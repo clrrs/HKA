@@ -10,14 +10,42 @@
 <body>
 
     <main>
-        <h1 tabindex="0">Women's Rights: The Wings of Change</h1>
+        <h1>Women's Rights Story 1: The Wings of Change</h1>
         <h2 tabindex="0">Film Clip of Helen Keller's First Flight in 1918</h2>
-        <img tabindex="0" src="../../../assets/FirstFlight_frame.png"
-            alt="Video clip with audio visual descriptions and captions. Plain text transcript available. Video controls below."
-            width="500">
+        <video id="myVideo" width="640">
+            <source src="/HKA/assets/HKA_helenRidingAPlane.mp4" type="video/mp4">
+        </video>
         <br>
-        <button>Play / Pause</button>
-        <button>Restart</button>
+        <br>
+        <button id="togglePlayPause">Play/Pause</button>
+        <button onclick="restartVideo()">Restart</button>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                var myVideo = document.getElementById("myVideo");
+                var toggleBtn = document.getElementById("togglePlayPause");
+
+                toggleBtn.addEventListener("click", function () {
+                    if (myVideo.paused) {
+                        myVideo.play();
+                        toggleBtn.textContent = "Pause";
+                    } else {
+                        myVideo.pause();
+                        toggleBtn.textContent = "Play";
+                    }
+                });
+            });
+
+            function restartVideo() {
+                var myVideo = document.getElementById("myVideo");
+                myVideo.currentTime = 0; // Resets the video to the beginning
+                myVideo.play(); // Optional: Play the video after restarting
+            }
+        </script>
+
+
+
+
 
         <br>
         <h3 tabindex="0">Transcript</h3>
