@@ -5,11 +5,11 @@ body {
 
 
 .container {
-    width: 60%;
+    width: 50%;
     /* 3 out of 7 columns width */
     margin: 0 auto;
     /* Centers the container */
-    padding: 80px;
+    padding: 20px;
     background-color: #fdfdfd;
     /* Light white-ish background */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
@@ -19,7 +19,6 @@ body {
     box-sizing: border-box;
     /* Ensures padding is included in the height calculation */
 }
-
 
 /* Basic accessible styles for your webpage */
 
