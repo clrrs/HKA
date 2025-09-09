@@ -1,0 +1,58 @@
+body {
+    background-color: #f9f9f9;
+    /* Change this color to whatever you want for the page background */
+}
+
+
+.container {
+    width: 50%;
+    /* 3 out of 7 columns width */
+    margin: 0 auto;
+    /* Centers the container */
+    padding: 20px;
+    background-color: #fdfdfd;
+    /* Light white-ish background */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    /* Adds a subtle shadow to the container */
+    min-height: 100vh;
+    /* Ensure it covers the full viewport height */
+    box-sizing: border-box;
+    /* Ensures padding is included in the height calculation */
+}
+
+
+/* Basic accessible styles for your webpage */
+
+body {
+    color: #333;
+    /* Dark black-ish text */
+    font-family: Arial, sans-serif;
+    /* Accessible and widely supported font */
+}
+
+a:link,
+a:visited {
+    color: #0000EE;
+    /* Standard link color, but you can adjust it */
+    font-weight: bold;
+    /* Makes links bold */
+    text-decoration: none;
+    /* Optional: removes underline from links */
+}
+
+a:hover,
+a:active {
+    text-decoration: underline;
+    /* Adds underline on hover for better visibility */
+}
+
+/* Additional styling for focus to improve accessibility */
+a:focus,
+button:focus,
+input:focus,
+textarea:focus {
+    outline: 2px solid #005A9C;
+    /* Blue outline for focused elements */
+    outline-offset: 2px;
+    /* Distance between outline and element */
+}

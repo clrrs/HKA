@@ -2,22 +2,49 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href=" style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Letter 1</title>
+    <title>Film Clip of Helen Keller's First Flight in 1918</title>
 </head>
 
 <body>
-
-    <main>
-        <h1 tabindex="0">Women's Rights: The Wings of Change</h1>
-        <h2 tabindex="0">Film Clip of Helen Keller's First Flight in 1918</h2>
-        <img tabindex="0" src="../../../assets/FirstFlight_frame.png"
-            alt="Video clip with audio visual descriptions and captions. Plain text transcript available. Video controls below."
-            width="500">
+    <div class="container">
+        <h2>Film Clip of Helen Keller's First Flight in 1918</h2>
+        <video id="myVideo" width="640">
+            <source src="/HKA/assets/HKA_helenRidingAPlane.mp4" type="video/mp4">
+        </video>
         <br>
-        <button>Play / Pause</button>
-        <button>Restart</button>
+        <br>
+        <button id="togglePlayPause">Play/Pause</button>
+        <button onclick="restartVideo()">Restart</button>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                var myVideo = document.getElementById("myVideo");
+                var toggleBtn = document.getElementById("togglePlayPause");
+
+                toggleBtn.addEventListener("click", function () {
+                    if (myVideo.paused) {
+                        myVideo.play();
+                        toggleBtn.textContent = "Pause";
+                    } else {
+                        myVideo.pause();
+                        toggleBtn.textContent = "Play";
+                    }
+                });
+            });
+
+            function restartVideo() {
+                var myVideo = document.getElementById("myVideo");
+                myVideo.currentTime = 0; // Resets the video to the beginning
+                myVideo.play(); // Optional: Play the video after restarting
+            }
+        </script>
+
+
+
+
 
         <br>
         <h3 tabindex="0">Transcript</h3>
@@ -38,17 +65,14 @@
             Wind flies over their heads in the open, roofless plane. The airplane safely lands on
             the flat, grassy
             ground. Dozens of people rush to the parked plane and assist Helen out of the sunken
-            seat. Helen smiles
-            broadly and hugs her teacher Anne Sullivan Macy.
-    </main>
-    <a href="W1_Main.html">Close Video Player</a> <br>
-    <a href="W1_Main.html">Back</a> <br>
-    <br>
-    <nav>
+            seat. Helen smiles broadly and hugs her teacher Anne Sullivan Macy. </p>
+
+        <br>
+        <a href="W1_Main.html">Close Video Player</a> <br>
+        <br>
         <a href="../../../Home.html">Home</a></li><br>
         <a href="../../../AccessibilitySettings.html">Accessibility Settings</a><br>
         <a href="../WomensRights_List.html">Women's Rights Menu</a><br>
-    </nav>
 </body>
 
 </html>
