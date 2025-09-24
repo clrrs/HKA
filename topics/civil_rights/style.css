@@ -1,6 +1,6 @@
 body {
-    background-color: #f9f9f9;
-    /* Change this color to whatever you want for the page background */
+    background-color: #1f1f1f;
+    /* Dark grey background */
 }
 
 
@@ -10,8 +10,8 @@ body {
     margin: 0 auto;
     /* Centers the container */
     padding: 20px;
-    background-color: #fdfdfd;
-    /* Light white-ish background */
+    background-color: #2a2a2a;
+    /* Darker container on dark background */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     /* Adds a subtle shadow to the container */
     min-height: 100vh;
@@ -23,16 +23,16 @@ body {
 /* Basic accessible styles for your webpage */
 
 body {
-    color: #333;
-    /* Dark black-ish text */
+    color: #ffffff;
+    /* White text on dark background */
     font-family: Arial, sans-serif;
     /* Accessible and widely supported font */
 }
 
 a:link,
 a:visited {
-    color: #0000EE;
-    /* Standard link color, but you can adjust it */
+    color: #ffd400;
+    /* Yellow links */
     font-weight: bold;
     /* Makes links bold */
     text-decoration: none;
