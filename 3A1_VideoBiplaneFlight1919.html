@@ -7,7 +7,73 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <h1>Travel and Adventure</h1>
+        <h2 tabindex="0">Artifact 1: Video of Biplane Flight, 1919</h2>
+        <video tabindex="0" id="myVideo" width="100%" aria-label="Video. This black and white film shows Helen in a leather flight jacket and helmet.  Helen’s assistants Anne and Polly help Helen board a biplane. Groundcrew starts the engine, and the biplane takes off.   The biplane is shown high in the sky, followed by shots of Helen’s friends watching and a closeup from the side of the plane.  The plane lands on grass, and Helen is helped out of the plane. Helen gives her assistant Anne a hug." title="This black and white film shows Helen in a leather flight jacket and helmet.  Helen’s assistants Anne and Polly help Helen board a biplane. Groundcrew starts the engine, and the biplane takes off.   The biplane is shown high in the sky, followed by shots of Helen’s friends watching and a closeup from the side of the plane.  The plane lands on grass, and Helen is helped out of the plane. Helen gives her assistant Anne a hug."> 
+            <source src="../../../assets/HKA_helenRidingAPlane.mp4" type="video/mp4">
+        </video>
+        <br>
+        <br>
+        <button id="togglePlayPause" type="button" aria-pressed="false" aria-label="Play or pause video">Play</button>
+        <button id="restartVideo" type="button" aria-label="Restart video">Restart</button>
 
+        <script>
+            (function () {
+                const myVideo = document.getElementById('myVideo');
+                const toggleBtn = document.getElementById('togglePlayPause');
+                const restartBtn = document.getElementById('restartVideo');
+
+                function updateToggleButtonLabel() {
+                    const isPaused = myVideo.paused || myVideo.ended;
+                    toggleBtn.textContent = isPaused ? 'Play' : 'Pause';
+                    toggleBtn.setAttribute('aria-pressed', String(!isPaused));
+                }
+
+                toggleBtn.addEventListener('click', function () {
+                    if (myVideo.paused || myVideo.ended) {
+                        myVideo.play();
+                    } else {
+                        myVideo.pause();
+                    }
+                });
+
+                restartBtn.addEventListener('click', function () {
+                    myVideo.currentTime = 0;
+                    myVideo.play();
+                });
+
+                myVideo.addEventListener('play', updateToggleButtonLabel);
+                myVideo.addEventListener('pause', updateToggleButtonLabel);
+                myVideo.addEventListener('ended', updateToggleButtonLabel);
+
+                updateToggleButtonLabel();
+            }());
+        </script>
+
+
+
+        <br>
+
+            <p tabindex="0">In this clip from her 1919 silent movie “Deliverance,” Helen puts on a leather
+                 flight jacket and crash helmet, and rides in the open cockpit of a biplane. Anne Sullivan 
+                 and Polly Thomson help Helen gear up.  Helen’s brother Phillips Brooks Keller, an Army 
+                 pilot in WWI, keeps a watchful eye on his sister during her flight.
+            </p>
+
+            <br>
+        <h3 tabindex="0"> Visual Description</h3>
+        <p tabindex="0">
+            Grainy black and white film shows Helen preparing her leather flight jacket and helmet.  
+            Anne Sullivan and Polly Thomson assist, while Helen's mother and brother watch.  
+            Her brother wears the uniform of a US Army WWI aviator.  
+            Anne and Polly help Helen board the open front cockpit of a biplane, 
+            while the pilot sits in the rear cockpit.  Groundcrew spins the propeller to start the engine,
+             and the biplane makes a wobbly takeoff from a dusty field.   
+             The biplane is shown high in the sky, followed by a shot of her friends and family watching.  
+             A closeup from the side, likely filmed while the plane was on ground, plays to illustrate her flight. 
+              A smooth landing on grass is shown,
+             and then Helen is assisted out of the biplane, and she gives Anne a hug.   </p>
     <nav>
         <a href="3_TravelAdventure.html">Back</a> |
         <a href="3A2_JapaneseLuncheonSet1948.html">Next</a>
