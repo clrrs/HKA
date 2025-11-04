@@ -3,15 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artifact 7: Syria Travel Itinerary, 1952</title>
+    <title>Artifact 7</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <h4>Travel and Adventure</h4> 
+        <h2>Artifact 7</h2><br><br>
+        <h1 tabindex="0">Syria Travel Itinerary, 1952</h1>
+
+        <p tabindex="0"> Helen traveled to the Middle East in 1952, spending 5 days in Syria. The handwriting on the top of the page indicates that these days were packed between her travels to other countries in the region, including Egypt, Lebanon, and Jordan.
+        </p>
+
+        <br>
+        <img tabindex="0" src="3A7Syria1.jpeg" alt="ALT TEXT GOES HERE" width="100%">
 
     <nav>
-        <a href="3A6_PhotoWithGoldaMeir1952.html">Previous</a> |
-        <a href="3A1_VideoBiplaneFlight1919.html">Next</a>
+        <a href="3A6_PhotoWithGoldaMeir1952.html">Back</a> 
+        <a href="3A1_VideoBiplaneFlight1919.html">Next</a> <br>
+        <a href="Home.html">Home</a> 
+        <a href="AccessibilitySettings.html">Accessibility Settings</a>
     </nav>
+
+    </div>
+
+    <script>
+        (function() {
+            const carousel = document.querySelector('.carousel-container');
+            const track = carousel.querySelector('.carousel-track');
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const nextBtn = carousel.querySelector('.carousel-btn-next');
+            const indicators = carousel.querySelectorAll('.carousel-indicator');
+            
+            let currentIndex = 0;
+            const totalSlides = slides.length;
+
+            function updateCarousel() {
+                // Update slide positions and image focusability
+                slides.forEach((slide, index) => {
+                    slide.style.transform = `translateX(${(index - currentIndex) * 100}%)`;
+                    slide.style.display = index === currentIndex ? 'block' : 'none';
+
+                    const img = slide.querySelector('img');
+                    if (img) {
+                        img.setAttribute('tabindex', index === currentIndex ? '0' : '-1');
+                    }
+                });
+
+                // Update indicators (visual only)
+                indicators.forEach((indicator, index) => {
+                    const isActive = index === currentIndex;
+                    indicator.classList.toggle('active', isActive);
+                });
+
+                // Update aria-live announcement for current slide position
+                const track = carousel.querySelector('.carousel-track');
+                track.setAttribute('aria-label', `Image ${currentIndex + 1} of ${totalSlides}`);
+            }
+
+            function nextSlide() {
+                currentIndex = (currentIndex + 1) % totalSlides;
+                updateCarousel();
+                nextBtn.focus();
+            }
+
+            function prevSlide() {
+                if (currentIndex === 0) {
+                    currentIndex = totalSlides - 1; // Loop to last slide
+                } else {
+                    currentIndex = currentIndex - 1;
+                }
+                updateCarousel();
+                nextBtn.focus();
+            }
+
+            // Button event listener
+            nextBtn.addEventListener('click', function() {
+                nextSlide();
+                nextBtn.focus();
+            });
+
+            // Keyboard navigation on images only
+            slides.forEach((slide) => {
+                const img = slide.querySelector('img');
+                if (img) {
+                    img.addEventListener('keydown', function(e) {
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            prevSlide();
+                            const currentImage = slides[currentIndex].querySelector('img');
+                            if (currentImage) currentImage.focus();
+                        } else if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            nextSlide();
+                            const currentImage = slides[currentIndex].querySelector('img');
+                            if (currentImage) currentImage.focus();
+                        }
+                    });
+                }
+            });
+
+            // Initialize carousel
+            updateCarousel();
+        })();
+    </script>
 
 </body>
 </html>
