@@ -147,6 +147,8 @@ nav a:focus {
 nav a:visited {
     color: #000000;
     /* Keep black text even for visited links */
+    background-color: #e7e7e7;
+    /* Keep same background as unvisited links */
 }
 
 /* Carousel/Slideshow styles */
@@ -248,4 +250,9 @@ nav a:visited {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border-width: 0;
+}
+
+.quote {
+    text-align: center;
+    font-style: italic;
 }
