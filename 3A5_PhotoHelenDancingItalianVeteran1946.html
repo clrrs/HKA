@@ -3,15 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artifact 5: Photograph of Helen Dancing with Italian Veteran, 1946</title>
+    <title>Artifact 5</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <h4>Travel and Adventure</h4> 
+        <h2>Artifact 5</h2><br><br>
+        <h1 tabindex="0">Photograph of Helen Dancing with Italian Veteran, 1946</h1>
+
+        <p tabindex="0"> In this photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind. Although he may have served with the Axis during the war, their warm embrace is apparent, signaling a global fatigue with the war and a desire for peace.
+        </p>
+
+        <br>
+        <div class="carousel-container">
+            <div class="carousel-wrapper">
+                <div class="carousel-track" aria-live="polite" aria-atomic="true">
+                    <div class="carousel-slide" id="slide-1" role="group" aria-roledescription="slide" aria-label="Image 1 of 2">
+                        <img src="3A5ItalyVet1.jpeg" alt="ALT TEXT GOES HERE" width="100%">
+                    </div>
+                    <div class="carousel-slide" id="slide-2" role="group" aria-roledescription="slide" aria-label="Image 2 of 2">
+                        <img src="3A5ItalyVet2.jpeg" alt="ALT TEXT GOES HERE" width="100%">
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-controls">
+                <button class="carousel-btn carousel-btn-next" 
+                        aria-label="Next image" 
+                        type="button">
+                    <span aria-hidden="true">→</span>
+                </button>
+            </div>
+            <div class="carousel-indicators" aria-hidden="true">
+                <span class="carousel-indicator active"></span>
+                <span class="carousel-indicator"></span>
+            </div>
+        </div>
 
     <nav>
-        <a href="3A4_GlobalTravelSchedule1948_49.html">Previous</a> |
-        <a href="3A6_PhotoWithGoldaMeir1952.html">Next</a>
+        <a href="3A4_GlobalTravelSchedule1948_49.html">Back</a> 
+        <a href="3A6_PhotoWithGoldaMeir1952.html">Next</a> <br>
+        <a href="Home.html">Home</a> 
+        <a href="AccessibilitySettings.html">Accessibility Settings</a>
     </nav>
+
+    </div>
+
+    <script>
+        (function() {
+            const carousel = document.querySelector('.carousel-container');
+            const track = carousel.querySelector('.carousel-track');
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const nextBtn = carousel.querySelector('.carousel-btn-next');
+            const indicators = carousel.querySelectorAll('.carousel-indicator');
+            
+            let currentIndex = 0;
+            const totalSlides = slides.length;
+
+            function updateCarousel() {
+                // Update slide positions and image focusability
+                slides.forEach((slide, index) => {
+                    slide.style.transform = `translateX(${(index - currentIndex) * 100}%)`;
+                    slide.style.display = index === currentIndex ? 'block' : 'none';
+
+                    const img = slide.querySelector('img');
+                    if (img) {
+                        img.setAttribute('tabindex', index === currentIndex ? '0' : '-1');
+                    }
+                });
+
+                // Update indicators (visual only)
+                indicators.forEach((indicator, index) => {
+                    const isActive = index === currentIndex;
+                    indicator.classList.toggle('active', isActive);
+                });
+
+                // Update aria-live announcement for current slide position
+                const track = carousel.querySelector('.carousel-track');
+                track.setAttribute('aria-label', `Image ${currentIndex + 1} of ${totalSlides}`);
+            }
+
+            function nextSlide() {
+                currentIndex = (currentIndex + 1) % totalSlides;
+                updateCarousel();
+                nextBtn.focus();
+            }
+
+            function prevSlide() {
+                if (currentIndex === 0) {
+                    currentIndex = totalSlides - 1; // Loop to last slide
+                } else {
+                    currentIndex = currentIndex - 1;
+                }
+                updateCarousel();
+                nextBtn.focus();
+            }
+
+            // Button event listener
+            nextBtn.addEventListener('click', function() {
+                nextSlide();
+                nextBtn.focus();
+            });
+
+            // Keyboard navigation on images only
+            slides.forEach((slide) => {
+                const img = slide.querySelector('img');
+                if (img) {
+                    img.addEventListener('keydown', function(e) {
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            prevSlide();
+                            const currentImage = slides[currentIndex].querySelector('img');
+                            if (currentImage) currentImage.focus();
+                        } else if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            nextSlide();
+                            const currentImage = slides[currentIndex].querySelector('img');
+                            if (currentImage) currentImage.focus();
+                        }
+                    });
+                }
+            });
+
+            // Initialize carousel
+            updateCarousel();
+        })();
+    </script>
 
 </body>
 </html>

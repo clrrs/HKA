@@ -16,29 +16,7 @@
         </p>
 
         <br>
-        <div class="carousel-container">
-            <div class="carousel-wrapper">
-                <div class="carousel-track" aria-live="polite" aria-atomic="true">
-                    <div class="carousel-slide" id="slide-1" role="group" aria-roledescription="slide" aria-label="Image 1 of 2">
-                        <img src="3A4ItalyVet1.jpeg" alt="Global Travel Schedule, 1948-49" width="100%">
-                    </div>
-                    <div class="carousel-slide" id="slide-2" role="group" aria-roledescription="slide" aria-label="Image 2 of 2">
-                        <img src="3A4ItalyVet2.jpeg" alt="Global Travel Schedule, 1948-49" width="100%">
-                    </div>
-                </div>
-            </div>
-            <div class="carousel-controls">
-                <button class="carousel-btn carousel-btn-next" 
-                        aria-label="Next image" 
-                        type="button">
-                    <span aria-hidden="true">→</span>
-                </button>
-            </div>
-            <div class="carousel-indicators" aria-hidden="true">
-                <span class="carousel-indicator active"></span>
-                <span class="carousel-indicator"></span>
-            </div>
-        </div>
+        <img tabindex="0" src="3A4_Schedule.png" alt="ALT TEXT GOES HERE" width="100%">
 
     <nav>
         <a href="3A3_PhotoWithBantuChief1951.html">Back</a> 
@@ -48,87 +26,6 @@
     </nav>
 
     </div>
-
-    <script>
-        (function() {
-            const carousel = document.querySelector('.carousel-container');
-            const track = carousel.querySelector('.carousel-track');
-            const slides = carousel.querySelectorAll('.carousel-slide');
-            const nextBtn = carousel.querySelector('.carousel-btn-next');
-            const indicators = carousel.querySelectorAll('.carousel-indicator');
-            
-            let currentIndex = 0;
-            const totalSlides = slides.length;
-
-            function updateCarousel() {
-                // Update slide positions and image focusability
-                slides.forEach((slide, index) => {
-                    slide.style.transform = `translateX(${(index - currentIndex) * 100}%)`;
-                    slide.style.display = index === currentIndex ? 'block' : 'none';
-
-                    const img = slide.querySelector('img');
-                    if (img) {
-                        img.setAttribute('tabindex', index === currentIndex ? '0' : '-1');
-                    }
-                });
-
-                // Update indicators (visual only)
-                indicators.forEach((indicator, index) => {
-                    const isActive = index === currentIndex;
-                    indicator.classList.toggle('active', isActive);
-                });
-
-                // Update aria-live announcement for current slide position
-                const track = carousel.querySelector('.carousel-track');
-                track.setAttribute('aria-label', `Image ${currentIndex + 1} of ${totalSlides}`);
-            }
-
-            function nextSlide() {
-                currentIndex = (currentIndex + 1) % totalSlides;
-                updateCarousel();
-                nextBtn.focus();
-            }
-
-            function prevSlide() {
-                if (currentIndex === 0) {
-                    currentIndex = totalSlides - 1; // Loop to last slide
-                } else {
-                    currentIndex = currentIndex - 1;
-                }
-                updateCarousel();
-                nextBtn.focus();
-            }
-
-            // Button event listener
-            nextBtn.addEventListener('click', function() {
-                nextSlide();
-                nextBtn.focus();
-            });
-
-            // Keyboard navigation on images only
-            slides.forEach((slide) => {
-                const img = slide.querySelector('img');
-                if (img) {
-                    img.addEventListener('keydown', function(e) {
-                        if (e.key === 'ArrowLeft') {
-                            e.preventDefault();
-                            prevSlide();
-                            const currentImage = slides[currentIndex].querySelector('img');
-                            if (currentImage) currentImage.focus();
-                        } else if (e.key === 'ArrowRight') {
-                            e.preventDefault();
-                            nextSlide();
-                            const currentImage = slides[currentIndex].querySelector('img');
-                            if (currentImage) currentImage.focus();
-                        }
-                    });
-                }
-            });
-
-            // Initialize carousel
-            updateCarousel();
-        })();
-    </script>
 
 </body>
 </html>
