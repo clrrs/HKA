@@ -48,11 +48,102 @@ a:active {
 
 /* Additional styling for focus to improve accessibility */
 a:focus,
-button:focus,
 input:focus,
 textarea:focus {
     outline: 2px solid #005A9C;
     /* Blue outline for focused elements */
     outline-offset: 2px;
     /* Distance between outline and element */
+}
+
+/* Note: button:focus is handled separately for nav and video-controls buttons */
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 0;
+    margin-top: 0;
+    /* Remove space after all headings */
+}
+
+h1, h2, h3 {
+    color: #ffd400;
+    /* Yellow color matching links */
+}
+
+.video-controls {
+    text-align: center;
+    /* Centers the play and pause buttons */
+}
+
+/* Video control button styles - matching nav button styling */
+.video-controls button {
+    background-color: #e7e7e7;
+    /* Light grey background matching nav buttons */
+    color: #000000;
+    /* Black text */
+    padding: 5px 10px;
+    /* Padding for button-like appearance */
+    border-radius: 20px;
+    /* Rounded rectangles */
+    font-weight: bold;
+    /* Bold text */
+    margin-left: 5px;
+    margin-right: 5px;
+    border: 3px solid transparent;
+    /* Transparent border to prevent layout shift on hover */
+    transition: border-color 0.2s;
+    /* Smooth transition for border */
+    cursor: pointer;
+    /* Pointer cursor on hover */
+}
+
+.video-controls button:hover,
+.video-controls button:focus {
+    border: 3px solid #ffd400;
+    /* Thick yellow border on hover and focus */
+    outline: none;
+    /* Remove default focus outline since we're using border */
+}
+
+/* Navigation button styles */
+nav {
+    margin-top: 40px;
+    /* Adds spacing above the navigation section */
+}
+
+nav a {
+    display: inline-block;
+    background-color: #e7e7e7;
+    /* Solid white background */
+    color: #000000;
+    /* Black text */
+    padding: 5px 10px;
+    /* Padding for button-like appearance */
+    border-radius: 20px;
+    /* Rounded rectangles */
+    text-decoration: none;
+    /* Remove underline */
+    font-weight: bold;
+    /* Bold text */
+    margin-top: 10px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+    border: 3px solid transparent;
+    /* Transparent border to prevent layout shift on hover */
+    transition: border-color 0.2s;
+    /* Smooth transition for border */
+}
+
+nav a:hover,
+nav a:focus {
+    border: 3px solid #ffd400;
+    /* Thick yellow border on hover and focus */
+    outline: none;
+    /* Remove default focus outline since we're using border */
+}
+
+nav a:visited {
+    color: #000000;
+    /* Keep black text even for visited links */
 }
