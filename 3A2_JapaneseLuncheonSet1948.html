@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artifact 2</title>
+    <title>Artifact 2 - Japanese Luncheon Set, 1948</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="carousel.css">
 </head>
 <body>
     <div class="container">
@@ -13,121 +14,122 @@
         <h1 tabindex="0">Japanese Luncheon Set, 1948</h1>
 
         <p tabindex="0">Kazuo Honma, the founder of the Japanese Braille Library, 
-            gifted Helen a New Year's luncheon set in 1948.  The black lacquer set 
+            gifted Helen a New Year's luncheon set in 1948. The black lacquer set 
             has gold symbols and carved abalone inlays, all set in a carrying stand with a brass handle. It contains six drawers, six trays, and a pair of cylindrical flasks. 
         </p>
 
-        <br><div class="carousel-container">
-            <div class="carousel-wrapper">
-                <div class="carousel-track" aria-live="polite" aria-atomic="true">
-                    <div class="carousel-slide" id="slide-1" role="group" aria-roledescription="slide" aria-label="Image 1 of 2">
-                        <img src="3A2Lunch1.jpeg" alt="ALT TEXT GOES HERE" width="100%">
+        <br>
+        <!-- Accessible Carousel Component -->
+        <div class="carousel" 
+             role="region" 
+             aria-label="Image carousel"
+             tabindex="0"
+             data-layer="1"
+             id="carousel">
+          
+            <!-- Layer 1: Surface (visible by default) -->
+            <div class="carousel-layer carousel-layer-1" data-active="true">
+                <div class="carousel-viewport">
+                    <img src="3A2Lunch1.jpeg" alt="Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle" data-slide="0">
+                    <img src="3A2Lunch2.jpeg" alt="Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface" data-slide="1" style="display: none;">
+                </div>
+                <div class="carousel-indicators" aria-hidden="true">
+                    <span class="indicator active" data-slide="0"></span>
+                    <span class="indicator" data-slide="1"></span>
+                </div>
+                <div class="carousel-prompt" aria-hidden="true">Press Enter to Explore</div>
+            </div>
+          
+            <!-- Layer 2: Navigation (hidden initially) -->
+            <div class="carousel-layer carousel-layer-2" data-active="false" aria-hidden="true">
+                <div class="carousel-image-display">
+                    <img src="3A2Lunch1.jpeg" alt="Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle" data-slide="0">
+                </div>
+                <div class="carousel-menu" role="toolbar" aria-label="Image navigation">
+                    <button type="button" data-action="exit">Exit</button>
+                    <button type="button" data-action="prev">◀ Prev</button>
+                    <button type="button" data-action="next">Next ▶</button>
+                    <button type="button" data-action="zoom">Zoom</button>
+                </div>
+            </div>
+          
+            <!-- Layer 3: Zoom Mode (hidden, becomes full screen when active) -->
+            <div class="carousel-layer carousel-layer-3" data-active="false" aria-hidden="true">
+                <div class="carousel-zoom-container">
+                    <div class="carousel-zoom-viewport">
+                        <img src="3A2Lunch1.jpeg" alt="Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle" class="zoomable-image">
                     </div>
-                    <div class="carousel-slide" id="slide-2" role="group" aria-roledescription="slide" aria-label="Image 2 of 2">
-                        <img src="3A2Lunch2.jpeg" alt="ALT TEXT GOES HERE" width="100%">
+                    <div class="carousel-menu" role="toolbar" aria-label="Zoom controls">
+                        <button type="button" data-action="exit">Exit</button>
+                        <button type="button" data-action="pan">Pan</button>
+                        <button type="button" data-action="zoom-control">Zoom</button>
                     </div>
                 </div>
             </div>
-            <div class="carousel-controls">
-                <button class="carousel-btn carousel-btn-next" 
-                        aria-label="Next image" 
-                        type="button">
-                    <span aria-hidden="true">→</span>
-                </button>
+          
+            <!-- Layer 3a: Pan Sub-Menu (hidden) -->
+            <div class="carousel-layer carousel-layer-3a" data-active="false" aria-hidden="true">
+                <div class="carousel-zoom-container">
+                    <div class="carousel-zoom-viewport">
+                        <img src="3A2Lunch1.jpeg" alt="Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle" class="zoomable-image">
+                    </div>
+                    <div class="carousel-menu" role="toolbar" aria-label="Pan controls">
+                        <button type="button" data-action="exit">Exit</button>
+                        <button type="button" data-action="pan-up">Up</button>
+                        <button type="button" data-action="pan-down">Down</button>
+                        <button type="button" data-action="pan-left">Left</button>
+                        <button type="button" data-action="pan-right">Right</button>
+                        <button type="button" data-action="reset-pan">Reset</button>
+                    </div>
+                </div>
             </div>
-            <div class="carousel-indicators" aria-hidden="true">
-                <span class="carousel-indicator active"></span>
-                <span class="carousel-indicator"></span>
+          
+            <!-- Layer 3b: Zoom Sub-Menu (hidden) -->
+            <div class="carousel-layer carousel-layer-3b" data-active="false" aria-hidden="true">
+                <div class="carousel-zoom-container">
+                    <div class="carousel-zoom-viewport">
+                        <img src="3A2Lunch1.jpeg" alt="Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle" class="zoomable-image">
+                    </div>
+                    <div class="carousel-menu" role="toolbar" aria-label="Zoom level controls">
+                        <button type="button" data-action="exit">Exit</button>
+                        <button type="button" data-action="zoom-in">Zoom In</button>
+                        <button type="button" data-action="zoom-out">Zoom Out</button>
+                        <button type="button" data-action="reset-zoom">Reset</button>
+                    </div>
+                </div>
             </div>
+          
+            <!-- Live region for screen reader announcements -->
+            <div class="sr-only" aria-live="polite" aria-atomic="true" id="carousel-announcer"></div>
         </div>
+
         <nav>
-        <a tabindex="0" href="3A1_VideoBiplaneFlight1919.html">Back</a> 
-        <a tabindex="0" href="3A3_PhotoWithBantuChief1951.html">Next</a> <br>
-        <a tabindex="0" href="3_TravelAdventure.html">Travel and Adventure Menu</a> <br> 
-        <a tabindex="0" href="Home.html">Home</a> 
-        <a tabindex="0" href="AccessibilitySettings.html">Accessibility Settings</a>
-    </nav>
+            <a tabindex="0" href="3A1_VideoBiplaneFlight1919.html">Back</a> 
+            <a tabindex="0" href="3A3_PhotoWithBantuChief1951.html">Next</a> <br>
+            <a tabindex="0" href="3_TravelAdventure.html">Travel and Adventure Menu</a> <br> 
+            <a tabindex="0" href="Home.html">Home</a> 
+            <a tabindex="0" href="AccessibilitySettings.html">Accessibility Settings</a>
+        </nav>
+    </div>
+
+    <script src="carousel.js"></script>
     <script>
-        (function() {
-            const carousel = document.querySelector('.carousel-container');
-            const track = carousel.querySelector('.carousel-track');
-            const slides = carousel.querySelectorAll('.carousel-slide');
-            const nextBtn = carousel.querySelector('.carousel-btn-next');
-            const indicators = carousel.querySelectorAll('.carousel-indicator');
+        // Initialize the carousel
+        document.addEventListener('DOMContentLoaded', function() {
+            const carouselElement = document.getElementById('carousel');
+            const images = [
+                {
+                    src: '3A2Lunch1.jpeg',
+                    alt: 'Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle'
+                },
+                {
+                    src: '3A2Lunch2.jpeg',
+                    alt: 'Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface'
+                }
+            ];
             
-            let currentIndex = 0;
-            const totalSlides = slides.length;
-
-            function updateCarousel() {
-                // Update slide positions and image focusability
-                slides.forEach((slide, index) => {
-                    slide.style.transform = `translateX(${(index - currentIndex) * 100}%)`;
-                    slide.style.display = index === currentIndex ? 'block' : 'none';
-
-                    const img = slide.querySelector('img');
-                    if (img) {
-                        img.setAttribute('tabindex', index === currentIndex ? '0' : '-1');
-                    }
-                });
-
-                // Update indicators (visual only)
-                indicators.forEach((indicator, index) => {
-                    const isActive = index === currentIndex;
-                    indicator.classList.toggle('active', isActive);
-                });
-
-                // Update aria-live announcement for current slide position
-                const track = carousel.querySelector('.carousel-track');
-                track.setAttribute('aria-label', `Image ${currentIndex + 1} of ${totalSlides}`);
-            }
-
-            function nextSlide() {
-                currentIndex = (currentIndex + 1) % totalSlides;
-                updateCarousel();
-                nextBtn.focus();
-            }
-
-            function prevSlide() {
-                if (currentIndex === 0) {
-                    currentIndex = totalSlides - 1; // Loop to last slide
-                } else {
-                    currentIndex = currentIndex - 1;
-                }
-                updateCarousel();
-                nextBtn.focus();
-            }
-
-            // Button event listener
-            nextBtn.addEventListener('click', function() {
-                nextSlide();
-                nextBtn.focus();
-            });
-
-            // Keyboard navigation on images only
-            slides.forEach((slide) => {
-                const img = slide.querySelector('img');
-                if (img) {
-                    img.addEventListener('keydown', function(e) {
-                        if (e.key === 'ArrowLeft') {
-                            e.preventDefault();
-                            prevSlide();
-                            const currentImage = slides[currentIndex].querySelector('img');
-                            if (currentImage) currentImage.focus();
-                        } else if (e.key === 'ArrowRight') {
-                            e.preventDefault();
-                            nextSlide();
-                            const currentImage = slides[currentIndex].querySelector('img');
-                            if (currentImage) currentImage.focus();
-                        }
-                    });
-                }
-            });
-
-            // Initialize carousel
-            updateCarousel();
-        })();
+            new CarouselController(carouselElement, images);
+        });
     </script>
 </body>
 </html>
-
-
