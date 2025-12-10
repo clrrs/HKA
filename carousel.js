@@ -290,19 +290,12 @@ class CarouselController {
             this.handleFocusTrap(e, this.layer2Buttons);
         });
         
-        // Button actions
+        // Button actions - use click which fires on both mouse click and Enter key
         this.layer2Buttons.forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (e) => {
                 if (this.state.currentLayer !== '2') return;
+                e.preventDefault();
                 this.handleLayer2Action(button.dataset.action);
-            });
-            
-            button.addEventListener('keydown', (e) => {
-                if (this.state.currentLayer !== '2') return;
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.handleLayer2Action(button.dataset.action);
-                }
             });
         });
     }
