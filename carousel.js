@@ -296,6 +296,10 @@ class CarouselController {
         // Update Next button's aria-label to include image info
         this.updateNextButtonLabel();
         
+        // Update Exit button's aria-label
+        const exitBtn = this.layer2Menu.querySelector('[data-action="exit"]');
+        if (exitBtn) exitBtn.setAttribute('aria-label', 'Exit Image Carousel');
+        
         this.setLayer('2');
         
         // No separate announcement - the button's aria-label handles it
@@ -372,6 +376,10 @@ class CarouselController {
         this.state.zoomLevel = 0;
         this.state.panPosition = { x: 0, y: 0 };
         this.updateZoomTransform();
+        
+        // Update Exit button's aria-label
+        const exitBtn = this.layer3Menu.querySelector('[data-action="exit"]');
+        if (exitBtn) exitBtn.setAttribute('aria-label', 'Exit Zoom Mode');
         
         this.setLayer('3');
         this.updateZoomButtonStates();
