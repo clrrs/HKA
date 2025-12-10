@@ -223,8 +223,10 @@ class CarouselController {
         this.updateCarouselDisplay();
         if (this.state.currentLayer === '2') {
             this.updateNextButtonLabel();
-        }
-        if (shouldAnnounce) {
+            if (shouldAnnounce) {
+                this.refocusForAnnouncement();
+            }
+        } else if (shouldAnnounce) {
             this.announceCurrentImage();
         }
     }
@@ -236,9 +238,20 @@ class CarouselController {
         this.updateCarouselDisplay();
         if (this.state.currentLayer === '2') {
             this.updateNextButtonLabel();
-        }
-        if (shouldAnnounce) {
+            if (shouldAnnounce) {
+                this.refocusForAnnouncement();
+            }
+        } else if (shouldAnnounce) {
             this.announceCurrentImage();
+        }
+    }
+    
+    refocusForAnnouncement() {
+        // Force VoiceOver to re-read the button's aria-label by blur/refocus
+        const nextBtn = this.layer2Menu.querySelector('[data-action="next"]');
+        if (nextBtn) {
+            nextBtn.blur();
+            setTimeout(() => nextBtn.focus(), 50);
         }
     }
     
