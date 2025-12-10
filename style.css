@@ -112,7 +112,8 @@ nav {
     /* Adds spacing above the navigation section */
 }
 
-nav a {
+nav a,
+nav a:link {
     display: inline-block;
     background-color: #e7e7e7;
     /* Solid white background */
