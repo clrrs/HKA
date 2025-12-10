@@ -191,12 +191,10 @@
 }
 
 /* ============================================
-   LAYER 3, 3A, 3B: ZOOM MODE (FULL SCREEN OVERLAY)
+   LAYER 3: ZOOM MODE (FULL SCREEN OVERLAY)
    ============================================ */
 
-.carousel-layer-3,
-.carousel-layer-3a,
-.carousel-layer-3b {
+.carousel-layer-3 {
     position: fixed;
     top: 0;
     left: 0;
@@ -209,9 +207,7 @@
     z-index: 9999;
 }
 
-.carousel-layer-3[data-active="false"],
-.carousel-layer-3a[data-active="false"],
-.carousel-layer-3b[data-active="false"] {
+.carousel-layer-3[data-active="false"] {
     pointer-events: none;
 }
 
@@ -245,13 +241,47 @@
     transform-origin: center center;
 }
 
-/* Zoom menu styling for full screen layers */
-.carousel-layer-3 .carousel-menu,
-.carousel-layer-3a .carousel-menu,
-.carousel-layer-3b .carousel-menu {
+/* Zoom menu styling for full screen layer */
+.carousel-layer-3 .carousel-menu {
     background-color: #2a2a2a;
     padding: 20px;
     border-top: 1px solid #444;
+}
+
+/* Layer 3 consolidated menu layout */
+.carousel-layer-3 .zoom-controls-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Zoom buttons (+/-) stacked vertically */
+.carousel-layer-3 .zoom-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Pan controls layout: left, center stack (up/down), right */
+.carousel-layer-3 .pan-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.carousel-layer-3 .pan-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Symbol button styling */
+.carousel-layer-3 .zoom-controls-menu button {
+    min-width: 50px;
+    min-height: 50px;
+    font-size: 1.4em;
+    padding: 10px;
 }
 
 /* ============================================
@@ -276,16 +306,12 @@
 
 /* When carousel is in Layer 2+, remove outer focus ring */
 .carousel[data-layer="2"],
-.carousel[data-layer="3"],
-.carousel[data-layer="3a"],
-.carousel[data-layer="3b"] {
+.carousel[data-layer="3"] {
     border-color: transparent;
 }
 
 .carousel[data-layer="2"]:focus,
-.carousel[data-layer="3"]:focus,
-.carousel[data-layer="3a"]:focus,
-.carousel[data-layer="3b"]:focus {
+.carousel[data-layer="3"]:focus {
     border-color: transparent;
 }
 
