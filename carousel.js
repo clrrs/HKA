@@ -60,6 +60,9 @@ class CarouselController {
     }
     
     init() {
+        // Set carousel aria-label with image count
+        this.carousel.setAttribute('aria-label', `Image carousel, ${this.images.length} images, press Enter to explore`);
+        
         // Set up event listeners
         this.setupLayer1Events();
         this.setupLayer2Events();
@@ -143,7 +146,8 @@ class CarouselController {
                 (nextBtn || this.layer2Buttons[0]).focus();
                 break;
             case '3':
-                this.layer3Buttons[0].focus();
+                const zoomInBtn = this.layer3Menu.querySelector('[data-action="zoom-in"]');
+                (zoomInBtn || this.layer3Buttons[0]).focus();
                 break;
         }
     }
@@ -159,7 +163,7 @@ class CarouselController {
                 this.stopAutoPlay();
                 this.prompt.classList.remove('hidden');
                 this.carousel.setAttribute('data-autoplay', 'false');
-                this.announce(`2 Images. Press Enter to explore.`);
+                // aria-label handles announcement: "Image carousel, X images, press Enter to explore"
             }
         });
         
@@ -217,6 +221,9 @@ class CarouselController {
     nextSlide(shouldAnnounce = true) {
         this.state.currentSlide = (this.state.currentSlide + 1) % this.images.length;
         this.updateCarouselDisplay();
+        if (this.state.currentLayer === '2') {
+            this.updateNextButtonLabel();
+        }
         if (shouldAnnounce) {
             this.announceCurrentImage();
         }
@@ -227,6 +234,9 @@ class CarouselController {
             ? this.images.length - 1 
             : this.state.currentSlide - 1;
         this.updateCarouselDisplay();
+        if (this.state.currentLayer === '2') {
+            this.updateNextButtonLabel();
+        }
         if (shouldAnnounce) {
             this.announceCurrentImage();
         }
@@ -280,13 +290,29 @@ class CarouselController {
             });
         }
         
+        // Remove aria-label so VoiceOver doesn't announce "image carousel"
+        this.carousel.removeAttribute('aria-label');
+        
+        // Update Next button's aria-label to include image info
+        this.updateNextButtonLabel();
+        
         this.setLayer('2');
         
-        const image = this.images[this.state.currentSlide];
-        if (this.images.length === 1) {
-            this.announce(`Viewing mode. ${image.alt}. Use Tab and Shift Tab to navigate menu. Exit or Zoom.`);
-        } else {
-            this.announce(`Navigation mode. Image ${this.state.currentSlide + 1} of ${this.images.length}. ${image.alt}. Use Tab and Shift Tab to navigate menu. Exit, Previous, Next, or Zoom.`);
+        // No separate announcement - the button's aria-label handles it
+    }
+    
+    updateNextButtonLabel() {
+        const nextBtn = this.layer2Menu.querySelector('[data-action="next"]');
+        if (nextBtn && this.images.length > 1) {
+            const image = this.images[this.state.currentSlide];
+            nextBtn.setAttribute('aria-label', `Image ${this.state.currentSlide + 1} of ${this.images.length}. ${image.alt}. Next`);
+        }
+    }
+    
+    resetNextButtonLabel() {
+        const nextBtn = this.layer2Menu.querySelector('[data-action="next"]');
+        if (nextBtn) {
+            nextBtn.setAttribute('aria-label', 'Next');
         }
     }
     
@@ -325,6 +351,12 @@ class CarouselController {
     }
     
     exitToLayer1() {
+        // Restore aria-label (no role to avoid "region" announcement)
+        this.carousel.setAttribute('aria-label', `Image carousel, ${this.images.length} images, press Enter to explore`);
+        
+        // Reset Next button's aria-label
+        this.resetNextButtonLabel();
+        
         this.setLayer('1');
         this.startAutoPlay();
         this.carousel.setAttribute('data-autoplay', 'true');
