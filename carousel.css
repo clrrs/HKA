@@ -84,16 +84,38 @@
 }
 
 .carousel-prompt {
-    text-align: center;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background-color: rgba(255, 212, 0, 0.15);
-    border: 2px solid #ffd400;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 3px solid transparent;
     border-radius: 8px;
-    color: #ffd400;
+    color: #000000;
     font-weight: bold;
-    font-size: 1.1em;
-    transition: opacity 300ms ease;
+    font-size: 1em;
+    transition: opacity 0.2s, visibility 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.carousel-layer-1:hover .carousel-prompt,
+.carousel:focus .carousel-prompt {
+    opacity: 1;
+    visibility: visible;
+}
+
+.carousel-prompt img {
+    width: 60px;
+    height: 60px;
+    display: block;
 }
 
 .carousel-prompt.hidden {
@@ -118,6 +140,25 @@
 
 .carousel-layer-2[data-active="false"] {
     pointer-events: none;
+}
+
+/* Popup variant for Layer 2 */
+.popup-layer-2 .carousel-layer-2 {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70vw;
+    height: 70vh;
+    right: auto;
+    bottom: auto;
+    z-index: 1000;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+}
+
+.popup-layer-2 .carousel-layer-2 .carousel-image-display {
+    flex: 1;
+    height: auto;
 }
 
 .carousel-image-display {
@@ -194,6 +235,12 @@
 .carousel-menu button:disabled:focus {
     border-color: transparent;
     box-shadow: none;
+}
+
+.carousel-menu button img {
+    width: 24px;
+    height: 24px;
+    display: block;
 }
 
 /* ============================================
@@ -366,7 +413,7 @@
 }
 
 .carousel[data-autoplay="true"] .carousel-prompt {
-    animation: pulse 2s ease-in-out infinite;
+    animation: none;
 }
 
 .carousel[data-autoplay="false"] .carousel-prompt {

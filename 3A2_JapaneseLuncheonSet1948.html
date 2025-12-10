@@ -20,7 +20,7 @@
 
         <br>
         <!-- Accessible Carousel Component -->
-        <div class="carousel" 
+        <div class="carousel popup-layer-2" 
              role="region" 
              aria-label="Image carousel"
              tabindex="0"
@@ -37,7 +37,9 @@
                     <span class="indicator active" data-slide="0"></span>
                     <span class="indicator" data-slide="1"></span>
                 </div>
-                <div class="carousel-prompt" aria-hidden="true">Press Enter to Explore</div>
+                <div class="carousel-prompt" aria-hidden="true">
+                    <img src="Expand.svg" alt="Press Enter to Explore" aria-hidden="true">
+                </div>
             </div>
           
             <!-- Layer 2: Navigation (hidden initially) -->
@@ -50,10 +52,18 @@
                     <span class="indicator" data-slide="1"></span>
                 </div>
                 <div class="carousel-menu" role="toolbar" aria-label="Image navigation">
-                    <button type="button" data-action="exit">Exit</button>
-                    <button type="button" data-action="prev">◀ Prev</button>
-                    <button type="button" data-action="next">Next ▶</button>
-                    <button type="button" data-action="zoom">Zoom</button>
+                    <button type="button" data-action="exit" aria-label="Exit">
+                        <img src="Exit.svg" alt="" aria-hidden="true">
+                    </button>
+                    <button type="button" data-action="prev" aria-label="Previous">
+                        <img src="Back.svg" alt="" aria-hidden="true">
+                    </button>
+                    <button type="button" data-action="next" aria-label="Next">
+                        <img src="Forward.svg" alt="" aria-hidden="true">
+                    </button>
+                    <button type="button" data-action="zoom" aria-label="Zoom">
+                        <img src="Zoom.svg" alt="" aria-hidden="true">
+                    </button>
                 </div>
             </div>
           
@@ -64,7 +74,9 @@
                         <img src="3A2Lunch1.jpeg" alt="Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle" class="zoomable-image">
                     </div>
                     <div class="carousel-menu zoom-controls-menu" role="toolbar" aria-label="Zoom and pan controls">
-                        <button type="button" data-action="exit">Exit</button>
+                        <button type="button" data-action="exit" aria-label="Exit">
+                            <img src="Exit.svg" alt="" aria-hidden="true">
+                        </button>
                         <div class="zoom-btn-group">
                             <button type="button" data-action="zoom-in" aria-label="Zoom in">+</button>
                             <button type="button" data-action="zoom-out" aria-label="Zoom out">−</button>
