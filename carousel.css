@@ -67,7 +67,8 @@
     margin-top: 15px;
 }
 
-.carousel-layer-1 .indicator {
+.carousel-layer-1 .indicator,
+.carousel-layer-2 .indicator {
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -76,7 +77,8 @@
     transition: background-color 0.2s, border-color 0.2s;
 }
 
-.carousel-layer-1 .indicator.active {
+.carousel-layer-1 .indicator.active,
+.carousel-layer-2 .indicator.active {
     background-color: #ffd400;
     border-color: #ffd400;
 }
@@ -127,6 +129,10 @@
     overflow: hidden;
     background-color: #1a1a1a;
     border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.carousel-layer-2 .carousel-indicators {
     margin-bottom: 15px;
 }
 

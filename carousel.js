@@ -46,6 +46,7 @@ class CarouselController {
         // Layer 2 elements
         this.layer2ImageDisplay = this.layer2.querySelector('.carousel-image-display');
         this.layer2Image = this.layer2ImageDisplay.querySelector('img');
+        this.layer2Indicators = this.layer2.querySelectorAll('.indicator');
         this.layer2Menu = this.layer2.querySelector('.carousel-menu');
         this.layer2Buttons = this.layer2Menu.querySelectorAll('button');
         
@@ -66,9 +67,13 @@ class CarouselController {
         
         // Hide indicators if only one image
         if (this.images.length <= 1) {
-            const indicatorsContainer = this.layer1.querySelector('.carousel-indicators');
-            if (indicatorsContainer) {
-                indicatorsContainer.style.display = 'none';
+            const indicatorsContainer1 = this.layer1.querySelector('.carousel-indicators');
+            if (indicatorsContainer1) {
+                indicatorsContainer1.style.display = 'none';
+            }
+            const indicatorsContainer2 = this.layer2.querySelector('.carousel-indicators');
+            if (indicatorsContainer2) {
+                indicatorsContainer2.style.display = 'none';
             }
         }
         
@@ -246,6 +251,11 @@ class CarouselController {
         // Update Layer 2 image
         this.layer2Image.src = currentImage.src;
         this.layer2Image.alt = currentImage.alt;
+        
+        // Update Layer 2 indicators
+        this.layer2Indicators.forEach((indicator, index) => {
+            indicator.classList.toggle('active', index === this.state.currentSlide);
+        });
         
         // Update Layer 3 image
         this.layer3Image.src = currentImage.src;
