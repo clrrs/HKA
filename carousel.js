@@ -139,7 +139,8 @@ class CarouselController {
                 this.carousel.focus();
                 break;
             case '2':
-                this.layer2Buttons[0].focus();
+                const nextBtn = this.layer2Menu.querySelector('[data-action="next"]');
+                (nextBtn || this.layer2Buttons[0]).focus();
                 break;
             case '3':
                 this.layer3Buttons[0].focus();
