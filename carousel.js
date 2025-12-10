@@ -18,7 +18,7 @@ class CarouselController {
             zoomLevel: 0,           // -300 to +300 (0 = fit to screen)
             panPosition: { x: 0, y: 0 }, // percentage offset
             autoPlayTimer: null,
-            autoPlayInterval: 5000,  // 5 seconds
+            autoPlayInterval: 3000,  // 3 seconds
             isAutoPlaying: false,
             holdTimer: null,
             holdInterval: null
