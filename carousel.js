@@ -158,11 +158,7 @@ class CarouselController {
                 this.stopAutoPlay();
                 this.prompt.classList.remove('hidden');
                 this.carousel.setAttribute('data-autoplay', 'false');
-                if (this.images.length === 1) {
-                    this.announce(`Image viewer. Press Enter to explore.`);
-                } else {
-                    this.announce(`Image carousel. ${this.images.length} images. Press Enter to explore.`);
-                }
+                this.announce(`2 Images. Press Enter to explore.`);
             }
         });
         
