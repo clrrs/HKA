@@ -1,0 +1,521 @@
+/* ============================================
+   HKA Kiosk - Global Styles
+   ============================================ */
+
+:root {
+  --brightness: 1;
+  --bg-dark: #1f1f1f;
+  --bg-container: #2a2a2a;
+  --text-primary: #ffffff;
+  --accent: #ffd400;
+  --btn-bg: #e7e7e7;
+  --btn-text: #000000;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: Arial, sans-serif;
+  filter: brightness(var(--brightness));
+  transition: filter 0.2s ease;
+}
+
+/* ============================================
+   Text Sizes
+   ============================================ */
+
+.text-small { font-size: 14px; }
+.text-medium { font-size: 18px; }
+.text-large { font-size: 22px; }
+
+/* ============================================
+   Theme Variants
+   ============================================ */
+
+.theme-dark {
+  --bg-dark: #1f1f1f;
+  --bg-container: #2a2a2a;
+  --text-primary: #ffffff;
+}
+
+.theme-light {
+  --bg-dark: #f0f0f0;
+  --bg-container: #ffffff;
+  --text-primary: #1a1a1a;
+}
+
+.theme-light .container {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   Layout
+   ============================================ */
+
+.app {
+  width: 100%;
+  height: 100%;
+}
+
+.scene-container {
+  width: 100%;
+  height: 100%;
+}
+
+.scene {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.scene-hidden {
+  display: none;
+}
+
+.scene-active {
+  display: block;
+}
+
+.container {
+  width: 60%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background-color: var(--bg-container);
+  min-height: 100vh;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+
+h1, h2, h3 {
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+h4, h5, h6 {
+  margin-bottom: 8px;
+}
+
+p {
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.quote {
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+/* ============================================
+   Links and Menu Items
+   ============================================ */
+
+.menu-list {
+  margin: 20px 0;
+}
+
+.menu-link {
+  display: block;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: bold;
+  font-size: inherit;
+  text-align: left;
+  padding: 8px 0;
+  cursor: pointer;
+  text-decoration: none;
+  width: 100%;
+}
+
+.menu-link:hover,
+.menu-link:focus {
+  text-decoration: underline;
+  outline: 2px solid #005A9C;
+  outline-offset: 2px;
+}
+
+.menu-link:disabled {
+  color: #666;
+  cursor: not-allowed;
+}
+
+.menu-link:disabled:hover {
+  text-decoration: none;
+}
+
+.artifact-list {
+  list-style: none;
+  margin: 20px 0;
+}
+
+.artifact-list li {
+  margin-bottom: 4px;
+}
+
+/* ============================================
+   Navigation Buttons
+   ============================================ */
+
+nav {
+  margin-top: 40px;
+}
+
+.nav-btn {
+  display: inline-block;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  font-weight: bold;
+  font-size: inherit;
+  cursor: pointer;
+  margin: 5px;
+  transition: border-color 0.2s;
+}
+
+.nav-btn:hover,
+.nav-btn:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.nav-btn.icon-btn {
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-btn.icon-btn img {
+  width: 24px;
+  height: 24px;
+}
+
+/* ============================================
+   Focus States
+   ============================================ */
+
+button:focus,
+[tabindex]:focus {
+  outline: 2px solid #005A9C;
+  outline-offset: 2px;
+}
+
+.nav-btn:focus,
+.carousel-btn:focus,
+.zoom-btn:focus,
+.setting-btn:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ============================================
+   Carousel
+   ============================================ */
+
+.carousel {
+  position: relative;
+  margin: 20px 0;
+  background: #111;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.carousel-surface {
+  cursor: pointer;
+}
+
+.carousel-viewport {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.carousel-viewport img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #666;
+  transition: background-color 0.2s;
+}
+
+.indicator.active {
+  background-color: var(--accent);
+}
+
+.carousel-prompt {
+  text-align: center;
+  padding: 10px;
+  color: #999;
+  font-size: 14px;
+}
+
+/* Carousel Expanded Mode */
+.carousel-expanded {
+  padding: 20px;
+}
+
+.carousel-image-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 350px;
+}
+
+.carousel-image-display img {
+  max-width: 100%;
+  max-height: 350px;
+  object-fit: contain;
+}
+
+.carousel-menu {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  flex-wrap: wrap;
+}
+
+.carousel-btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 80px;
+}
+
+.carousel-btn:hover,
+.carousel-btn:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.carousel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   Zoom Mode
+   ============================================ */
+
+.carousel-zoom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 1000;
+}
+
+.zoom-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.zoom-viewport {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.zoomable-image {
+  max-width: 90%;
+  max-height: 80vh;
+  object-fit: contain;
+  transition: transform 0.1s ease-out;
+}
+
+.zoom-controls-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  flex-wrap: wrap;
+}
+
+.zoom-btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 12px 16px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 50px;
+  min-height: 44px;
+}
+
+.zoom-btn:hover,
+.zoom-btn:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.zoom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zoom-btn-group,
+.pan-btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pan-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ============================================
+   Video Player
+   ============================================ */
+
+.video-container {
+  margin: 20px 0;
+}
+
+.video-container video {
+  width: 100%;
+  max-height: 400px;
+  background: #000;
+}
+
+.video-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+}
+
+.video-controls button {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  font-weight: bold;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.video-controls button:hover,
+.video-controls button:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ============================================
+   Accessibility Menu
+   ============================================ */
+
+.accessibility-menu {
+  margin: 30px 0;
+}
+
+.setting-group {
+  margin-bottom: 30px;
+}
+
+.setting-group h3 {
+  margin-bottom: 15px;
+}
+
+.setting-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.setting-btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  font-weight: bold;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.setting-btn:hover,
+.setting-btn:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.setting-btn.active {
+  background-color: var(--accent);
+  color: #000;
+}
+
+/* ============================================
+   Screen Reader Only
+   ============================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================
+   Hidden Utility
+   ============================================ */
+
+.hidden {
+  display: none !important;
+}
+

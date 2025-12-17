@@ -738,3 +738,4 @@ class CarouselController {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CarouselController;
 }
+
