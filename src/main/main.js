@@ -7,7 +7,7 @@ function createWindow() {
     height: 1080,
     // kiosk: true, // DISABLED FOR DEVELOPMENT - enable for production
     kiosk: false,
-    fullscreen: false, // Set to true for production
+    fullscreen: true, // Set to true for production
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
