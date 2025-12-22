@@ -45,18 +45,20 @@ export default function ArtifactScene() {
       <nav>
         {prevArtifact && (
           <button 
-            className="nav-btn"
+            className="nav-btn nav-btn-icon"
             onClick={() => goToScene("artifact", { artifactId: prevArtifact.id })}
+            aria-label="Back"
           >
-            Back
+            <img src="/Back.svg" alt="" aria-hidden="true" />
           </button>
         )}
         {nextArtifact && (
           <button 
-            className="nav-btn"
+            className="nav-btn nav-btn-icon"
             onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
+            aria-label="Next"
           >
-            Next
+            <img src="/Forward.svg" alt="" aria-hidden="true" />
           </button>
         )}
         <br />

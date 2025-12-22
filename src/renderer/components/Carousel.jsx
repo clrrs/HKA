@@ -155,9 +155,9 @@ export default function Carousel({ images = [] }) {
               type="button" 
               onClick={exitExpanded}
               aria-label="Exit Image Carousel"
-              className="carousel-btn"
+              className="carousel-btn carousel-btn-icon"
             >
-              Exit
+              <img src="/Exit.svg" alt="" aria-hidden="true" />
             </button>
             {images.length > 1 && (
               <>
@@ -165,17 +165,17 @@ export default function Carousel({ images = [] }) {
                   type="button" 
                   onClick={prevSlide}
                   aria-label="Previous"
-                  className="carousel-btn"
+                  className="carousel-btn carousel-btn-icon"
                 >
-                  ◀ Prev
+                  <img src="/Back.svg" alt="" aria-hidden="true" />
                 </button>
                 <button 
                   type="button" 
                   onClick={nextSlide}
                   aria-label={`Image ${currentIndex + 1} of ${images.length}. ${currentImage.alt}. Next`}
-                  className="carousel-btn"
+                  className="carousel-btn carousel-btn-icon"
                 >
-                  Next ▶
+                  <img src="/Forward.svg" alt="" aria-hidden="true" />
                 </button>
               </>
             )}
@@ -183,9 +183,9 @@ export default function Carousel({ images = [] }) {
               type="button" 
               onClick={enterZoom}
               aria-label="Zoom"
-              className="carousel-btn"
+              className="carousel-btn carousel-btn-icon"
             >
-              🔍 Zoom
+              <img src="/Zoom.svg" alt="" aria-hidden="true" />
             </button>
           </div>
         </div>

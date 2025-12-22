@@ -24,11 +24,11 @@ export default function HomeScene() {
       
       <nav>
         <button 
-          className="nav-btn icon-btn"
+          className="nav-btn nav-btn-icon"
           onClick={() => goToScene("accessibility")}
           aria-label="Accessibility Settings"
         >
-          <img src="settingsCog.svg" alt="" aria-hidden="true" />
+          <img src="/settingsCog.svg" alt="" aria-hidden="true" />
         </button>
       </nav>
     </div>
