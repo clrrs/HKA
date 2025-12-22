@@ -237,6 +237,15 @@ button:focus,
 
 .carousel-surface {
   cursor: pointer;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.carousel-surface:hover,
+.carousel-surface:focus {
+  border-color: var(--accent);
+  outline: none;
 }
 
 .carousel-viewport {
@@ -279,9 +288,37 @@ button:focus,
   font-size: 14px;
 }
 
-/* Carousel Expanded Mode */
+/* Carousel Expanded Mode - Floating popup with backdrop */
 .carousel-expanded {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 900;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.carousel-expanded::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: -1;
+}
+
+.carousel-expanded-content {
+  background: var(--bg-container);
+  border-radius: 12px;
   padding: 20px;
+  width: 50%;
+  max-height: 85vh;
+  overflow: auto;
 }
 
 .carousel-image-display {
