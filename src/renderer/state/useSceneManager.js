@@ -57,18 +57,11 @@ export function useKeyboardNav() {
       // Back (K) - simulate Shift+Tab
       if (key === "k") {
         e.preventDefault();
-        const focusEvent = new KeyboardEvent("keydown", {
-          key: "Tab",
-          shiftKey: true,
-          bubbles: true,
-        });
-        document.activeElement.dispatchEvent(focusEvent);
-        // Fallback: manually move focus
         const focusables = Array.from(
           document.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-        );
+        ).filter(el => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
         if (idx > 0) focusables[idx - 1].focus();
         else if (focusables.length) focusables[focusables.length - 1].focus();
@@ -87,9 +80,9 @@ export function useKeyboardNav() {
         e.preventDefault();
         const focusables = Array.from(
           document.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-        );
+        ).filter(el => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
         if (idx < focusables.length - 1) focusables[idx + 1].focus();
         else if (focusables.length) focusables[0].focus();
