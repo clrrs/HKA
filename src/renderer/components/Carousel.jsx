@@ -44,6 +44,7 @@ export default function Carousel({ images = [] }) {
   const { subscene, setSubscene } = useAppState();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isHovering, setIsHovering] = useState(false);
   const autoPlayRef = useRef(null);
   const carouselRef = useRef(null);
   const announcerRef = useRef(null);
@@ -161,16 +162,16 @@ export default function Carousel({ images = [] }) {
       {/* Layer 1: Surface View (auto-carousel) */}
       {!subscene && (
         <div 
-          className="carousel-layer carousel-surface"
+          className={`carousel-layer carousel-surface ${isHovering ? 'carousel-hovering' : ''}`}
           tabIndex={0}
           role="button"
           aria-label={`Image carousel, ${images.length} images, press Enter to explore`}
           onKeyDown={handleKeyDown}
           onClick={enterExpanded}
-          onFocus={stopAutoPlay}
-          onBlur={startAutoPlay}
-          onMouseEnter={stopAutoPlay}
-          onMouseLeave={startAutoPlay}
+          onFocus={() => { stopAutoPlay(); setIsHovering(true); }}
+          onBlur={() => { startAutoPlay(); setIsHovering(false); }}
+          onMouseEnter={() => { stopAutoPlay(); setIsHovering(true); }}
+          onMouseLeave={() => { startAutoPlay(); setIsHovering(false); }}
         >
           <div className="carousel-viewport">
             <img 
@@ -188,9 +189,11 @@ export default function Carousel({ images = [] }) {
               ))}
             </div>
           )}
-          <div className="carousel-prompt" aria-hidden="true">
-            <span>Press Enter to Explore</span>
-          </div>
+          {isHovering && (
+            <div className="carousel-prompt" aria-hidden="true">
+              <span>Press Enter to Explore</span>
+            </div>
+          )}
         </div>
       )}
 
