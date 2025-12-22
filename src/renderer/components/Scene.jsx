@@ -7,7 +7,8 @@ export default function Scene({ id, children, isActive }) {
   return (
     <section 
       data-scene={id} 
-      aria-hidden={!isActive} 
+      aria-hidden={!isActive}
+      inert={!isActive ? "" : undefined}
       className={isActive ? "scene scene-active" : "scene scene-hidden"}
     >
       {children}

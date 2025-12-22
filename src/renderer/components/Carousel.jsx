@@ -163,9 +163,10 @@ export default function Carousel({ images = [] }) {
         <div 
           className="carousel-layer carousel-surface"
           tabIndex={0}
-          role="img"
+          role="button"
           aria-label={`Image carousel, ${images.length} images, press Enter to explore`}
           onKeyDown={handleKeyDown}
+          onClick={enterExpanded}
           onFocus={stopAutoPlay}
           onBlur={startAutoPlay}
           onMouseEnter={stopAutoPlay}

@@ -5,7 +5,8 @@ import Carousel from "../Carousel";
 import VideoPlayer from "../VideoPlayer";
 
 export default function ArtifactScene() {
-  const { artifactId, goToScene } = useAppState();
+  const { artifactId, goToScene, subscene } = useAppState();
+  const isCarouselModal = subscene === "expanded" || subscene === "zoom";
   
   const artifact = getArtifact(artifactId);
   const prevArtifact = getPrevArtifact(artifactId);
@@ -27,11 +28,13 @@ export default function ArtifactScene() {
 
   return (
     <div className="container">
-      <h4>Travel and Adventure</h4>
-      <h2>Artifact {artifactNum}</h2>
-      <h1 tabIndex={0}>{artifact.title}</h1>
-      
-      <p tabIndex={0}>{artifact.description}</p>
+      <div inert={isCarouselModal ? "" : undefined}>
+        <h4>Travel and Adventure</h4>
+        <h2>Artifact {artifactNum}</h2>
+        <h1 tabIndex={0}>{artifact.title}</h1>
+        
+        <p tabIndex={0}>{artifact.description}</p>
+      </div>
       
       {artifact.type === "video" ? (
         <VideoPlayer 
@@ -42,12 +45,12 @@ export default function ArtifactScene() {
         <Carousel images={artifact.images} />
       )}
       
-      <nav>
+      <nav inert={isCarouselModal ? "" : undefined}>
         {prevArtifact && (
           <button 
             className="nav-btn nav-btn-icon"
             onClick={() => goToScene("artifact", { artifactId: prevArtifact.id })}
-            aria-label="Back"
+            aria-label="Previous Artifact"
           >
             <img src="/Back.svg" alt="" aria-hidden="true" />
           </button>
@@ -56,7 +59,7 @@ export default function ArtifactScene() {
           <button 
             className="nav-btn nav-btn-icon"
             onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
-            aria-label="Next"
+            aria-label="Next Artifact"
           >
             <img src="/Forward.svg" alt="" aria-hidden="true" />
           </button>
