@@ -62,8 +62,17 @@ npm run build:win
 
 ### Auto-Update Pipeline (For Development)
 
-Pushing to `main` triggers a GitHub Actions workflow that builds the Windows exe and publishes it as a GitHub Release. The app uses `electron-updater` to check for new releases on launch.
+Pushing a version tag (e.g. `v1.0.3`) triggers a GitHub Actions workflow that builds the Windows exe and publishes it as a GitHub Release. The app uses `electron-updater` to check for new releases on launch. Pushes to `main` without a tag do **not** trigger a build.
 
 **Required repo secret:** A `GH_TOKEN` secret with `repo` scope must be set in Settings > Secrets and variables > Actions.
 
-**To release a new version:** bump `"version"` in `package.json` and push to `main`.
+**To release a new version:**
+
+1. Bump `"version"` in `package.json` (e.g. `1.0.3`)
+2. Commit and push to `main`
+3. Tag the commit and push the tag:
+   ```bash
+   git tag v1.0.3
+   git push origin v1.0.3
+   ```
+This keeps day-to-day pushes lightweight and only generates installers when you're ready for a release.
