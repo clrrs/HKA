@@ -50,7 +50,7 @@ export function useKeyboardNav() {
       // Home (S)
       if (key === "s") {
         e.preventDefault();
-        goToScene("home");
+        goToScene("start");
         return;
       }
 

@@ -5,12 +5,17 @@ import HomeScene from "./scenes/HomeScene";
 import TravelScene from "./scenes/TravelScene";
 import ArtifactScene from "./scenes/ArtifactScene";
 import AccessibilityScene from "./scenes/AccessibilityScene";
+import StartScene from "./scenes/StartScene";
 
 export default function SceneContainer() {
   const { scene } = useAppState();
 
   return (
     <main className="scene-container">
+      <Scene id="start" isActive={scene === "start"}>
+        <StartScene />
+      </Scene>
+      
       <Scene id="home" isActive={scene === "home"}>
         <HomeScene />
       </Scene>

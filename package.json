@@ -44,7 +44,8 @@
     "publish": {
       "provider": "github",
       "owner": "clrrs",
-      "repo": "HKA"
+      "repo": "HKA",
+      "releaseType": "release"
     },
     "directories": {
       "output": "release"

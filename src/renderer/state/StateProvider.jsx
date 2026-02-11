@@ -7,7 +7,7 @@ export function useAppState() {
 }
 
 export default function StateProvider({ children }) {
-  const [scene, setScene] = useState("home");
+  const [scene, setScene] = useState("start");
   const [subscene, setSubscene] = useState(null);
   const [artifactId, setArtifactId] = useState(null);
   
@@ -40,7 +40,7 @@ export default function StateProvider({ children }) {
     }
   };
 
-  const [previousScene, setPreviousScene] = useState("home");
+  const [previousScene, setPreviousScene] = useState("start");
 
   const goBack = () => {
     // Simple back navigation logic
@@ -52,6 +52,8 @@ export default function StateProvider({ children }) {
       setScene("travel");
     } else if (scene === "travel") {
       setScene("home");
+    } else if (scene === "home") {
+      setScene("start");
     } else if (scene === "accessibility") {
       setScene(previousScene);
     }
