@@ -7,7 +7,7 @@ export default function TravelScene() {
 
   return (
     <div className="container">
-      <h1 tabIndex={0}>Travel and Adventure</h1>
+      <h1 tabIndex={0}>Adventure</h1>
       <h4 className="quote" tabIndex={0}>
         "Life is either a daring adventure or nothing."
       </h4>

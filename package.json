@@ -9,9 +9,12 @@
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "build:win": "vite build && electron-builder --win",
+    "publish": "vite build && electron-builder --win --publish always"
   },
   "dependencies": {
+    "electron-updater": "^6.7.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -22,6 +25,20 @@
     "electron-builder": "^24.9.1",
     "vite": "^5.0.10",
     "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.hka.kiosk",
+    "productName": "HKA Kiosk",
+    "win": {
+      "target": "nsis"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "clrrs",
+      "repo": "HKA"
+    },
+    "directories": {
+      "output": "release"
+    }
   }
 }
-

@@ -25,10 +25,8 @@ export default function StateProvider({ children }) {
 
   useEffect(() => {
     localStorage.setItem("prefs", JSON.stringify(prefs));
-    document.documentElement.classList.remove("text-small", "text-medium", "text-large");
-    document.documentElement.classList.add(`text-${prefs.textSize}`);
-    document.documentElement.classList.toggle("theme-dark", prefs.theme === "dark");
-    document.documentElement.classList.toggle("theme-light", prefs.theme === "light");
+    document.documentElement.dataset.theme = prefs.theme;
+    document.documentElement.dataset.textSize = prefs.textSize;
     document.documentElement.style.setProperty("--brightness", prefs.brightness);
   }, [prefs]);
 

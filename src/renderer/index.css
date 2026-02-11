@@ -2,15 +2,117 @@
    HKA Kiosk - Global Styles
    ============================================ */
 
-:root {
-  --brightness: 1;
-  --bg-dark: #1f1f1f;
-  --bg-container: #2a2a2a;
-  --text-primary: #ffffff;
-  --accent: #ffd400;
-  --btn-bg: #e7e7e7;
-  --btn-text: #000000;
+/* ============================================
+   Custom Font - APHb2
+   ============================================ */
+
+@font-face {
+  font-family: 'APHb2';
+  src: url('/fonts/APHb2-Thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
 }
+
+@font-face {
+  font-family: 'APHb2';
+  src: url('/fonts/APHb2-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'APHb2';
+  src: url('/fonts/APHb2-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'APHb2';
+  src: url('/fonts/APHb2-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'APHb2';
+  src: url('/fonts/APHb2-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+:root {
+  /* Static palette */
+  --color-black: #000000;
+  --color-gray: #333333;
+  --color-gold: #FBD400;
+  --color-white: #ffffff;
+
+  /* Accessibility */
+  --brightness: 1;
+  --text-scale: 1;
+
+  /* Typography scale (base sizes at 1080p) */
+  --font-size-h1: 96px;
+  --font-size-h2: 64px;
+  --font-size-h3: 52px;
+  --font-size-h4: 44px;
+  --font-size-body: 28px;
+}
+
+/* ============================================
+   Theme: Dark (default, matches kiosk design)
+   ============================================ */
+
+[data-theme="dark"] {
+  --bg-primary: var(--color-black);
+  --bg-secondary: var(--color-gray);
+  --text-primary: var(--color-white);
+  --text-heading: var(--color-gold);
+  --accent: var(--color-gold);
+  /* Buttons: neutral (black fill, white stroke, white icon) */
+  --btn-bg: var(--color-black);
+  --btn-text: var(--color-white);
+  --btn-border: var(--color-white);
+  /* Buttons: focus (inverted) */
+  --btn-focus-bg: var(--color-white);
+  --btn-focus-text: var(--color-black);
+  --btn-focus-border: var(--color-black);
+  /* Icons: black SVGs inverted to white; on focus back to black */
+  --icon-filter: invert(1);
+  --icon-focus-filter: none;
+}
+
+/* ============================================
+   Theme: Light
+   ============================================ */
+
+[data-theme="light"] {
+  --bg-primary: var(--color-white);
+  --bg-secondary: #f5f5f5;
+  --text-primary: var(--color-black);
+  --text-heading: var(--color-black);
+  --accent: var(--color-gold);
+  /* Buttons: neutral (white fill, black stroke, black icon) */
+  --btn-bg: var(--color-white);
+  --btn-text: var(--color-black);
+  --btn-border: var(--color-black);
+  /* Buttons: focus (inverted) */
+  --btn-focus-bg: var(--color-black);
+  --btn-focus-text: var(--color-white);
+  --btn-focus-border: var(--color-white);
+  /* Icons: black SVGs stay black; on focus invert to white */
+  --icon-filter: none;
+  --icon-focus-filter: invert(1);
+}
+
+/* ============================================
+   Text Size Accessibility
+   ============================================ */
+
+[data-text-size="small"]  { --text-scale: 0.8; }
+[data-text-size="medium"] { --text-scale: 1; }
+[data-text-size="large"]  { --text-scale: 1.25; }
 
 * {
   box-sizing: border-box;
@@ -24,38 +126,14 @@ html, body, #root {
 }
 
 body {
-  background-color: var(--bg-dark);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: Arial, sans-serif;
+  font-family: 'APHb2', Arial, sans-serif;
   filter: brightness(var(--brightness));
   transition: filter 0.2s ease;
 }
 
-/* ============================================
-   Text Sizes
-   ============================================ */
-
-.text-small { font-size: 14px; }
-.text-medium { font-size: 18px; }
-.text-large { font-size: 22px; }
-
-/* ============================================
-   Theme Variants
-   ============================================ */
-
-.theme-dark {
-  --bg-dark: #1f1f1f;
-  --bg-container: #2a2a2a;
-  --text-primary: #ffffff;
-}
-
-.theme-light {
-  --bg-dark: #f0f0f0;
-  --bg-container: #ffffff;
-  --text-primary: #1a1a1a;
-}
-
-.theme-light .container {
+[data-theme="light"] .container {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -91,7 +169,7 @@ body {
   max-width: 800px;
   margin: 0 auto;
   padding: 40px 20px;
-  background-color: var(--bg-container);
+  background-color: var(--bg-secondary);
   min-height: 100vh;
 }
 
@@ -99,16 +177,43 @@ body {
    Typography
    ============================================ */
 
-h1, h2, h3 {
-  color: var(--accent);
+h1 {
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: calc(var(--font-size-h1) * var(--text-scale));
+  line-height: 1.1;
   margin-bottom: 10px;
 }
 
-h4, h5, h6 {
+h2 {
+  color: var(--text-heading);
+  font-weight: 400;
+  font-size: calc(var(--font-size-h2) * var(--text-scale));
+  line-height: 1.0;
+  margin-bottom: 10px;
+}
+
+h3 {
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: calc(var(--font-size-h3) * var(--text-scale));
+  line-height: 1.08;
+  margin-bottom: 10px;
+}
+
+h4 {
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: calc(var(--font-size-h4) * var(--text-scale));
+  margin-bottom: 8px;
+}
+
+h5, h6 {
   margin-bottom: 8px;
 }
 
 p {
+  font-size: calc(var(--font-size-body) * var(--text-scale));
   line-height: 1.6;
   margin-bottom: 16px;
 }
@@ -140,11 +245,10 @@ p {
   width: 100%;
 }
 
-.menu-link:hover,
-.menu-link:focus {
+.menu-link:focus-visible {
   text-decoration: underline;
-  outline: 2px solid #005A9C;
-  outline-offset: 2px;
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .menu-link:disabled {
@@ -152,7 +256,7 @@ p {
   cursor: not-allowed;
 }
 
-.menu-link:disabled:hover {
+.menu-link:disabled:focus-visible {
   text-decoration: none;
 }
 
@@ -171,56 +275,79 @@ p {
 
 nav {
   margin-top: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
+/* --- Pill text button (neutral) --- */
 .nav-btn {
-  display: inline-block;
-  background-color: var(--btn-bg);
-  color: var(--btn-text);
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 3px solid transparent;
-  font-weight: bold;
-  font-size: inherit;
-  cursor: pointer;
-  margin: 5px;
-  transition: border-color 0.2s;
-}
-
-.nav-btn:hover,
-.nav-btn:focus {
-  border-color: var(--accent);
-  outline: none;
-}
-
-.nav-btn-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 12px 32px;
+  border-radius: 999px;
+  border: 2px solid var(--btn-border);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
+  cursor: pointer;
+  margin: 0;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.nav-btn-icon img {
-  width: 20px;
-  height: 20px;
+/* --- Pill text button (focus / selected) --- */
+.nav-btn:focus-visible {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
+  outline: none;
+}
+
+.nav-btn.active {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
+}
+
+/* --- Circular icon button --- */
+.nav-btn.icon-btn {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* Icon colors: SVGs are black, invert to white in neutral; revert on focus */
+.nav-btn.icon-btn img {
+  width: 28px;
+  height: 28px;
+  filter: var(--icon-filter);
+  transition: filter 0.2s;
+}
+
+.nav-btn.icon-btn:focus-visible img {
+  filter: var(--icon-focus-filter);
 }
 
 /* ============================================
-   Focus States
+   Focus States (global)
    ============================================ */
 
-button:focus,
-[tabindex]:focus {
-  outline: 2px solid #005A9C;
-  outline-offset: 2px;
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 
-.nav-btn:focus,
-.carousel-btn:focus,
-.zoom-btn:focus,
-.setting-btn:focus {
+.nav-btn:focus-visible,
+.carousel-btn:focus-visible,
+.zoom-btn:focus-visible,
+.setting-btn:focus-visible {
   outline: none;
-  border-color: var(--accent);
 }
 
 /* ============================================
@@ -271,15 +398,17 @@ button:focus,
 }
 
 .indicator {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background-color: #666;
-  transition: background-color 0.2s;
+  background-color: transparent;
+  border: 2px solid var(--text-primary);
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .indicator.active {
-  background-color: var(--accent);
+  background-color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 .carousel-prompt {
@@ -355,19 +484,21 @@ button:focus,
 .carousel-btn {
   background-color: var(--btn-bg);
   color: var(--btn-text);
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: 3px solid transparent;
-  font-weight: bold;
-  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 2px solid var(--btn-border);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   min-width: 80px;
 }
 
-.carousel-btn:hover,
-.carousel-btn:focus {
-  border-color: var(--accent);
+.carousel-btn:focus-visible {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
   outline: none;
 }
 
@@ -437,20 +568,22 @@ button:focus,
 .zoom-btn {
   background-color: var(--btn-bg);
   color: var(--btn-text);
-  padding: 12px 16px;
-  border-radius: 20px;
-  border: 3px solid transparent;
-  font-weight: bold;
-  font-size: 18px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 2px solid var(--btn-border);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   min-width: 50px;
   min-height: 44px;
 }
 
-.zoom-btn:hover,
-.zoom-btn:focus {
-  border-color: var(--accent);
+.zoom-btn:focus-visible {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
   outline: none;
 }
 
@@ -496,17 +629,20 @@ button:focus,
 .video-controls button {
   background-color: var(--btn-bg);
   color: var(--btn-text);
-  padding: 10px 20px;
-  border-radius: 20px;
-  border: 3px solid transparent;
-  font-weight: bold;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 2px solid var(--btn-border);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.video-controls button:hover,
-.video-controls button:focus {
-  border-color: var(--accent);
+.video-controls button:focus-visible {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
   outline: none;
 }
 
@@ -535,23 +671,184 @@ button:focus,
 .setting-btn {
   background-color: var(--btn-bg);
   color: var(--btn-text);
-  padding: 10px 20px;
-  border-radius: 20px;
-  border: 3px solid transparent;
-  font-weight: bold;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 2px solid var(--btn-border);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
   cursor: pointer;
-  transition: border-color 0.2s, background-color 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.setting-btn:hover,
-.setting-btn:focus {
-  border-color: var(--accent);
+.setting-btn:focus-visible {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
   outline: none;
 }
 
 .setting-btn.active {
   background-color: var(--accent);
-  color: #000;
+  color: var(--color-black);
+}
+
+/* ============================================
+   Home Scene
+   ============================================ */
+
+.home-scene {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dark photo-collage background with overlay */
+.home-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-primary);
+  /* Swap in a real collage image later:
+     background: url('/home-bg.jpg') center/cover no-repeat;
+     Then uncomment the overlay below: */
+  /* &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+  } */
+}
+
+/* Two-column content area */
+.home-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 60px 60px 120px;
+  gap: 40px;
+}
+
+.home-heading {
+  flex: 0 0 35%;
+  max-width: 420px;
+}
+
+.home-heading h1 {
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: calc(var(--font-size-h1) * var(--text-scale) * 0.75);
+  line-height: 1.05;
+}
+
+/* Carousel area */
+.home-carousel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.theme-circles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+/* Individual theme circle */
+.theme-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0.6;
+  transform: scale(0.8);
+}
+
+.theme-circle--active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.theme-circle--disabled {
+  cursor: default;
+}
+
+.theme-circle:focus-visible {
+  outline: none;
+}
+
+.theme-circle:focus-visible .theme-circle-inner {
+  box-shadow: 0 0 0 4px var(--accent);
+}
+
+/* Circle container */
+.theme-circle-inner {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 3px solid var(--text-primary);
+  background: var(--color-black);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s;
+}
+
+.theme-circle-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.theme-circle-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-secondary);
+}
+
+.theme-label {
+  color: var(--text-primary);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 700;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
+}
+
+/* Bottom navigation bar */
+.home-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 24px 60px;
+}
+
+.home-nav-left {
+  display: flex;
+  gap: 12px;
+}
+
+.home-nav-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
 /* ============================================

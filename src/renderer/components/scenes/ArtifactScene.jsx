@@ -19,7 +19,7 @@ export default function ArtifactScene() {
         <h1>Artifact not found</h1>
         <nav>
           <button className="nav-btn" onClick={() => goToScene("travel")}>
-            Back to Travel Menu
+            Back to Adventure Menu
           </button>
         </nav>
       </div>
@@ -29,7 +29,7 @@ export default function ArtifactScene() {
   return (
     <div className="container">
       <div inert={isCarouselModal ? "" : undefined}>
-        <h4>Travel and Adventure</h4>
+        <h4>Adventure</h4>
         <h2>Artifact {artifactNum}</h2>
         <h1 tabIndex={0}>{artifact.title}</h1>
         
@@ -69,7 +69,7 @@ export default function ArtifactScene() {
           className="nav-btn"
           onClick={() => goToScene("travel")}
         >
-          Travel and Adventure Menu
+          Adventure Menu
         </button>
         <br />
         <button 

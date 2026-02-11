@@ -1,4 +1,4 @@
-// Artifact data for the Travel and Adventure theme
+// Artifact data for the Adventure theme
 export const artifacts = [
   {
     id: "3A1",
