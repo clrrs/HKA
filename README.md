@@ -1,53 +1,69 @@
 # HKA
 
-Helen Keller Archive -- Electron + React app.
+Helen Keller Archive -- Electron + React kiosk app.
 
-## Prerequisites
+> **Note:** This is a demo/prototyping version. Installation and update processes described here are for testing purposes and will change for the final release.
 
-- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+## For Solid Light/WET: Installing the Windows App
+
+1. Go to the [Releases page](https://github.com/clrrs/HKA/releases/latest)
+2. Download the `.exe` file (e.g. `HKA-Kiosk-Setup-1.0.0.exe`)
+3. Run the installer. It will install and launch the app
+4. The app checks for updates on every launch. When a new version is available, it downloads silently and installs the next time the app is restarted.
+
+No other setup required. Just run the installer once and restart the app to get future updates.
+
+---
+
+## To Note
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or higher)
 - npm (included with Node.js)
 
-## Installation
+### Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/HKA.git
+git clone https://github.com/clrrs/HKA.git
 cd HKA
-
-# Install dependencies
 npm install
 ```
 
-## Development
+### Development
 
 ```bash
-# Run Vite dev server only (browser)
+# Vite dev server only (browser)
 npm run dev
 
-# Run full Electron app in development mode
+# Full Electron app with hot reload
 npm run electron:dev
 ```
 
-## Production
+### Building
 
 ```bash
-# Build the app
+# Build for production
 npm run build
 
-# Run the built Electron app
-npm start
-
-# Package for distribution
-npm run dist
+# Package Windows exe locally
+npm run build:win
 ```
 
-## Scripts
+### Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start Vite dev server |
 | `npm run electron:dev` | Start Electron with hot reload |
-| `npm start` | Run Electron app |
 | `npm run build` | Build for production |
-| `npm run pack` | Package app (unpacked) |
-| `npm run dist` | Package app for distribution |
+| `npm run build:win` | Build Windows installer |
+| `npm run publish` | Build + publish to GitHub Releases |
+
+### Auto-Update Pipeline (For Development)
+
+Pushing to `main` triggers a GitHub Actions workflow that builds the Windows exe and publishes it as a GitHub Release. The app uses `electron-updater` to check for new releases on launch.
+
+**Required repo secret:** A `GH_TOKEN` secret with `repo` scope must be set in Settings > Secrets and variables > Actions.
+
+**To release a new version:** bump `"version"` in `package.json` and push to `main`.

@@ -41,10 +41,11 @@ app.whenReady().then(() => {
 
   // Auto-update from GitHub Releases (only works in packaged app)
   if (app.isPackaged) {
-    autoUpdater.checkForUpdates();
+    // Download updates silently, install on next app launch
+    autoUpdater.autoInstallOnAppQuit = true;
 
     autoUpdater.on('update-available', () => {
-      console.log('Update available, downloading...');
+      console.log('Update available, downloading in background...');
     });
 
     autoUpdater.on('update-not-available', () => {
@@ -52,13 +53,14 @@ app.whenReady().then(() => {
     });
 
     autoUpdater.on('update-downloaded', () => {
-      console.log('Update downloaded, installing...');
-      autoUpdater.quitAndInstall();
+      console.log('Update downloaded. Will install on next restart.');
     });
 
     autoUpdater.on('error', (err) => {
       console.error('Update error:', err);
     });
+
+    autoUpdater.checkForUpdates();
   }
 });
 

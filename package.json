@@ -29,8 +29,17 @@
   "build": {
     "appId": "com.hka.kiosk",
     "productName": "HKA Kiosk",
+    "files": [
+      "dist/renderer/**/*",
+      "src/main/**/*"
+    ],
     "win": {
       "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
     },
     "publish": {
       "provider": "github",
