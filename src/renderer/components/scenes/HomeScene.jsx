@@ -1,70 +1,139 @@
-import React from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useAppState } from "../../state/StateProvider";
 
 const themes = [
-  { id: "change",    label: "Change",    disabled: true,  scene: null,     image: null },
-  { id: "together",  label: "Together",  disabled: true,  scene: null,     image: null },
-  { id: "adventure", label: "Adventure", disabled: false, scene: "travel", image: "3A2Lunch1.jpeg" },
-  { id: "work",      label: "Work",      disabled: true,  scene: null,     image: null },
+  { id: "change",    label: "Change",    scene: null,     image: "/Change.png" },
+  { id: "together",  label: "Together",  scene: null,     image: "/Together.png" },
+  { id: "adventure", label: "Adventure", scene: "travel", image: "/Adventure.png" },
+  { id: "work",      label: "Work",      scene: null,     image: "/Work.png" },
 ];
+
+const ITEM_WIDTH = 600;
+const GAP = 77;
+const ITEM_STEP = ITEM_WIDTH + GAP;
+const SCREEN_CENTER = 960;
+const IDLE_OFFSET = 800;
+
+function getTrackTranslateX(focusedIndex) {
+  if (focusedIndex < 0) return IDLE_OFFSET;
+  const itemCenter = focusedIndex * ITEM_STEP + ITEM_WIDTH / 2;
+  return SCREEN_CENTER - itemCenter;
+}
 
 export default function HomeScene() {
   const { goToScene } = useAppState();
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const circleRefs = useRef([]);
+  const headingRef = useRef(null);
+  const focusedIndexRef = useRef(focusedIndex);
+  focusedIndexRef.current = focusedIndex;
+
+  const handleFocus = useCallback((index) => {
+    setFocusedIndex(index);
+  }, []);
+
+  const handleHeadingFocus = useCallback(() => {
+    setFocusedIndex(-1);
+  }, []);
+
+  const handleBlur = useCallback((e) => {
+    const scene = e.currentTarget.closest(".home-scene");
+    requestAnimationFrame(() => {
+      if (scene && !scene.contains(document.activeElement)) {
+        setFocusedIndex(-1);
+      }
+    });
+  }, []);
+
+  const handleSceneKeyDown = useCallback((e) => {
+    const isNext = (e.key === "Tab" && !e.shiftKey) || e.key === "l";
+    const isBack = (e.key === "Tab" && e.shiftKey) || e.key === "k";
+    const isSelect = e.key === "Enter" || e.key === "j";
+
+    const idx = focusedIndexRef.current;
+
+    if (isSelect && idx >= 0) {
+      const theme = themes[idx];
+      if (theme.scene) goToScene(theme.scene);
+      e.preventDefault();
+      return;
+    }
+
+    if (!isNext && !isBack) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isNext) {
+      if (idx < 0) {
+        circleRefs.current[0]?.focus();
+      } else if (idx < themes.length - 1) {
+        circleRefs.current[idx + 1]?.focus();
+      } else {
+        headingRef.current?.focus();
+      }
+    } else {
+      if (idx < 0) {
+        goToScene("start");
+      } else if (idx === 0) {
+        headingRef.current?.focus();
+      } else {
+        circleRefs.current[idx - 1]?.focus();
+      }
+    }
+  }, [goToScene]);
+
+  const hasFocus = focusedIndex >= 0;
 
   return (
-    <div className="home-scene">
-      {/* Background overlay */}
+    <div className="home-scene" onKeyDown={handleSceneKeyDown}>
       <div className="home-bg" aria-hidden="true" />
 
-      {/* Main content: heading + carousel */}
-      <div className="home-content">
-        <div className="home-heading">
-          <h1 tabIndex={-1}>
-            Choose a theme from Helen Keller's life journey
-          </h1>
-        </div>
+      <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          data-autofocus
+          onFocus={handleHeadingFocus}
+        >
+          Choose a theme from Helen&nbsp;Keller&#8217;s life journey
+        </h1>
+      </div>
 
-        <div className="home-carousel" role="region" aria-label="Theme selection">
-          <div className="theme-circles">
-            {themes.map((theme) => (
-              <button
-                key={theme.id}
-                className={`theme-circle ${theme.disabled ? "theme-circle--disabled" : ""}`}
-                onClick={() => {
-                  if (!theme.disabled && theme.scene) {
-                    goToScene(theme.scene);
-                  }
-                }}
-                aria-label={`${theme.label}${theme.disabled ? " (coming soon)" : ""}`}
-                tabIndex={0}
-              >
-                <span className="theme-circle-inner">
-                  {theme.image ? (
-                    <img src={theme.image} alt="" aria-hidden="true" />
-                  ) : (
-                    <span className="theme-circle-placeholder" aria-hidden="true" />
-                  )}
-                </span>
-                <span className="theme-label">{theme.label}</span>
-              </button>
-            ))}
-          </div>
+      <div className="home-carousel" role="region" aria-label="Theme selection">
+        <div
+          className="theme-circles"
+          style={{ transform: `translateX(${getTrackTranslateX(focusedIndex)}px)` }}
+        >
+          {themes.map((theme, i) => (
+            <button
+              key={theme.id}
+              ref={(el) => { circleRefs.current[i] = el; }}
+              className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""}`}
+              onFocus={() => handleFocus(i)}
+              onBlur={handleBlur}
+              onClick={() => { if (theme.scene) goToScene(theme.scene); }}
+              aria-label={`${theme.label}${theme.scene ? "" : " (coming soon)"}`}
+              tabIndex={0}
+            >
+              <span className="theme-circle-inner" aria-hidden="true" />
+              <img className="theme-circle-img" src={theme.image} alt="" aria-hidden="true" />
+              <span className="theme-label">{theme.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Bottom navigation bar */}
-      <div className="home-nav">
-        <div className="home-nav-left">
-          <button
-            className="nav-btn icon-btn"
-            onClick={() => goToScene("accessibility")}
-            aria-label="Settings"
-          >
-            <img src="settingsCog.svg" alt="" aria-hidden="true" />
-          </button>
+      {hasFocus && (
+        <div className="theme-indicators" aria-hidden="true">
+          {themes.map((theme, i) => (
+            <span
+              key={theme.id}
+              className={`theme-indicator ${focusedIndex === i ? "active" : ""}`}
+            />
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
-

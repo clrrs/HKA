@@ -44,7 +44,7 @@
 :root {
   /* Static palette */
   --color-black: #000000;
-  --color-gray: #333333;
+  --color-gray: #444041;
   --color-gold: #FBD400;
   --color-white: #ffffff;
 
@@ -65,7 +65,7 @@
    ============================================ */
 
 [data-theme="dark"] {
-  --bg-primary: var(--color-black);
+  --bg-primary: var(--color-gray);
   --bg-secondary: var(--color-gray);
   --text-primary: var(--color-white);
   --text-heading: var(--color-gold);
@@ -123,10 +123,11 @@
 html, body, #root {
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--color-black);
   color: var(--text-primary);
   font-family: 'APHb2', Arial, sans-serif;
   filter: brightness(var(--brightness));
@@ -138,22 +139,35 @@ body {
 }
 
 /* ============================================
-   Layout
+   Layout — fixed 1920x1080 design, scaled to fit
    ============================================ */
 
 .app {
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-scaler {
+  width: 1920px;
+  height: 1080px;
+  flex-shrink: 0;
+  transform-origin: center center;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  outline: 2px solid white;
 }
 
 .scene-container {
-  width: 100%;
-  height: 100%;
+  width: 1920px;
+  height: 1080px;
 }
 
 .scene {
-  width: 100%;
-  min-height: 100vh;
+  width: 1920px;
+  height: 1080px;
 }
 
 .scene-hidden {
@@ -170,7 +184,7 @@ body {
   margin: 0 auto;
   padding: 40px 20px;
   background-color: var(--bg-secondary);
-  min-height: 100vh;
+  min-height: 1080px;
 }
 
 /* ============================================
@@ -432,8 +446,8 @@ button:focus-visible,
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 1920px;
+  height: 1080px;
   z-index: 900;
   display: flex;
   justify-content: center;
@@ -456,7 +470,7 @@ button:focus-visible,
   border-radius: 12px;
   padding: 20px;
   width: 50%;
-  max-height: 85vh;
+  max-height: 918px;
   overflow: auto;
 }
 
@@ -527,8 +541,8 @@ button:focus-visible,
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 1920px;
+  height: 1080px;
   background: #000;
   z-index: 1000;
 }
@@ -550,7 +564,7 @@ button:focus-visible,
 
 .zoomable-image {
   max-width: 90%;
-  max-height: 80vh;
+  max-height: 864px;
   object-fit: contain;
   transition: transform 0.1s ease-out;
 }
@@ -700,7 +714,7 @@ button:focus-visible,
 .start-scene {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 1080px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -721,11 +735,6 @@ button:focus-visible,
   padding: 40px 60px;
 }
 
-.start-top-bar {
-  display: flex;
-  gap: 12px;
-}
-
 .start-center {
   flex: 1;
   display: flex;
@@ -740,161 +749,175 @@ button:focus-visible,
 }
 
 /* ============================================
+   Start Scene — Transition
+   ============================================ */
+
+[data-scene="start"].scene-active {
+  animation: slideInFromTop 0.4s ease;
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ============================================
    Home Scene
    ============================================ */
 
 .home-scene {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 1080px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
-/* Dark photo-collage background with overlay */
 .home-bg {
   position: absolute;
   inset: 0;
   background: var(--bg-primary);
-  /* Swap in a real collage image later:
-     background: url('/home-bg.jpg') center/cover no-repeat;
-     Then uncomment the overlay below: */
-  /* &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-  } */
 }
 
-/* Two-column content area */
-.home-content {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  padding: 60px 60px 120px;
-  gap: 40px;
-}
-
+/* --- Heading --- */
 .home-heading {
-  flex: 0 0 35%;
-  max-width: 420px;
+  position: absolute;
+  z-index: 1;
+  left: 101px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 620px;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.home-heading--hidden {
+  transform: translateY(-50%) translateX(-700px);
+  opacity: 0;
 }
 
 .home-heading h1 {
   color: var(--text-heading);
-  font-weight: 700;
-  font-size: calc(var(--font-size-h1) * var(--text-scale) * 0.75);
-  line-height: 1.05;
+  font-weight: 400;
+  font-size: 109px;
+  letter-spacing: -0.02em;
+  line-height: 116px;
+  white-space: pre-line;
 }
 
-/* Carousel area */
+.home-heading h1:focus,
+.home-heading h1:focus-visible {
+  outline: none;
+}
+
+/* --- Carousel --- */
 .home-carousel {
-  flex: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
 }
 
 .theme-circles {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 40px;
+  gap: 77px;
+  transition: transform 0.4s ease;
+  will-change: transform;
 }
 
-/* Individual theme circle */
+/* --- Theme circle button --- */
 .theme-circle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
+  position: relative;
+  width: 600px;
+  height: 600px;
+  flex-shrink: 0;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 0.6;
-  transform: scale(0.8);
-}
-
-.theme-circle--active {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.theme-circle--disabled {
-  cursor: default;
+  transition: transform 0.4s ease;
 }
 
 .theme-circle:focus-visible {
   outline: none;
 }
 
-.theme-circle:focus-visible .theme-circle-inner {
-  box-shadow: 0 0 0 4px var(--accent);
-}
-
-/* Circle container */
+/* Circular background shape — white border when neutral */
 .theme-circle-inner {
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  border: 3px solid var(--text-primary);
-  background: var(--color-black);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: box-shadow 0.2s;
-}
-
-.theme-circle-inner img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.theme-circle-placeholder {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: var(--bg-secondary);
-}
-
-.theme-label {
-  color: var(--text-primary);
-  font-family: 'APHb2', Arial, sans-serif;
-  font-weight: 700;
-  font-size: calc(var(--font-size-body) * var(--text-scale));
-}
-
-/* Bottom navigation bar */
-.home-nav {
   position: absolute;
-  bottom: 0;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-black);
+  border: 3px solid var(--text-primary);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+/* Theme image — overflows the circle */
+.theme-circle-img {
+  position: absolute;
+  width: 110%;
+  height: auto;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Label inside the circle */
+.theme-label {
+  position: absolute;
+  bottom: 70px;
   left: 0;
   right: 0;
+  text-align: center;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  padding: 24px 60px;
+  color: var(--text-primary);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 70px;
+  letter-spacing: -0.02em;
+  transition: color 0.4s ease;
 }
 
-.home-nav-left {
-  display: flex;
-  gap: 12px;
+/* --- Focused state --- */
+.theme-circle--focused {
+  transform: scale(1.1167);
+  z-index: 1;
 }
 
-.home-nav-center {
-  flex: 1;
+.theme-circle--focused .theme-circle-inner {
+  background-color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.theme-circle--focused .theme-label {
+  color: var(--color-black);
+}
+
+/* --- Dot indicators (fixed to screen bottom-center) --- */
+.theme-indicators {
+  position: absolute;
+  z-index: 3;
+  bottom: 105px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  gap: 14px;
+}
+
+.theme-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 2px solid var(--text-primary);
+  transition: background-color 0.3s ease;
+}
+
+.theme-indicator.active {
+  background-color: var(--text-primary);
 }
 
 /* ============================================

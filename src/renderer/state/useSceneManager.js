@@ -10,9 +10,10 @@ export function useSceneFocus(sceneId, isActive) {
     const sceneEl = document.querySelector(`[data-scene="${sceneId}"]`);
     if (!sceneEl) return;
     
-    const first = sceneEl.querySelector(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
+    const first = sceneEl.querySelector('[data-autofocus]') ||
+      sceneEl.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
     
     if (first) {
       // Small timeout to ensure visible

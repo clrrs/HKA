@@ -71,19 +71,6 @@ export default function ArtifactScene() {
         >
           Adventure Menu
         </button>
-        <br />
-        <button 
-          className="nav-btn"
-          onClick={() => goToScene("home")}
-        >
-          Home
-        </button>
-        <button 
-          className="nav-btn"
-          onClick={() => goToScene("accessibility")}
-        >
-          Accessibility Settings
-        </button>
       </nav>
     </div>
   );

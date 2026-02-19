@@ -32,13 +32,7 @@ export default function TravelScene() {
           className="nav-btn"
           onClick={() => goToScene("home")}
         >
-          Home
-        </button>
-        <button 
-          className="nav-btn"
-          onClick={() => goToScene("accessibility")}
-        >
-          Accessibility Settings
+          Back
         </button>
       </nav>
     </div>
