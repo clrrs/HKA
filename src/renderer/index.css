@@ -753,7 +753,7 @@ button:focus-visible,
    ============================================ */
 
 [data-scene="start"].scene-active {
-  animation: slideInFromTop 0.4s ease;
+  animation: slideInFromTop 0.5s ease-out;
 }
 
 @keyframes slideInFromTop {
@@ -786,7 +786,7 @@ button:focus-visible,
   top: 50%;
   transform: translateY(-50%);
   max-width: 620px;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  transition: transform 0.55s ease-in-out, opacity 0.45s ease-in-out;
 }
 
 .home-heading--hidden {
