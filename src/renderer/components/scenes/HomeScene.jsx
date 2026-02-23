@@ -25,8 +25,17 @@ export default function HomeScene() {
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const circleRefs = useRef([]);
   const headingRef = useRef(null);
+  const carouselRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
   focusedIndexRef.current = focusedIndex;
+
+  const showCarousel = useCallback(() => {
+    carouselRef.current?.removeAttribute("aria-hidden");
+  }, []);
+
+  const hideCarousel = useCallback(() => {
+    carouselRef.current?.setAttribute("aria-hidden", "true");
+  }, []);
 
   const handleFocus = useCallback((index) => {
     setFocusedIndex(index);
@@ -34,16 +43,18 @@ export default function HomeScene() {
 
   const handleHeadingFocus = useCallback(() => {
     setFocusedIndex(-1);
-  }, []);
+    hideCarousel();
+  }, [hideCarousel]);
 
   const handleBlur = useCallback((e) => {
     const scene = e.currentTarget.closest(".home-scene");
     requestAnimationFrame(() => {
       if (scene && !scene.contains(document.activeElement)) {
         setFocusedIndex(-1);
+        hideCarousel();
       }
     });
-  }, []);
+  }, [hideCarousel]);
 
   const handleSceneKeyDown = useCallback((e) => {
     const isNext = (e.key === "Tab" && !e.shiftKey) || e.key === "l";
@@ -66,6 +77,7 @@ export default function HomeScene() {
 
     if (isNext) {
       if (idx < 0) {
+        showCarousel();
         circleRefs.current[0]?.focus();
       } else if (idx < themes.length - 1) {
         circleRefs.current[idx + 1]?.focus();
@@ -81,12 +93,12 @@ export default function HomeScene() {
         circleRefs.current[idx - 1]?.focus();
       }
     }
-  }, [goToScene]);
+  }, [goToScene, showCarousel]);
 
   const hasFocus = focusedIndex >= 0;
 
   return (
-    <div className="home-scene" role="application" onKeyDown={handleSceneKeyDown}>
+    <div className="home-scene" onKeyDown={handleSceneKeyDown}>
       <div className="home-bg" aria-hidden="true" />
 
       <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
@@ -101,7 +113,7 @@ export default function HomeScene() {
         </div>
       </div>
 
-      <div className="home-carousel">
+      <div ref={carouselRef} className="home-carousel" aria-hidden="true">
         <div
           role="list"
           aria-label="Theme selection"
@@ -117,8 +129,6 @@ export default function HomeScene() {
                 onBlur={handleBlur}
                 onClick={() => { if (theme.scene) goToScene(theme.scene); }}
                 aria-label={theme.label}
-                aria-posinset={i + 1}
-                aria-setsize={themes.length}
                 tabIndex={0}
               >
                 <span className="theme-circle-inner" aria-hidden="true" />
