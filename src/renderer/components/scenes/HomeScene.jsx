@@ -86,40 +86,46 @@ export default function HomeScene() {
   const hasFocus = focusedIndex >= 0;
 
   return (
-    <div className="home-scene" onKeyDown={handleSceneKeyDown}>
+    <div className="home-scene" role="application" onKeyDown={handleSceneKeyDown}>
       <div className="home-bg" aria-hidden="true" />
 
       <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
-        <h1
+        <div
+          className="home-heading-text"
           ref={headingRef}
           tabIndex={-1}
           data-autofocus
           onFocus={handleHeadingFocus}
         >
           Choose a theme from Helen&nbsp;Keller&#8217;s life journey
-        </h1>
+        </div>
       </div>
 
-      <div className="home-carousel" role="region" aria-label="Theme selection">
+      <div className="home-carousel">
         <div
+          role="list"
+          aria-label="Theme selection"
           className="theme-circles"
           style={{ transform: `translateX(${getTrackTranslateX(focusedIndex)}px)` }}
         >
           {themes.map((theme, i) => (
-            <button
-              key={theme.id}
-              ref={(el) => { circleRefs.current[i] = el; }}
-              className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""}`}
-              onFocus={() => handleFocus(i)}
-              onBlur={handleBlur}
-              onClick={() => { if (theme.scene) goToScene(theme.scene); }}
-              aria-label={`${theme.label}${theme.scene ? "" : " (coming soon)"}`}
-              tabIndex={0}
-            >
-              <span className="theme-circle-inner" aria-hidden="true" />
-              <img className="theme-circle-img" src={theme.image} alt="" aria-hidden="true" />
-              <span className="theme-label">{theme.label}</span>
-            </button>
+            <div role="listitem" key={theme.id}>
+              <button
+                ref={(el) => { circleRefs.current[i] = el; }}
+                className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""}`}
+                onFocus={() => handleFocus(i)}
+                onBlur={handleBlur}
+                onClick={() => { if (theme.scene) goToScene(theme.scene); }}
+                aria-label={theme.label}
+                aria-posinset={i + 1}
+                aria-setsize={themes.length}
+                tabIndex={0}
+              >
+                <span className="theme-circle-inner" aria-hidden="true" />
+                <img className="theme-circle-img" src={theme.image} alt="" aria-hidden="true" />
+                <span className="theme-label" aria-hidden="true">{theme.label}</span>
+              </button>
+            </div>
           ))}
         </div>
       </div>

@@ -794,7 +794,7 @@ button:focus-visible,
   opacity: 0;
 }
 
-.home-heading h1 {
+.home-heading .home-heading-text {
   color: var(--text-heading);
   font-weight: 400;
   font-size: 109px;
@@ -803,8 +803,8 @@ button:focus-visible,
   white-space: pre-line;
 }
 
-.home-heading h1:focus,
-.home-heading h1:focus-visible {
+.home-heading .home-heading-text:focus,
+.home-heading .home-heading-text:focus-visible {
   outline: none;
 }
 
