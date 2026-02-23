@@ -108,8 +108,11 @@ export default function HomeScene() {
           tabIndex={-1}
           data-autofocus
           onFocus={handleHeadingFocus}
+          aria-label="Choose a theme from Helen Keller's life journey"
         >
-          Choose a theme from Helen&nbsp;Keller&#8217;s life journey
+          <span aria-hidden="true">
+            Choose a theme from Helen&nbsp;Keller&#8217;s life journey
+          </span>
         </div>
       </div>
 
@@ -128,7 +131,7 @@ export default function HomeScene() {
                 onFocus={() => handleFocus(i)}
                 onBlur={handleBlur}
                 onClick={() => { if (theme.scene) goToScene(theme.scene); }}
-                aria-label={theme.label}
+                aria-label={`${theme.label}, ${i + 1} of ${themes.length}`}
                 tabIndex={0}
               >
                 <span className="theme-circle-inner" aria-hidden="true" />
