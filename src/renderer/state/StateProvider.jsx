@@ -40,6 +40,9 @@ export default function StateProvider({ children }) {
     }
   };
 
+  const [showSettings, setShowSettings] = useState(false);
+  const toggleSettings = () => setShowSettings(prev => !prev);
+
   const [previousScene, setPreviousScene] = useState("start");
 
   const goBack = () => {
@@ -78,7 +81,9 @@ export default function StateProvider({ children }) {
       prefs, 
       setPref,
       goToScene: goToSceneWithHistory,
-      goBack
+      goBack,
+      showSettings,
+      toggleSettings
     }}>
       {children}
     </AppState.Provider>

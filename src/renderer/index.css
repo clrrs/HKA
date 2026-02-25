@@ -708,6 +708,40 @@ button:focus-visible,
 }
 
 /* ============================================
+   Settings Overlay (floating popup)
+   ============================================ */
+
+.settings-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.settings-panel {
+  position: relative;
+  background: var(--bg-primary);
+  border: 2px solid var(--btn-border);
+  border-radius: 16px;
+  padding: 40px 48px;
+  width: 720px;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.settings-panel h2 {
+  margin-bottom: 20px;
+}
+
+/* ============================================
    Start Scene
    ============================================ */
 

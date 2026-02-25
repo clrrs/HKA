@@ -1,9 +1,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("kioskApi", {
-  // Placeholder for safe native calls
   send: (channel, data) => {
-    const validChannels = ["toMain"];
+    const validChannels = ["toMain", "toggle-tts", "volume-up", "volume-down"];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }

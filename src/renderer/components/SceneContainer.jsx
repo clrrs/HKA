@@ -4,7 +4,6 @@ import Scene from "./Scene";
 import HomeScene from "./scenes/HomeScene";
 import TravelScene from "./scenes/TravelScene";
 import ArtifactScene from "./scenes/ArtifactScene";
-import AccessibilityScene from "./scenes/AccessibilityScene";
 import StartScene from "./scenes/StartScene";
 
 export default function SceneContainer() {
@@ -26,10 +25,6 @@ export default function SceneContainer() {
       
       <Scene id="artifact" isActive={scene === "artifact"}>
         <ArtifactScene />
-      </Scene>
-      
-      <Scene id="accessibility" isActive={scene === "accessibility"}>
-        <AccessibilityScene />
       </Scene>
     </main>
   );

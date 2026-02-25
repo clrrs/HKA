@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const { exec } = require("child_process");
 const { autoUpdater } = require("electron-updater");
 
 function createWindow() {
@@ -35,6 +36,49 @@ function createWindow() {
     win.loadFile(indexPath);
   }
 }
+
+const PS_KEYBD_TYPE = `
+Add-Type -TypeDefinition '
+using System;
+using System.Runtime.InteropServices;
+public class KbdEvent {
+  [DllImport("user32.dll")]
+  public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+}
+'
+`;
+
+function sendKeys(script) {
+  exec(`powershell -NoProfile -Command "${PS_KEYBD_TYPE}${script}"`, (err) => {
+    if (err) console.error("keybd_event error:", err.message);
+  });
+}
+
+// Toggle NVDA speech (Insert+S x2 to skip "beeps" mode: talk → off or off → talk)
+ipcMain.on("toggle-tts", () => {
+  const press =
+    "[KbdEvent]::keybd_event(0x2D,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0x53,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0x53,0,2,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0x2D,0,2,[UIntPtr]::Zero);";
+  sendKeys(press + "Start-Sleep -Milliseconds 100;" + press);
+});
+
+// Volume Up (VK_VOLUME_UP = 0xAF)
+ipcMain.on("volume-up", () => {
+  sendKeys(
+    "[KbdEvent]::keybd_event(0xAF,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0xAF,0,2,[UIntPtr]::Zero)"
+  );
+});
+
+// Volume Down (VK_VOLUME_DOWN = 0xAE)
+ipcMain.on("volume-down", () => {
+  sendKeys(
+    "[KbdEvent]::keybd_event(0xAE,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0xAE,0,2,[UIntPtr]::Zero)"
+  );
+});
 
 app.whenReady().then(() => {
   createWindow();

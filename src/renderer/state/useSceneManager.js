@@ -29,29 +29,23 @@ export function useSceneFocus(sceneId, isActive) {
 }
 
 export function useKeyboardNav() {
-  const { scene, goToScene, goBack } = useAppState();
-  const previousSceneRef = useRef("home");
+  const { scene, goToScene, goBack, toggleSettings } = useAppState();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
 
-      // Settings (A) - toggle to/from accessibility
+      // Settings (A) - toggle settings overlay
       if (key === "a") {
         e.preventDefault();
-        if (scene === "accessibility") {
-          goToScene(previousSceneRef.current);
-        } else {
-          previousSceneRef.current = scene;
-          goToScene("accessibility");
-        }
+        toggleSettings();
         return;
       }
 
       // Home (S)
       if (key === "s") {
         e.preventDefault();
-        goToScene("start");
+        goToScene("home");
         return;
       }
 
@@ -90,12 +84,30 @@ export function useKeyboardNav() {
         return;
       }
 
-      // TTS (Q) - placeholder for future
-      // Vol Up (W), Vol Down (I) - ignored for now
+      // TTS (Q) - toggle NVDA speech via Electron IPC
+      if (key === "q") {
+        e.preventDefault();
+        window.kioskApi?.send("toggle-tts");
+        return;
+      }
+
+      // Vol Up (W)
+      if (key === "w") {
+        e.preventDefault();
+        window.kioskApi?.send("volume-up");
+        return;
+      }
+
+      // Vol Down (I)
+      if (key === "i") {
+        e.preventDefault();
+        window.kioskApi?.send("volume-down");
+        return;
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scene, goToScene, goBack]);
+  }, [scene, goToScene, goBack, toggleSettings]);
 }
 
