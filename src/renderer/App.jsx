@@ -12,6 +12,7 @@ export default function App() {
   const { scene, showSettings, toggleSettings, resetToStart } = useAppState();
   const [idleCountdown, setIdleCountdown] = useState(null);
   const lastActivityRef = useRef(Date.now());
+  const settingsPanelRef = useRef(null);
 
   const rescale = useCallback(() => {
     const el = document.getElementById("app-scaler");
@@ -73,15 +74,88 @@ export default function App() {
     };
   }, [resetToStart, scene]);
 
+  const handleSettingsKeyDown = (e) => {
+    if (!showSettings || e.key !== "Tab") return;
+
+    const panel = settingsPanelRef.current;
+    if (!panel) return;
+
+    const focusables = Array.from(
+      panel.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(el => el.offsetParent !== null);
+
+    if (!focusables.length) return;
+
+    const currentIndex = focusables.indexOf(document.activeElement);
+    let nextIndex;
+
+    if (e.shiftKey) {
+      // Move backwards
+      if (currentIndex <= 0) {
+        nextIndex = focusables.length - 1;
+      } else {
+        nextIndex = currentIndex - 1;
+      }
+    } else {
+      // Move forwards
+      if (currentIndex === -1 || currentIndex === focusables.length - 1) {
+        nextIndex = 0;
+      } else {
+        nextIndex = currentIndex + 1;
+      }
+    }
+
+    e.preventDefault();
+    focusables[nextIndex].focus();
+  };
+
+  useEffect(() => {
+    if (!showSettings) return;
+    const panel = settingsPanelRef.current;
+    if (!panel) return;
+
+    const first = panel.querySelector("[data-autofocus]") ||
+      panel.querySelector(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+
+    if (first) {
+      setTimeout(() => {
+        first.focus();
+      }, 50);
+    }
+  }, [showSettings]);
+
   return (
     <div className="app" role="application">
       <div id="app-scaler" className="app-scaler">
         <SceneContainer />
         {showSettings && (
-          <div className="settings-overlay" role="dialog" aria-label="Accessibility Settings">
+          <div
+            className="settings-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="accessibility-settings-title"
+          >
             <div className="settings-backdrop" onClick={toggleSettings} />
-            <div className="settings-panel">
-              <h2 tabIndex={0}>Accessibility Settings</h2>
+            <div
+              className="settings-panel"
+              ref={settingsPanelRef}
+              role="document"
+              onKeyDown={handleSettingsKeyDown}
+            >
+              <button
+                type="button"
+                className="settings-close-btn"
+                onClick={toggleSettings}
+                aria-label="Close accessibility settings"
+                data-autofocus
+              >
+                ×
+              </button>
+              <h2 id="accessibility-settings-title">Accessibility Settings</h2>
               <AccessibilityMenu />
             </div>
           </div>

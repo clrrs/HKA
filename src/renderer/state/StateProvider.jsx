@@ -34,6 +34,10 @@ export default function StateProvider({ children }) {
 
   const setPref = (k, v) => setPrefs(prev => ({...prev, [k]: v}));
 
+  const resetPrefs = () => {
+    setPrefs(DEFAULT_PREFS);
+  };
+
   const goToScene = (sceneName, options = {}) => {
     setScene(sceneName);
     setSubscene(options.subscene || null);
@@ -96,6 +100,7 @@ export default function StateProvider({ children }) {
       setArtifactId,
       prefs, 
       setPref,
+      resetPrefs,
       goToScene: goToSceneWithHistory,
       goBack,
       showSettings,

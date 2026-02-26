@@ -29,7 +29,7 @@ export function useSceneFocus(sceneId, isActive) {
 }
 
 export function useKeyboardNav() {
-  const { scene, goToScene, goBack, toggleSettings } = useAppState();
+  const { scene, goToScene, goBack, toggleSettings, showSettings } = useAppState();
 
   useEffect(() => {
     let lastTtsToggle = 0;
@@ -55,8 +55,12 @@ export function useKeyboardNav() {
       // Back (K) - simulate Shift+Tab
       if (key === "k") {
         e.preventDefault();
+        const container =
+          showSettings
+            ? document.querySelector(".settings-panel") || document
+            : document;
         const focusables = Array.from(
-          document.querySelectorAll(
+          container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
         ).filter(el => el.offsetParent !== null);
@@ -76,8 +80,12 @@ export function useKeyboardNav() {
       // Next (L) - simulate Tab
       if (key === "l") {
         e.preventDefault();
+        const container =
+          showSettings
+            ? document.querySelector(".settings-panel") || document
+            : document;
         const focusables = Array.from(
-          document.querySelectorAll(
+          container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
         ).filter(el => el.offsetParent !== null);
@@ -112,6 +120,6 @@ export function useKeyboardNav() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scene, goToScene, goBack, toggleSettings]);
+  }, [scene, goToScene, goBack, toggleSettings, showSettings]);
 }
 
