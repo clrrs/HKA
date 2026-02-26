@@ -43,9 +43,7 @@ function useFocusTrap(containerRef, isActive) {
 export default function Carousel({ images = [] }) {
   const { subscene, setSubscene } = useAppState();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
-  const autoPlayRef = useRef(null);
   const carouselRef = useRef(null);
   const announcerRef = useRef(null);
   const expandedRef = useRef(null);
@@ -64,32 +62,6 @@ export default function Carousel({ images = [] }) {
     }
   }, []);
 
-  // Auto-play logic
-  useEffect(() => {
-    if (isAutoPlaying && images.length > 1 && !subscene) {
-      autoPlayRef.current = setInterval(() => {
-        setCurrentIndex(prev => (prev + 1) % images.length);
-      }, 3000);
-    }
-    return () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current);
-      }
-    };
-  }, [isAutoPlaying, images.length, subscene]);
-
-  // Stop auto-play when entering expanded/zoom modes
-  useEffect(() => {
-    if (subscene) {
-      setIsAutoPlaying(false);
-    }
-  }, [subscene]);
-
-  const stopAutoPlay = () => setIsAutoPlaying(false);
-  const startAutoPlay = () => {
-    if (!subscene) setIsAutoPlaying(true);
-  };
-
   const nextSlide = () => {
     setCurrentIndex(prev => (prev + 1) % images.length);
     announce(`Image ${((currentIndex + 1) % images.length) + 1} of ${images.length}`);
@@ -101,14 +73,12 @@ export default function Carousel({ images = [] }) {
   };
 
   const enterExpanded = () => {
-    stopAutoPlay();
     setSubscene("expanded");
     announce(`Expanded view. Image ${currentIndex + 1} of ${images.length}. ${images[currentIndex]?.alt}`);
   };
 
   const exitExpanded = () => {
     setSubscene(null);
-    startAutoPlay();
     announce("Exited navigation mode.");
   };
 
@@ -159,19 +129,19 @@ export default function Carousel({ images = [] }) {
       ref={carouselRef}
       data-layer={subscene || "surface"}
     >
-      {/* Layer 1: Surface View (auto-carousel) */}
+      {/* Layer 1: Surface View (static) */}
       {!subscene && (
         <div 
           className={`carousel-layer carousel-surface ${isHovering ? 'carousel-hovering' : ''}`}
           tabIndex={0}
           role="button"
-          aria-label={`Image carousel, ${images.length} images, press Enter to explore`}
+          aria-label={`Image carousel, ${images.length} images, press Enter to open`}
           onKeyDown={handleKeyDown}
           onClick={enterExpanded}
-          onFocus={() => { stopAutoPlay(); setIsHovering(true); }}
-          onBlur={() => { startAutoPlay(); setIsHovering(false); }}
-          onMouseEnter={() => { stopAutoPlay(); setIsHovering(true); }}
-          onMouseLeave={() => { startAutoPlay(); setIsHovering(false); }}
+          onFocus={() => setIsHovering(true)}
+          onBlur={() => setIsHovering(false)}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
         >
           <div className="carousel-viewport">
             <img 
@@ -191,7 +161,7 @@ export default function Carousel({ images = [] }) {
           )}
           {isHovering && (
             <div className="carousel-prompt" aria-hidden="true">
-              <span>Press Enter to Explore</span>
+              <span>Open Image Carousel</span>
             </div>
           )}
         </div>
