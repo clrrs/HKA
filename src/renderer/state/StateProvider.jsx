@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+const DEFAULT_PREFS = {
+  textSize: "medium",
+  theme: "dark",
+  brightness: 1
+};
+
 const AppState = createContext();
 
 export function useAppState() { 
@@ -13,13 +19,9 @@ export default function StateProvider({ children }) {
   
   const [prefs, setPrefs] = useState(() => {
     try { 
-      return JSON.parse(localStorage.getItem("prefs")) || { 
-        textSize: "medium", 
-        theme: "dark", 
-        brightness: 1 
-      }; 
+      return JSON.parse(localStorage.getItem("prefs")) || DEFAULT_PREFS; 
     } catch { 
-      return { textSize: "medium", theme: "dark", brightness: 1 }; 
+      return DEFAULT_PREFS; 
     }
   });
 
@@ -44,6 +46,20 @@ export default function StateProvider({ children }) {
   const toggleSettings = () => setShowSettings(prev => !prev);
 
   const [previousScene, setPreviousScene] = useState("start");
+
+  const resetToStart = () => {
+    setScene("start");
+    setSubscene(null);
+    setArtifactId(null);
+    setPrefs(DEFAULT_PREFS);
+    setShowSettings(false);
+    setPreviousScene("start");
+    try {
+      localStorage.removeItem("prefs");
+    } catch {
+      // ignore
+    }
+  };
 
   const goBack = () => {
     // Simple back navigation logic
@@ -83,7 +99,8 @@ export default function StateProvider({ children }) {
       goToScene: goToSceneWithHistory,
       goBack,
       showSettings,
-      toggleSettings
+      toggleSettings,
+      resetToStart
     }}>
       {children}
     </AppState.Provider>
