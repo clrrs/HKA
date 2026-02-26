@@ -44,7 +44,7 @@
 :root {
   /* Static palette */
   --color-black: #000000;
-  --color-gray: #444041;
+  --color-gray: #2a2a2a;
   --color-gold: #FBD400;
   --color-white: #ffffff;
 
@@ -890,10 +890,18 @@ button:focus-visible,
   justify-content: center;
 }
 
-.start-help-btn {
+/* 3× larger than default icon btn (41px → 123px) */
+.nav-btn.start-help-btn {
   position: absolute;
-  top: 40px;
-  left: 60px;
+  top: 82px;
+  left: 72px;
+  width: 123px;
+  height: 123px;
+}
+
+.nav-btn.start-help-btn img {
+  width: 62px;
+  height: 62px;
 }
 
 .start-bubble {
@@ -910,8 +918,10 @@ button:focus-visible,
   justify-content: center;
   text-align: center;
   font-family: 'APHb2', Arial, sans-serif;
-  font-weight: 700;
-  font-size: calc(72px * var(--text-scale));
+  font-weight: 500;
+  font-size: 110px;
+  padding-left: 8px;
+  padding-right: 8px;
   cursor: pointer;
   transition: transform 0.3s ease;
 }

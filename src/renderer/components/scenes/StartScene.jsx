@@ -99,7 +99,9 @@ export default function StartScene() {
             className="start-bubble"
             onClick={() => goToScene("home")}
           >
-            The Helen Keller Archives
+            The 
+            <br />
+            Helen Keller Archives
           </button>
         </div>
       </div>
