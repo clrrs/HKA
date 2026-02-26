@@ -10,6 +10,15 @@ Helen Keller Archive
 2. Download the `.exe` file (e.g. `HKA-Kiosk-Setup-1.0.0.exe`)
 3. Run the installer. It will install and launch the app
 
+### NVDA (Screen Reader)
+
+[NVDA](https://www.nvaccess.org/download/) must be installed and running **before** the app launches. The app uses `role="application"` to put NVDA into focus mode, which only works if NVDA is already active at page load.
+
+For kiosk deployment, configure NVDA to start automatically:
+NVDA menu > Preferences > Settings > General > **"Start NVDA after I sign in"**
+
+A pre-configured NVDA settings file will be added to this repo in the future.
+
 ---
 
 ## To Note

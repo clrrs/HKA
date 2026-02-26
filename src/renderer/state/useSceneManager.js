@@ -32,6 +32,8 @@ export function useKeyboardNav() {
   const { scene, goToScene, goBack, toggleSettings } = useAppState();
 
   useEffect(() => {
+    let lastTtsToggle = 0;
+
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
 
@@ -42,8 +44,9 @@ export function useKeyboardNav() {
         return;
       }
 
-      // Home (S)
+      // Home (S) — guard against synthetic S from toggle-tts (Insert+S)
       if (key === "s") {
+        if (Date.now() - lastTtsToggle < 500) return;
         e.preventDefault();
         goToScene("home");
         return;
@@ -87,6 +90,7 @@ export function useKeyboardNav() {
       // TTS (Q) - toggle NVDA speech via Electron IPC
       if (key === "q") {
         e.preventDefault();
+        lastTtsToggle = Date.now();
         window.kioskApi?.send("toggle-tts");
         return;
       }

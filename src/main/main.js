@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
-const { exec } = require("child_process");
+const { spawn } = require("child_process");
 const { autoUpdater } = require("electron-updater");
 
 function createWindow() {
@@ -37,21 +37,26 @@ function createWindow() {
   }
 }
 
-const PS_KEYBD_TYPE = `
-Add-Type -TypeDefinition '
-using System;
-using System.Runtime.InteropServices;
-public class KbdEvent {
-  [DllImport("user32.dll")]
-  public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+let ps = null;
+
+function ensurePowerShell() {
+  if (ps && ps.exitCode === null) return;
+  ps = spawn("powershell.exe", ["-NoProfile", "-NoLogo", "-NoExit"], {
+    stdio: ["pipe", "ignore", "pipe"],
+    windowsHide: true,
+  });
+  ps.stderr.on("data", (d) => console.error("PS stderr:", d.toString()));
+  ps.on("exit", () => { ps = null; });
+  ps.stdin.write(
+    "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; " +
+    "public class KbdEvent { [DllImport(\"user32.dll\")] " +
+    "public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo); }'\n"
+  );
 }
-'
-`;
 
 function sendKeys(script) {
-  exec(`powershell -NoProfile -Command "${PS_KEYBD_TYPE}${script}"`, (err) => {
-    if (err) console.error("keybd_event error:", err.message);
-  });
+  ensurePowerShell();
+  ps.stdin.write(script + "\n");
 }
 
 // Toggle NVDA speech (Insert+S x2 to skip "beeps" mode: talk → off or off → talk)
@@ -81,6 +86,7 @@ ipcMain.on("volume-down", () => {
 });
 
 app.whenReady().then(() => {
+  ensurePowerShell();
   createWindow();
 
   // Auto-update from GitHub Releases (only works in packaged app)
@@ -109,6 +115,7 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
+  if (ps) ps.kill();
   app.quit();
 });
 

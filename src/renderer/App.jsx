@@ -28,7 +28,7 @@ export default function App() {
   }, [rescale]);
 
   return (
-    <div className="app">
+    <div className="app" role="application">
       <div id="app-scaler" className="app-scaler">
         <SceneContainer />
         {showSettings && (
