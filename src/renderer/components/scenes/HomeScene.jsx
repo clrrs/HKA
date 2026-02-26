@@ -2,10 +2,10 @@ import React, { useState, useRef, useCallback } from "react";
 import { useAppState } from "../../state/StateProvider";
 
 const themes = [
-  { id: "change",    label: "Change",    scene: null,     image: "/Change.png" },
-  { id: "together",  label: "Together",  scene: null,     image: "/Together.png" },
-  { id: "adventure", label: "Adventure", scene: "travel", image: "/Adventure.png" },
-  { id: "work",      label: "Work",      scene: null,     image: "/Work.png" },
+  { id: "change",    label: "Change",    scene: null,     image: "./Change.png" },
+  { id: "together",  label: "Together",  scene: null,     image: "./Together.png" },
+  { id: "adventure", label: "Adventure", scene: "travel", image: "./Adventure.png" },
+  { id: "work",      label: "Work",      scene: null,     image: "./Work.png" },
 ];
 
 const ITEM_WIDTH = 600;

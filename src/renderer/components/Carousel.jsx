@@ -224,7 +224,7 @@ export default function Carousel({ images = [] }) {
                 aria-label="Exit Image Carousel"
                 className="carousel-btn carousel-btn-icon"
               >
-                <img src="/Exit.svg" alt="" aria-hidden="true" />
+                <img src="./Exit.svg" alt="" aria-hidden="true" />
               </button>
               {images.length > 1 && (
                 <>
@@ -234,7 +234,7 @@ export default function Carousel({ images = [] }) {
                     aria-label="Previous"
                     className="carousel-btn carousel-btn-icon"
                   >
-                    <img src="/Back.svg" alt="" aria-hidden="true" />
+                    <img src="./Back.svg" alt="" aria-hidden="true" />
                   </button>
                   <button 
                     type="button" 
@@ -242,7 +242,7 @@ export default function Carousel({ images = [] }) {
                     aria-label={`Image ${currentIndex + 1} of ${images.length}. ${currentImage.alt}. Next`}
                     className="carousel-btn carousel-btn-icon"
                   >
-                    <img src="/Forward.svg" alt="" aria-hidden="true" />
+                    <img src="./Forward.svg" alt="" aria-hidden="true" />
                   </button>
                 </>
               )}
@@ -252,7 +252,7 @@ export default function Carousel({ images = [] }) {
                 aria-label="Zoom"
                 className="carousel-btn carousel-btn-icon"
               >
-                <img src="/Zoom.svg" alt="" aria-hidden="true" />
+                <img src="./Zoom.svg" alt="" aria-hidden="true" />
               </button>
             </div>
           </div>

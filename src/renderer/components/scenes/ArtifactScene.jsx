@@ -52,7 +52,7 @@ export default function ArtifactScene() {
             onClick={() => goToScene("artifact", { artifactId: prevArtifact.id })}
             aria-label="Previous Artifact"
           >
-            <img src="/Back.svg" alt="" aria-hidden="true" />
+            <img src="./Back.svg" alt="" aria-hidden="true" />
           </button>
         )}
         {nextArtifact && (
@@ -61,7 +61,7 @@ export default function ArtifactScene() {
             onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
             aria-label="Next Artifact"
           >
-            <img src="/Forward.svg" alt="" aria-hidden="true" />
+            <img src="./Forward.svg" alt="" aria-hidden="true" />
           </button>
         )}
         <br />
