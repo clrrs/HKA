@@ -1231,10 +1231,11 @@ button:focus-visible,
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-/* Theme image — overflows the circle */
+/* Theme image — overflows the circle, max 660px */
 .theme-circle-img {
   position: absolute;
   width: 110%;
+  max-width: 660px;
   height: auto;
   top: 35%;
   left: 50%;
@@ -1339,44 +1340,207 @@ button:focus-visible,
 }
 
 /* ============================================
-   Travel / Artifact Selection Scene (theme-aware)
+   Travel / Artifact Selection Scene (carousel)
    ============================================ */
 
 .travel-scene {
   position: relative;
   width: 100%;
   height: 1080px;
-  display: flex;
-  flex-direction: column;
-  padding: 80px 120px 60px;
   overflow: hidden;
 }
 
-.travel-scene h1 {
-  margin-bottom: 20px;
+/* --- Left info panel --- */
+.travel-heading {
+  position: absolute;
+  z-index: 1;
+  left: 101px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 440px;
+  transition: transform 0.55s ease-in-out, opacity 0.45s ease-in-out;
+}
+
+.travel-heading--hidden {
+  transform: translateY(-50%) translateX(-700px);
+  opacity: 0;
+}
+
+.travel-heading-inner:focus,
+.travel-heading-inner:focus-visible {
+  outline: none;
+}
+
+.travel-title {
+  color: var(--text-heading);
+  font-weight: 400;
+  font-size: 80px;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 24px;
 }
 
 .travel-description {
-  font-size: calc(26px * var(--text-scale));
+  font-size: calc(22px * var(--text-scale));
   line-height: 1.55;
   color: var(--text-primary);
-  margin-bottom: 32px;
-  max-width: 1200px;
+  margin-bottom: 40px;
 }
 
-.travel-scene h4 {
-  margin-bottom: 12px;
+.travel-cta {
+  color: var(--text-heading);
+  font-size: calc(30px * var(--text-scale));
+  font-weight: 700;
+  margin: 0;
 }
 
-.travel-scene .artifact-list {
-  margin: 12px 0 0 0;
-  flex: 1;
-  overflow-y: auto;
+/* --- Artifact carousel --- */
+.travel-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 
-.travel-scene nav {
-  margin-top: auto;
-  padding-top: 20px;
+.artifact-circles {
+  display: flex;
+  align-items: center;
+  gap: 77px;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+
+/* --- Artifact circle button --- */
+.artifact-circle {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.4s ease;
+}
+
+.artifact-circle:focus-visible {
+  outline: none;
+}
+
+.artifact-circle-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-black);
+  border: 3px solid var(--text-primary);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+/* Artifact image — same placement as theme circles, fit within a fixed zone so all thumbnails align */
+.artifact-circle-img {
+  position: absolute;
+  width: 110%;
+  max-width: 660px;
+  max-height: 320px;
+  height: auto;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Labels positioned at bottom of circle */
+.artifact-circle-labels {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  right: 40px;
+  text-align: center;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.artifact-label-number {
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  transition: color 0.4s ease;
+}
+
+.artifact-label-title {
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: clamp(24px, 32px, 32px);
+  line-height: 1.2;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
+  max-width: 420px;
+  overflow-wrap: break-word;
+}
+
+.artifact-label-year {
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
+}
+
+/* --- Focused state --- */
+.artifact-circle--focused {
+  transform: scale(1.1167);
+  z-index: 1;
+}
+
+.artifact-circle--focused .artifact-circle-inner {
+  background-color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.artifact-circle--focused .artifact-label-number {
+  color: var(--color-black);
+}
+
+.artifact-circle--focused .artifact-label-title {
+  color: var(--color-black);
+}
+
+.artifact-circle--focused .artifact-label-year {
+  color: var(--color-black);
+}
+
+/* --- Dot indicators --- */
+.artifact-indicators {
+  position: absolute;
+  z-index: 3;
+  bottom: 105px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+}
+
+.artifact-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 2px solid var(--text-primary);
+  transition: background-color 0.3s ease;
+}
+
+.artifact-indicator.active {
+  background-color: var(--text-primary);
 }
 
 /* ============================================
