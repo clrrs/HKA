@@ -138,6 +138,24 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Light: no vignette, plain white background; outline visible */
+[data-theme="light"] .app-scaler {
+  background-image: none;
+  background-color: var(--color-white);
+  outline: 2px solid var(--color-black);
+}
+
+/* Light: theme and artifact bubbles — white fill, black border */
+[data-theme="light"] .theme-circle-inner {
+  background-color: var(--color-white);
+  border-color: var(--color-black);
+}
+
+[data-theme="light"] .artifact-circle-inner {
+  background-color: var(--color-white);
+  border-color: var(--color-black);
+}
+
 /* ============================================
    Layout — fixed 1920x1080 design, scaled to fit
    ============================================ */
