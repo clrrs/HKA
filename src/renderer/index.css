@@ -130,6 +130,7 @@ body {
   background-color: var(--color-black);
   color: var(--text-primary);
   font-family: 'APHb2', Arial, sans-serif;
+  cursor: none;
   filter: brightness(var(--brightness));
   transition: filter 0.2s ease;
 }
@@ -529,6 +530,12 @@ button:focus-visible,
 .carousel-btn:focus-visible,
 .zoom-btn:focus-visible,
 .setting-btn:focus-visible {
+  outline: none;
+}
+
+/* Hide gold focus outline when NVDA speech mode is off */
+html[data-speech-mode="off"] button:focus-visible,
+html[data-speech-mode="off"] [tabindex]:focus-visible {
   outline: none;
 }
 

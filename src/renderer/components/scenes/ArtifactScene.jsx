@@ -5,7 +5,7 @@ import Carousel from "../Carousel";
 import VideoPlayer from "../VideoPlayer";
 
 export default function ArtifactScene() {
-  const { artifactId, goToScene, subscene, currentTheme } = useAppState();
+  const { artifactId, goToScene, subscene, currentTheme, speechMode } = useAppState();
   const isCarouselModal = subscene === "expanded" || subscene === "zoom";
 
   const theme = getTheme(currentTheme);
@@ -35,8 +35,8 @@ export default function ArtifactScene() {
             <span className="artifact-header-accent">{theme.label} — </span>
             <span>Artifact {artifactNum}</span>
           </h2>
-          <h1 tabIndex={0}>{artifact.title}</h1>
-          <p tabIndex={0}>{artifact.description}</p>
+          <h1 tabIndex={speechMode ? 0 : -1}>{artifact.title}</h1>
+          <p tabIndex={speechMode ? 0 : -1}>{artifact.description}</p>
         </div>
         <div className="artifact-media">
           {artifact.type === "video" ? (

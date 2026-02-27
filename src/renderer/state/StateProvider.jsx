@@ -53,7 +53,14 @@ export default function StateProvider({ children }) {
   const [showSettings, setShowSettings] = useState(false);
   const toggleSettings = () => setShowSettings(prev => !prev);
 
+  const [speechMode, setSpeechMode] = useState(true);
+  const toggleSpeechMode = () => setSpeechMode(prev => !prev);
+
   const [previousScene, setPreviousScene] = useState("start");
+
+  useEffect(() => {
+    document.documentElement.dataset.speechMode = speechMode ? "on" : "off";
+  }, [speechMode]);
 
   const resetToStart = () => {
     setScene("start");
@@ -112,6 +119,8 @@ export default function StateProvider({ children }) {
       goBack,
       showSettings,
       toggleSettings,
+      speechMode,
+      toggleSpeechMode,
       resetToStart
     }}>
       {children}

@@ -29,7 +29,7 @@ export function useSceneFocus(sceneId, isActive) {
 }
 
 export function useKeyboardNav() {
-  const { scene, goToScene, goBack, toggleSettings, showSettings } = useAppState();
+  const { scene, goToScene, goBack, toggleSettings, showSettings, toggleSpeechMode } = useAppState();
 
   useEffect(() => {
     let lastTtsToggle = 0;
@@ -97,10 +97,11 @@ export function useKeyboardNav() {
         return;
       }
 
-      // TTS (Q) - toggle NVDA speech via Electron IPC
+      // TTS (Q) - toggle NVDA speech via Electron IPC and in-app state
       if (key === "q") {
         e.preventDefault();
         lastTtsToggle = Date.now();
+        toggleSpeechMode();
         window.kioskApi?.send("toggle-tts");
         return;
       }
@@ -122,6 +123,6 @@ export function useKeyboardNav() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scene, goToScene, goBack, toggleSettings, showSettings]);
+  }, [scene, goToScene, goBack, toggleSettings, showSettings, toggleSpeechMode]);
 }
 

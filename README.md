@@ -14,6 +14,8 @@ Helen Keller Archive
 
 [NVDA](https://www.nvaccess.org/download/) must be installed and running **before** the app launches. The app uses `role="application"` to put NVDA into focus mode, which only works if NVDA is already active at page load.
 
+Speech mode (Q): Press **Q** to toggle NVDA speech on or off. When speech is off, the app hides the gold focus outline and on artifact pages keyboard navigation (L/K) moves only between buttons and media controls (title and description stay in the DOM for screen-reader order when speech is on).
+
 For kiosk deployment, configure NVDA to start automatically:
 NVDA menu > Preferences > Settings > General > **"Start NVDA after I sign in"**
 
