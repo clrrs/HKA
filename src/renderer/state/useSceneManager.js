@@ -35,6 +35,7 @@ export function useKeyboardNav() {
     let lastTtsToggle = 0;
 
     const handleKeyDown = (e) => {
+      if (e.repeat) return; // ignore key repeat (keypad hold)
       if (scene === "quote") return;
 
       const key = e.key.toLowerCase();

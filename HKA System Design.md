@@ -61,6 +61,7 @@ All interaction in the final build is through a custom keypad. There is NO mouse
 ## Implementation notes
 
 - The global key handler lives in `useKeyboardNav()` (`src/renderer/state/useSceneManager.js`). It attaches a single `window` keydown listener that maps each keystroke to a logical action.
+- Ignore key repeat: at the start of every keypad key handler, `if (e.repeat) return;` so holding a key does not retrigger (keydown fires repeatedly while held; `e.repeat` is true for those).
 - Always call `preventDefault()` when intercepting to avoid OS shortcuts.
 - Scenes that handle their own key events (HomeScene, StartScene) use React `onKeyDown` and call `stopPropagation()` when they fully handle the event, preventing the global handler from double-processing it.
 - Keep navigation deterministic: every scene has a defined "primary" focusable element.

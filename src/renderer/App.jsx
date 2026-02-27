@@ -75,6 +75,7 @@ export default function App() {
   }, [resetToStart, scene]);
 
   const handleSettingsKeyDown = (e) => {
+    if (e.repeat) return;
     if (!showSettings || e.key !== "Tab") return;
 
     const panel = settingsPanelRef.current;

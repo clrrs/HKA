@@ -18,7 +18,8 @@ export default function QuoteScene() {
     readyRef.current = false;
     const armTimer = setTimeout(() => { readyRef.current = true; }, 250);
 
-    const dismiss = () => {
+    const dismiss = (e) => {
+      if (e.type === "keydown" && e.repeat) return;
       if (!readyRef.current) return;
       goToScene("travel");
     };

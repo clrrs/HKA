@@ -61,6 +61,7 @@ export default function TravelScene() {
   }, [hideCarousel]);
 
   const handleSceneKeyDown = useCallback((e) => {
+    if (e.repeat) return;
     const isNext = (e.key === "Tab" && !e.shiftKey) || e.key === "l";
     const isBack = (e.key === "Tab" && e.shiftKey) || e.key === "k";
     const isSelect = e.key === "Enter" || e.key === "j";

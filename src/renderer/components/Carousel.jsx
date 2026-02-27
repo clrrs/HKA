@@ -11,6 +11,7 @@ function useFocusTrap(containerRef, isActive) {
     const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
     
     const handleKeyDown = (e) => {
+      if (e.repeat) return;
       if (e.key !== 'Tab') return;
       
       const focusables = container.querySelectorAll(focusableSelector);
@@ -93,6 +94,7 @@ export default function Carousel({ images = [] }) {
   };
 
   const handleKeyDown = (e) => {
+    if (e.repeat) return;
     if (e.key === "Enter" && !subscene) {
       e.preventDefault();
       enterExpanded();
@@ -102,6 +104,7 @@ export default function Carousel({ images = [] }) {
   // Escape key handler (dev convenience)
   useEffect(() => {
     const handleEscape = (e) => {
+      if (e.repeat) return;
       if (e.key === "Escape") {
         if (subscene === "zoom") {
           exitZoom();
