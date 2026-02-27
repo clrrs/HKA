@@ -16,6 +16,7 @@ export default function StateProvider({ children }) {
   const [scene, setScene] = useState("start");
   const [subscene, setSubscene] = useState(null);
   const [artifactId, setArtifactId] = useState(null);
+  const [currentTheme, setCurrentTheme] = useState(null);
   
   const [prefs, setPrefs] = useState(() => {
     try { 
@@ -44,6 +45,9 @@ export default function StateProvider({ children }) {
     if (options.artifactId !== undefined) {
       setArtifactId(options.artifactId);
     }
+    if (options.theme !== undefined) {
+      setCurrentTheme(options.theme);
+    }
   };
 
   const [showSettings, setShowSettings] = useState(false);
@@ -55,6 +59,7 @@ export default function StateProvider({ children }) {
     setScene("start");
     setSubscene(null);
     setArtifactId(null);
+    setCurrentTheme(null);
     setPrefs(DEFAULT_PREFS);
     setShowSettings(false);
     setPreviousScene("start");
@@ -66,7 +71,6 @@ export default function StateProvider({ children }) {
   };
 
   const goBack = () => {
-    // Simple back navigation logic
     if (subscene === "zoom") {
       setSubscene("expanded");
     } else if (subscene === "expanded") {
@@ -74,6 +78,8 @@ export default function StateProvider({ children }) {
     } else if (scene === "artifact") {
       setScene("travel");
     } else if (scene === "travel") {
+      setScene("quote");
+    } else if (scene === "quote") {
       setScene("home");
     } else if (scene === "home") {
       setScene("start");
@@ -98,6 +104,7 @@ export default function StateProvider({ children }) {
       setSubscene, 
       artifactId,
       setArtifactId,
+      currentTheme,
       prefs, 
       setPref,
       resetPrefs,

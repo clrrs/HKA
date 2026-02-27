@@ -2,6 +2,7 @@ import React from "react";
 import { useAppState } from "../state/StateProvider";
 import Scene from "./Scene";
 import HomeScene from "./scenes/HomeScene";
+import QuoteScene from "./scenes/QuoteScene";
 import TravelScene from "./scenes/TravelScene";
 import ArtifactScene from "./scenes/ArtifactScene";
 import StartScene from "./scenes/StartScene";
@@ -17,6 +18,10 @@ export default function SceneContainer() {
       
       <Scene id="home" isActive={scene === "home"}>
         <HomeScene />
+      </Scene>
+
+      <Scene id="quote" isActive={scene === "quote"}>
+        <QuoteScene />
       </Scene>
       
       <Scene id="travel" isActive={scene === "travel"}>

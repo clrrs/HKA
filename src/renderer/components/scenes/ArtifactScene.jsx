@@ -1,17 +1,18 @@
 import React from "react";
 import { useAppState } from "../../state/StateProvider";
-import { getArtifact, getNextArtifact, getPrevArtifact, getArtifactIndex } from "../../data/artifacts";
+import { getTheme, getArtifact, getNextArtifact, getPrevArtifact, getArtifactIndex } from "../../data/artifacts";
 import Carousel from "../Carousel";
 import VideoPlayer from "../VideoPlayer";
 
 export default function ArtifactScene() {
-  const { artifactId, goToScene, subscene } = useAppState();
+  const { artifactId, goToScene, subscene, currentTheme } = useAppState();
   const isCarouselModal = subscene === "expanded" || subscene === "zoom";
 
-  const artifact = getArtifact(artifactId);
-  const prevArtifact = getPrevArtifact(artifactId);
-  const nextArtifact = getNextArtifact(artifactId);
-  const artifactNum = getArtifactIndex(artifactId) + 1;
+  const theme = getTheme(currentTheme);
+  const artifact = getArtifact(currentTheme, artifactId);
+  const prevArtifact = getPrevArtifact(currentTheme, artifactId);
+  const nextArtifact = getNextArtifact(currentTheme, artifactId);
+  const artifactNum = getArtifactIndex(currentTheme, artifactId) + 1;
 
   if (!artifact) {
     return (
@@ -19,7 +20,7 @@ export default function ArtifactScene() {
         <h1>Artifact not found</h1>
         <nav className="artifact-nav">
           <button className="nav-btn" onClick={() => goToScene("travel")}>
-            Back to Adventure Menu
+            Back to {theme?.label || "Theme"} Menu
           </button>
         </nav>
       </div>
@@ -31,7 +32,7 @@ export default function ArtifactScene() {
       <div className="artifact-content" inert={isCarouselModal ? "" : undefined}>
         <div className="artifact-text">
           <h2 className="artifact-header">
-            <span className="artifact-header-accent">Adventure — </span>
+            <span className="artifact-header-accent">{theme.label} — </span>
             <span>Artifact {artifactNum}</span>
           </h2>
           <h1 tabIndex={0}>{artifact.title}</h1>

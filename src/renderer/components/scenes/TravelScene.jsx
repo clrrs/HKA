@@ -1,23 +1,38 @@
 import React from "react";
 import { useAppState } from "../../state/StateProvider";
-import { artifacts } from "../../data/artifacts";
+import { getTheme } from "../../data/artifacts";
 
 export default function TravelScene() {
-  const { goToScene } = useAppState();
+  const { goToScene, currentTheme } = useAppState();
+  const theme = getTheme(currentTheme);
+
+  if (!theme) {
+    return (
+      <div className="travel-scene">
+        <h1>Theme not found</h1>
+        <nav>
+          <button className="nav-btn" onClick={() => goToScene("home")}>
+            Back
+          </button>
+        </nav>
+      </div>
+    );
+  }
 
   return (
-    <div className="container">
-      <h1 tabIndex={0}>Adventure</h1>
-      <h4 className="quote" tabIndex={0}>
-        "Life is either a daring adventure or nothing."
-      </h4>
-      
+    <div className="travel-scene">
+      <h1 tabIndex={0}>{theme.label}</h1>
+
+      <p className="travel-description" tabIndex={0}>
+        {theme.description}
+      </p>
+
       <h4 tabIndex={0}>Select an Artifact</h4>
-      
+
       <ul className="artifact-list">
-        {artifacts.map((artifact, index) => (
+        {theme.artifacts.map((artifact, index) => (
           <li key={artifact.id}>
-            <button 
+            <button
               className="menu-link"
               onClick={() => goToScene("artifact", { artifactId: artifact.id })}
             >
@@ -26,9 +41,9 @@ export default function TravelScene() {
           </li>
         ))}
       </ul>
-      
+
       <nav>
-        <button 
+        <button
           className="nav-btn"
           onClick={() => goToScene("home")}
         >
@@ -38,4 +53,3 @@ export default function TravelScene() {
     </div>
   );
 }
-

@@ -2,10 +2,10 @@ import React, { useState, useRef, useCallback } from "react";
 import { useAppState } from "../../state/StateProvider";
 
 const themes = [
-  { id: "change",    label: "Change",    scene: null,     image: "./Change.png" },
-  { id: "together",  label: "Together",  scene: null,     image: "./Together.png" },
-  { id: "adventure", label: "Adventure", scene: "travel", image: "./Adventure.png" },
-  { id: "work",      label: "Work",      scene: null,     image: "./Work.png" },
+  { id: "change",    label: "Change",    scene: "quote", image: "./Change.png" },
+  { id: "together",  label: "Together",  scene: "quote", image: "./Together.png" },
+  { id: "adventure", label: "Adventure", scene: "quote", image: "./Adventure.png" },
+  { id: "work",      label: "Work",      scene: "quote", image: "./Work.png" },
 ];
 
 const ITEM_WIDTH = 600;
@@ -65,8 +65,9 @@ export default function HomeScene() {
 
     if (isSelect && idx >= 0) {
       const theme = themes[idx];
-      if (theme.scene) goToScene(theme.scene);
+      if (theme.scene) goToScene(theme.scene, { theme: theme.id });
       e.preventDefault();
+      e.stopPropagation();
       return;
     }
 
@@ -130,7 +131,7 @@ export default function HomeScene() {
                 className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""}`}
                 onFocus={() => handleFocus(i)}
                 onBlur={handleBlur}
-                onClick={() => { if (theme.scene) goToScene(theme.scene); }}
+                onClick={() => { if (theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
                 aria-label={`${theme.label}, ${i + 1} of ${themes.length}`}
                 tabIndex={0}
               >

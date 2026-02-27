@@ -35,6 +35,8 @@ export function useKeyboardNav() {
     let lastTtsToggle = 0;
 
     const handleKeyDown = (e) => {
+      if (scene === "quote") return;
+
       const key = e.key.toLowerCase();
 
       // Settings (A) - toggle settings overlay
