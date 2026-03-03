@@ -64,13 +64,21 @@ export default function Carousel({ images = [] }) {
   }, []);
 
   const nextSlide = () => {
-    setCurrentIndex(prev => (prev + 1) % images.length);
-    announce(`Image ${((currentIndex + 1) % images.length) + 1} of ${images.length}`);
+    setCurrentIndex(prev => {
+      if (images.length === 0) return prev;
+      const next = (prev + 1) % images.length;
+      announce(`Image ${next + 1} of ${images.length}`);
+      return next;
+    });
   };
 
   const prevSlide = () => {
-    setCurrentIndex(prev => prev === 0 ? images.length - 1 : prev - 1);
-    announce(`Image ${(currentIndex === 0 ? images.length : currentIndex)} of ${images.length}`);
+    setCurrentIndex(prev => {
+      if (images.length === 0) return prev;
+      const next = prev === 0 ? images.length - 1 : prev - 1;
+      announce(`Image ${next + 1} of ${images.length}`);
+      return next;
+    });
   };
 
   const enterExpanded = () => {

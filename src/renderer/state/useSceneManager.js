@@ -61,7 +61,9 @@ export function useKeyboardNav() {
         const container =
           showSettings
             ? document.querySelector(".settings-panel") || document
-            : document;
+            : document.querySelector(".carousel-zoom") ||
+              document.querySelector(".carousel-expanded") ||
+              document;
         const focusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -86,7 +88,9 @@ export function useKeyboardNav() {
         const container =
           showSettings
             ? document.querySelector(".settings-panel") || document
-            : document;
+            : document.querySelector(".carousel-zoom") ||
+              document.querySelector(".carousel-expanded") ||
+              document;
         const focusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'

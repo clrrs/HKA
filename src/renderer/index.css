@@ -70,6 +70,7 @@
   --text-primary: var(--color-white);
   --text-heading: var(--color-gold);
   --accent: var(--color-gold);
+  --bg-container: var(--bg-secondary);
   /* Buttons: neutral (black fill, white stroke, white icon) */
   --btn-bg: var(--color-black);
   --btn-text: var(--color-white);
@@ -93,6 +94,7 @@
   --text-primary: var(--color-black);
   --text-heading: var(--color-black);
   --accent: var(--color-gold);
+  --bg-container: var(--bg-secondary);
   /* Buttons: neutral (white fill, black stroke, black icon) */
   --btn-bg: var(--color-white);
   --btn-text: var(--color-black);
@@ -618,10 +620,9 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 /* Carousel Expanded Mode - Floating popup with backdrop */
 .carousel-expanded {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 1920px;
-  height: 1080px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 900;
   display: flex;
   justify-content: center;
@@ -705,6 +706,12 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 .carousel-btn-icon img {
   width: 24px;
   height: 24px;
+  filter: var(--icon-filter);
+  transition: filter 0.2s;
+}
+
+.carousel-btn.carousel-btn-icon:focus-visible img {
+  filter: var(--icon-focus-filter);
 }
 
 /* ============================================
@@ -713,12 +720,15 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .carousel-zoom {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 1920px;
-  height: 1080px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: #000;
   z-index: 1000;
+}
+
+.carousel-surface.carousel-hovering {
+  border-color: var(--accent);
 }
 
 .zoom-container {
