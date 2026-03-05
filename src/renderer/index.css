@@ -338,6 +338,17 @@ body {
   box-sizing: border-box;
 }
 
+.artifact-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.artifact-nav-right {
+  display: flex;
+  align-items: center;
+}
+
 .artifact-nav .nav-btn {
   display: inline-flex;
   align-items: center;
@@ -356,6 +367,20 @@ body {
 
 .artifact-nav .nav-btn:focus-visible img {
   filter: var(--icon-focus-filter);
+}
+
+/* Menu.svg is white; show white by default in dark theme, black on focus */
+[data-theme="dark"] .artifact-nav .nav-btn.nav-btn-icon-white img {
+  filter: none;
+}
+[data-theme="dark"] .artifact-nav .nav-btn.nav-btn-icon-white:focus-visible img {
+  filter: invert(1);
+}
+[data-theme="light"] .artifact-nav .nav-btn.nav-btn-icon-white img {
+  filter: invert(1);
+}
+[data-theme="light"] .artifact-nav .nav-btn.nav-btn-icon-white:focus-visible img {
+  filter: none;
 }
 
 /* ============================================
@@ -1587,7 +1612,7 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 /* Labels positioned at bottom of circle */
 .artifact-circle-labels {
   position: absolute;
-  bottom: 40px;
+  bottom: 80px;
   left: 40px;
   right: 40px;
   text-align: center;

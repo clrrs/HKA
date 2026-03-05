@@ -1,6 +1,6 @@
 import React from "react";
 import { useAppState } from "../../state/StateProvider";
-import { getTheme, getArtifact, getNextArtifact, getPrevArtifact, getArtifactIndex } from "../../data/artifacts";
+import { getTheme, getArtifact, getNextArtifact, getPrevArtifact } from "../../data/artifacts";
 import Carousel from "../Carousel";
 import VideoPlayer from "../VideoPlayer";
 
@@ -12,15 +12,19 @@ export default function ArtifactScene() {
   const artifact = getArtifact(currentTheme, artifactId);
   const prevArtifact = getPrevArtifact(currentTheme, artifactId);
   const nextArtifact = getNextArtifact(currentTheme, artifactId);
-  const artifactNum = getArtifactIndex(currentTheme, artifactId) + 1;
 
   if (!artifact) {
     return (
       <div className="artifact-page">
         <h1>Artifact not found</h1>
         <nav className="artifact-nav">
-          <button className="nav-btn" onClick={() => goToScene("travel")}>
-            Back to {theme?.label || "Theme"} Menu
+          <button
+            className="nav-btn nav-btn-icon-white"
+            onClick={() => goToScene("travel")}
+            aria-label="Back to theme, return to artifact list"
+          >
+            <img src="./Menu.svg" alt="" aria-hidden="true" />
+            Back to Theme
           </button>
         </nav>
       </div>
@@ -32,8 +36,7 @@ export default function ArtifactScene() {
       <div className="artifact-content" inert={isCarouselModal ? "" : undefined}>
         <div className="artifact-text">
           <h2 className="artifact-header">
-            <span className="artifact-header-accent">{theme.label} — </span>
-            <span>Artifact {artifactNum}</span>
+            <span className="artifact-header-accent">{theme.label}</span>
           </h2>
           <h1 tabIndex={speechMode ? 0 : -1}>{artifact.title}</h1>
           <p tabIndex={speechMode ? 0 : -1}>{artifact.description}</p>
@@ -51,30 +54,40 @@ export default function ArtifactScene() {
       </div>
 
       <nav className="artifact-nav" inert={isCarouselModal ? "" : undefined}>
-        {prevArtifact ? (
+        <div className="artifact-nav-left">
           <button
-            className="nav-btn"
-            onClick={() => goToScene("artifact", { artifactId: prevArtifact.id })}
-            aria-label="Previous Artifact"
+            className="nav-btn nav-btn-icon-white"
+            onClick={() => goToScene("travel")}
+            aria-label="Back to theme, return to artifact list"
           >
-            <img src="./Back.svg" alt="" aria-hidden="true" />
-            Previous Artifact
+            <img src="./Menu.svg" alt="" aria-hidden="true" />
+            Back to Theme
           </button>
-        ) : (
-          <span />
-        )}
-        {nextArtifact ? (
-          <button
-            className="nav-btn"
-            onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
-            aria-label="Next Artifact"
-          >
-            Next Artifact
-            <img src="./Forward.svg" alt="" aria-hidden="true" />
-          </button>
-        ) : (
-          <span />
-        )}
+          {prevArtifact && (
+            <button
+              className="nav-btn"
+              onClick={() => goToScene("artifact", { artifactId: prevArtifact.id })}
+              aria-label="Previous Artifact"
+            >
+              <img src="./Back.svg" alt="" aria-hidden="true" />
+              Previous Artifact
+            </button>
+          )}
+        </div>
+        <div className="artifact-nav-right">
+          {nextArtifact ? (
+            <button
+              className="nav-btn"
+              onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
+              aria-label="Next Artifact"
+            >
+              Next Artifact
+              <img src="./Forward.svg" alt="" aria-hidden="true" />
+            </button>
+          ) : (
+            <span />
+          )}
+        </div>
       </nav>
     </div>
   );

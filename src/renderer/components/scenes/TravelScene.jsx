@@ -147,7 +147,7 @@ export default function TravelScene() {
                   onFocus={() => handleFocus(i)}
                   onBlur={handleBlur}
                   onClick={() => goToScene("artifact", { artifactId: artifact.id })}
-                  aria-label={`Artifact ${i + 1}, ${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}`}
+                  aria-label={`${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}`}
                   tabIndex={0}
                 >
                   <span className="artifact-circle-inner" aria-hidden="true" />
@@ -155,7 +155,6 @@ export default function TravelScene() {
                     <img className="artifact-circle-img" src={thumbSrc} alt="" aria-hidden="true" />
                   )}
                   <span className="artifact-circle-labels" aria-hidden="true">
-                    <span className="artifact-label-number">Artifact {i + 1}</span>
                     <span className="artifact-label-title">{artifact.displayTitle}</span>
                     {artifact.year && (
                       <span className="artifact-label-year">{artifact.year}</span>
