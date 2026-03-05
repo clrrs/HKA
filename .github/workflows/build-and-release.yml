@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.2.2)'
+        required: false
 
 jobs:
   build:
@@ -19,13 +24,19 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Set version from tag
+      - name: Set version
         shell: bash
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
           CURRENT=$(node -p "require('./package.json').version")
           if [ "$CURRENT" != "$VERSION" ]; then
-            npm version $VERSION --no-git-tag-version
+            npm version "$VERSION" --no-git-tag-version
           fi
 
       - name: Install dependencies
