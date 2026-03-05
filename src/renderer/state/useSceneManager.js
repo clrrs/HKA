@@ -33,12 +33,32 @@ export function useKeyboardNav() {
 
   useEffect(() => {
     let lastTtsToggle = 0;
+    const ENABLE_TEST_SHORTCUTS = true;
 
     const handleKeyDown = (e) => {
       if (e.repeat) return; // ignore key repeat (keypad hold)
-      if (scene === "quote" || scene === "attract") return;
-
       const key = e.key.toLowerCase();
+
+      // Test-only backdoor shortcuts (always active)
+      if (ENABLE_TEST_SHORTCUTS) {
+        if (key === "1") {
+          e.preventDefault();
+          goToScene("start");
+          return;
+        }
+        if (key === "2") {
+          e.preventDefault();
+          goToScene("home");
+          return;
+        }
+        if (key === "3") {
+          e.preventDefault();
+          goToScene("quote", { theme: "adventure" });
+          return;
+        }
+      }
+
+      if (scene === "quote" || scene === "attract") return;
 
       // Settings (A) - toggle settings overlay
       if (key === "a") {
