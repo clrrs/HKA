@@ -44,6 +44,9 @@ export default function QuoteScene() {
       <div className="quote-scene-text" tabIndex={0} aria-live="polite">
         {theme.quote}
       </div>
+      <p className="quote-scene-attribution" aria-hidden="true">
+        — Helen Keller
+      </p>
       <p className="quote-scene-hint" aria-hidden="true">
         Press any key to continue
       </p>

@@ -1423,7 +1423,15 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   font-weight: 400;
   font-size: calc(90px * var(--text-scale));
   line-height: 1.2;
-  font-style: italic;
+}
+
+.quote-scene-attribution {
+  margin-top: 1em;
+  color: var(--text-heading);
+  font-size: calc(32px * var(--text-scale));
+  font-weight: 400;
+  text-align: center;
+  opacity: 0.85;
 }
 
 .quote-scene-text:focus,
@@ -1436,8 +1444,13 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   bottom: 80px;
   color: var(--text-primary);
   font-size: calc(24px * var(--text-scale));
-  opacity: 0.5;
   font-weight: 300;
+  opacity: 0;
+  animation: quote-hint-fade 0.8s ease-in 4s forwards;
+}
+
+@keyframes quote-hint-fade {
+  to { opacity: 0.5; }
 }
 
 /* ============================================
