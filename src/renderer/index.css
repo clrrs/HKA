@@ -858,6 +858,22 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   justify-content: center;
 }
 
+.idle-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  text-align: center;
+}
+
+.idle-overlay-line {
+  margin: 0;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .idle-countdown {
   font-size: calc(var(--font-size-h1) * 2 * var(--text-scale));
   font-weight: 900;

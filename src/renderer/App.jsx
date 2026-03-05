@@ -166,8 +166,13 @@ export default function App() {
         )}
         {idleCountdown !== null && (
           <div className="idle-overlay" aria-hidden="false">
-            <div className="idle-countdown" aria-live="assertive">
-              {idleCountdown}
+            <div className="idle-overlay-content">
+              <p className="idle-overlay-line">Still there?</p>
+              <p className="idle-overlay-line">Inactivity timer, returning to start in…</p>
+              <div className="idle-countdown" aria-live="assertive">
+                {idleCountdown}
+              </div>
+              <p className="idle-overlay-line">Press any key to stay</p>
             </div>
           </div>
         )}
