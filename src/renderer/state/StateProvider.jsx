@@ -13,7 +13,7 @@ export function useAppState() {
 }
 
 export default function StateProvider({ children }) {
-  const [scene, setScene] = useState("start");
+  const [scene, setScene] = useState("attract");
   const [subscene, setSubscene] = useState(null);
   const [artifactId, setArtifactId] = useState(null);
   const [currentTheme, setCurrentTheme] = useState(null);
@@ -53,6 +53,8 @@ export default function StateProvider({ children }) {
   const [showSettings, setShowSettings] = useState(false);
   const toggleSettings = () => setShowSettings(prev => !prev);
 
+  const [videoOverlayOpen, setVideoOverlayOpen] = useState(false);
+
   const [speechMode, setSpeechMode] = useState(true);
   const toggleSpeechMode = () => setSpeechMode(prev => !prev);
 
@@ -63,13 +65,13 @@ export default function StateProvider({ children }) {
   }, [speechMode]);
 
   const resetToStart = () => {
-    setScene("start");
+    setScene("attract");
     setSubscene(null);
     setArtifactId(null);
     setCurrentTheme(null);
     setPrefs(DEFAULT_PREFS);
     setShowSettings(false);
-    setPreviousScene("start");
+    setPreviousScene("attract");
     try {
       localStorage.removeItem("prefs");
     } catch {
@@ -119,6 +121,8 @@ export default function StateProvider({ children }) {
       goBack,
       showSettings,
       toggleSettings,
+      videoOverlayOpen,
+      setVideoOverlayOpen,
       speechMode,
       toggleSpeechMode,
       resetToStart

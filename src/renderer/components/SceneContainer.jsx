@@ -1,6 +1,8 @@
 import React from "react";
 import { useAppState } from "../state/StateProvider";
 import Scene from "./Scene";
+import AttractScene from "./scenes/AttractScene";
+import InstructionScene from "./scenes/InstructionScene";
 import HomeScene from "./scenes/HomeScene";
 import QuoteScene from "./scenes/QuoteScene";
 import TravelScene from "./scenes/TravelScene";
@@ -12,6 +14,12 @@ export default function SceneContainer() {
 
   return (
     <main className="scene-container">
+      <Scene id="attract" isActive={scene === "attract"}>
+        <AttractScene isActive={scene === "attract"} />
+      </Scene>
+      <Scene id="instruction" isActive={scene === "instruction"}>
+        <InstructionScene isActive={scene === "instruction"} />
+      </Scene>
       <Scene id="start" isActive={scene === "start"}>
         <StartScene />
       </Scene>

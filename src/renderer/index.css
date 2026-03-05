@@ -1037,6 +1037,56 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 }
 
 /* ============================================
+   Attract & Instruction Scenes
+   ============================================ */
+
+.attract-scene,
+.instruction-scene {
+  position: relative;
+  width: 100%;
+  height: 1080px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attract-video,
+.instruction-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.instruction-scene-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.instruction-focus-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  z-index: 10;
+}
+
+.instruction-skip-btn {
+  position: absolute;
+  bottom: 60px;
+  right: 60px;
+  padding: 24px 48px;
+  font-size: 28px;
+  z-index: 10;
+}
+
+/* ============================================
    Start Scene
    ============================================ */
 
@@ -1139,9 +1189,9 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   border-radius: 16px;
   border: 2px solid var(--btn-border);
   padding: 32px;
-  width: 80%;
-  height: 80%;
-  max-width: 1200px;
+  width: 92%;
+  height: 92%;
+  max-width: none;
   overflow: visible;
 }
 

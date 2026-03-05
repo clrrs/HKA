@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAppState } from "../../state/StateProvider";
 
 export default function StartScene() {
-  const { goToScene } = useAppState();
+  const { goToScene, setVideoOverlayOpen } = useAppState();
   const [showVideo, setShowVideo] = useState(false);
   const helpButtonRef = useRef(null);
   const modalRef = useRef(null);
@@ -49,10 +49,12 @@ export default function StartScene() {
 
   const openVideo = () => {
     setShowVideo(true);
+    setVideoOverlayOpen(true);
   };
 
   const closeVideo = () => {
     setShowVideo(false);
+    setVideoOverlayOpen(false);
     // Restore focus to the help button
     if (helpButtonRef.current) {
       helpButtonRef.current.focus();
@@ -93,7 +95,7 @@ export default function StartScene() {
           aria-label="Watch instructional video"
           onClick={openVideo}
         >
-          <img src="./Question.svg" alt="" aria-hidden="true" />
+          <img src="./InformationIcon.svg" alt="" aria-hidden="true" />
         </button>
         <div className="start-center">
           <button
@@ -128,7 +130,7 @@ export default function StartScene() {
             <div className="start-video-body">
               <video
                 ref={videoRef}
-                src="/InstructionalVideo.mov"
+                src="/3HK7_Instructional-VO_v01-260227.mp4"
                 onEnded={handleVideoEnded}
                 autoPlay
                 tabIndex={0}

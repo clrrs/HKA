@@ -36,7 +36,7 @@ export function useKeyboardNav() {
 
     const handleKeyDown = (e) => {
       if (e.repeat) return; // ignore key repeat (keypad hold)
-      if (scene === "quote") return;
+      if (scene === "quote" || scene === "attract") return;
 
       const key = e.key.toLowerCase();
 
@@ -47,8 +47,9 @@ export function useKeyboardNav() {
         return;
       }
 
-      // Home (S) — guard against synthetic S from toggle-tts (Insert+S)
+      // Home (S) — guard against synthetic S from toggle-tts (Insert+S); disabled on instruction scene
       if (key === "s") {
+        if (scene === "instruction") return;
         if (Date.now() - lastTtsToggle < 500) return;
         e.preventDefault();
         goToScene("home");

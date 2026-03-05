@@ -9,7 +9,7 @@ const DESIGN_H = 1080;
 
 export default function App() {
   useKeyboardNav();
-  const { scene, showSettings, toggleSettings, resetToStart } = useAppState();
+  const { scene, showSettings, toggleSettings, resetToStart, videoOverlayOpen } = useAppState();
   const [idleCountdown, setIdleCountdown] = useState(null);
   const lastActivityRef = useRef(Date.now());
   const settingsPanelRef = useRef(null);
@@ -31,12 +31,15 @@ export default function App() {
   }, [rescale]);
 
   useEffect(() => {
-    // Disable inactivity timer while on the start scene
-    if (scene === "start") {
+    // Disable inactivity timer whenever a video is playing (attract, instruction, or start popup)
+    if (scene === "attract" || scene === "instruction" || videoOverlayOpen) {
       setIdleCountdown(null);
       lastActivityRef.current = Date.now();
       return;
     }
+
+    // Reset activity timestamp when entering a scene that uses the timer so countdown starts fresh after leaving video scenes
+    lastActivityRef.current = Date.now();
 
     const handleActivity = () => {
       lastActivityRef.current = Date.now();
@@ -72,7 +75,7 @@ export default function App() {
       });
       clearInterval(intervalId);
     };
-  }, [resetToStart, scene]);
+  }, [resetToStart, scene, videoOverlayOpen]);
 
   const handleSettingsKeyDown = (e) => {
     if (e.repeat) return;
