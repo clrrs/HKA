@@ -61,7 +61,7 @@ export default function InstructionScene({ isActive }) {
         <video
           ref={videoRef}
           className="instruction-video"
-          src="/3HK7_Instructional-VO_v01-260227.mp4"
+          src="/3HK7_Instructional-VO_v01-260227_SMALL.mov"
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
           tabIndex={-1}

@@ -46,7 +46,7 @@ export default function AttractScene({ isActive }) {
       <video
         ref={videoRef}
         className="attract-video"
-        src="/3HK7_Attract_v02-260227.mp4"
+        src="/3HK7_Attract_v02-260227_SMALL.mov"
         loop
         playsInline
         aria-hidden="true"
