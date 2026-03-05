@@ -1376,6 +1376,22 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   color: var(--color-black);
 }
 
+/* --- Disabled (testing: adventure only) --- */
+.theme-circle--disabled {
+  cursor: default;
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+.theme-circle--disabled.theme-circle--focused .theme-circle-inner {
+  background-color: var(--color-black);
+  border-color: var(--text-primary);
+}
+
+.theme-circle--disabled.theme-circle--focused .theme-label {
+  color: var(--text-primary);
+}
+
 /* --- Dot indicators (fixed to screen bottom-center) --- */
 .theme-indicators {
   position: absolute;

@@ -1,12 +1,22 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useAppState } from "../../state/StateProvider";
 
-const themes = [
+const TESTING_ADVENTURE_ONLY = true;
+
+const ALL_THEMES = [
   { id: "change",    label: "Change",    scene: "quote", image: "./Change.png" },
   { id: "together",  label: "Together",  scene: "quote", image: "./Together.png" },
   { id: "adventure", label: "Adventure", scene: "quote", image: "./Adventure.png" },
   { id: "work",      label: "Work",      scene: "quote", image: "./Work.png" },
 ];
+
+const themes = TESTING_ADVENTURE_ONLY
+  ? (() => {
+      const adventure = ALL_THEMES.find((t) => t.id === "adventure");
+      const others = ALL_THEMES.filter((t) => t.id !== "adventure").map((t) => ({ ...t, disabledForTesting: true }));
+      return [adventure, ...others];
+    })()
+  : ALL_THEMES;
 
 const ITEM_WIDTH = 600;
 const GAP = 77;
@@ -66,7 +76,7 @@ export default function HomeScene() {
 
     if (isSelect && idx >= 0) {
       const theme = themes[idx];
-      if (theme.scene) goToScene(theme.scene, { theme: theme.id });
+      if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id });
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -129,11 +139,12 @@ export default function HomeScene() {
             <div role="listitem" key={theme.id}>
               <button
                 ref={(el) => { circleRefs.current[i] = el; }}
-                className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""}`}
+                className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""} ${theme.disabledForTesting ? "theme-circle--disabled" : ""}`}
                 onFocus={() => handleFocus(i)}
                 onBlur={handleBlur}
-                onClick={() => { if (theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
+                onClick={() => { if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
                 aria-label={`${theme.label}, ${i + 1} of ${themes.length}`}
+                aria-disabled={theme.disabledForTesting ? true : undefined}
                 tabIndex={0}
               >
                 <span className="theme-circle-inner" aria-hidden="true" />
