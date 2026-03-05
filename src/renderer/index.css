@@ -642,12 +642,10 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   pointer-events: none;
 }
 
-/* Carousel Expanded Mode - Floating popup with backdrop */
+/* Carousel Expanded Mode - Full-screen overlay with backdrop */
 .carousel-expanded {
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
   z-index: 900;
   display: flex;
   justify-content: center;
@@ -666,24 +664,31 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 }
 
 .carousel-expanded-content {
+  position: relative;
   background: var(--bg-container);
-  border-radius: 12px;
-  padding: 20px;
-  width: 50%;
-  max-height: 918px;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  padding: 40px 80px 80px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .carousel-image-display {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex: 1;
   min-height: 350px;
+  padding-bottom: 40px;
 }
 
 .carousel-image-display img {
   max-width: 100%;
-  max-height: 350px;
+  max-height: 100%;
   object-fit: contain;
 }
 
@@ -691,8 +696,12 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   display: flex;
   justify-content: center;
   gap: 10px;
-  padding: 15px;
+  padding: 16px 0 0;
   flex-wrap: wrap;
+}
+
+.carousel-expanded .carousel-indicators {
+  margin-top: 16px;
 }
 
 .carousel-btn {
@@ -737,6 +746,57 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .carousel-btn.carousel-btn-icon:focus-visible img {
   filter: var(--icon-focus-filter);
+}
+
+/* Carousel expanded close button (top-left circular icon) */
+.carousel-exit-btn {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  z-index: 2;
+}
+
+/* Guided Description pill button */
+.carousel-guided-btn {
+  padding-inline: 32px;
+}
+
+/* Guided Description text popup */
+.carousel-guided-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3;
+}
+
+.carousel-guided-modal {
+  position: relative;
+  max-width: 640px;
+  max-height: 80%;
+  width: 80%;
+  background: var(--bg-container);
+  padding: 32px 40px 40px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.carousel-guided-close-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.carousel-guided-body {
+  margin-top: 32px;
+}
+
+.carousel-guided-heading {
+  margin: 0;
+  font-size: calc(var(--font-size-heading) * var(--text-scale));
 }
 
 /* ============================================

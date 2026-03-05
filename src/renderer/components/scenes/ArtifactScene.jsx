@@ -6,7 +6,6 @@ import VideoPlayer from "../VideoPlayer";
 
 export default function ArtifactScene() {
   const { artifactId, goToScene, subscene, currentTheme, speechMode } = useAppState();
-  const isCarouselModal = subscene === "expanded" || subscene === "zoom";
 
   const theme = getTheme(currentTheme);
   const artifact = getArtifact(currentTheme, artifactId);
@@ -33,7 +32,7 @@ export default function ArtifactScene() {
 
   return (
     <div className="artifact-page">
-      <div className="artifact-content" inert={isCarouselModal ? "" : undefined}>
+      <div className="artifact-content">
         <div className="artifact-text">
           <h2 className="artifact-header">
             <span className="artifact-header-accent">{theme.label}</span>
@@ -53,7 +52,7 @@ export default function ArtifactScene() {
         </div>
       </div>
 
-      <nav className="artifact-nav" inert={isCarouselModal ? "" : undefined}>
+      <nav className="artifact-nav">
         <div className="artifact-nav-left">
           <button
             className="nav-btn nav-btn-icon-white"

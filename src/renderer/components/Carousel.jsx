@@ -45,14 +45,17 @@ export default function Carousel({ images = [] }) {
   const { subscene, setSubscene } = useAppState();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
+  const [showGuided, setShowGuided] = useState(false);
   const carouselRef = useRef(null);
   const announcerRef = useRef(null);
   const expandedRef = useRef(null);
   const zoomRef = useRef(null);
+  const guidedRef = useRef(null);
 
-  // Apply focus trap when in expanded or zoom mode
-  useFocusTrap(expandedRef, subscene === "expanded");
+  // Apply focus trap when in expanded, zoom, or guided description mode
+  useFocusTrap(expandedRef, subscene === "expanded" && !showGuided);
   useFocusTrap(zoomRef, subscene === "zoom");
+  useFocusTrap(guidedRef, showGuided);
 
   const announce = useCallback((message) => {
     if (announcerRef.current) {
@@ -83,10 +86,25 @@ export default function Carousel({ images = [] }) {
 
   const enterExpanded = () => {
     setSubscene("expanded");
-    announce(`Expanded view. Image ${currentIndex + 1} of ${images.length}. ${images[currentIndex]?.alt}`);
+    announce(
+      `Expanded view. Image ${currentIndex + 1} of ${images.length}. ${
+        images[currentIndex]?.alt || ""
+      }`
+    );
+    // Ensure focus moves into the expanded carousel so keypad L/K navigation works
+    setTimeout(() => {
+      if (!expandedRef.current) return;
+      const focusables = expandedRef.current.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
+    }, 0);
   };
 
   const exitExpanded = () => {
+    setShowGuided(false);
     setSubscene(null);
     announce("Exited navigation mode.");
   };
@@ -114,7 +132,10 @@ export default function Carousel({ images = [] }) {
     const handleEscape = (e) => {
       if (e.repeat) return;
       if (e.key === "Escape") {
-        if (subscene === "zoom") {
+        if (showGuided) {
+          setShowGuided(false);
+          announce("Closed guided description.");
+        } else if (subscene === "zoom") {
           exitZoom();
         } else if (subscene === "expanded") {
           exitExpanded();
@@ -122,17 +143,32 @@ export default function Carousel({ images = [] }) {
       }
     };
     
-    if (subscene) {
+    if (subscene || showGuided) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [subscene]);
+  }, [subscene, showGuided, announce, exitZoom]);
 
-  if (images.length === 0) {
-    return <div className="carousel-empty">No images available</div>;
-  }
+  const currentImage = images.length > 0 ? images[currentIndex] : null;
 
-  const currentImage = images[currentIndex];
+  const openGuided = () => {
+    if (!currentImage) return;
+    setShowGuided(true);
+    announce(
+      `Guided description opened for image ${currentIndex + 1} of ${images.length}.`
+    );
+  };
+
+  const closeGuided = () => {
+    setShowGuided(false);
+    announce("Closed guided description.");
+    if (carouselRef.current) {
+      const btn = carouselRef.current.querySelector(".carousel-guided-btn");
+      if (btn) {
+        btn.focus();
+      }
+    }
+  };
 
   return (
     <div 
@@ -178,17 +214,37 @@ export default function Carousel({ images = [] }) {
         </div>
       )}
 
-      {/* Layer 2: Expanded Navigation - Floating popup with backdrop */}
+      {/* Layer 2: Expanded Navigation - Full-screen overlay with backdrop */}
       {subscene === "expanded" && (
-        <div className="carousel-layer carousel-expanded" ref={expandedRef}>
+        <div
+          className="carousel-layer carousel-expanded"
+          ref={expandedRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image carousel, expanded view"
+        >
           <div className="carousel-expanded-content">
+            {currentImage && (
+              <button 
+                type="button" 
+                onClick={exitExpanded}
+                aria-label="Exit image carousel"
+                className="nav-btn icon-btn carousel-exit-btn"
+              >
+                <img src="./Exit.svg" alt="" aria-hidden="true" />
+              </button>
+            )}
             <div className="carousel-image-display">
-              <img 
-                src={currentImage.src} 
-                alt={currentImage.alt}
-              />
+              {currentImage ? (
+                <img 
+                  src={currentImage.src} 
+                  alt={currentImage.alt}
+                />
+              ) : (
+                <div className="carousel-empty">No images available</div>
+              )}
             </div>
-            {images.length > 1 && (
+            {images.length > 1 && currentImage && (
               <div className="carousel-indicators" aria-hidden="true">
                 {images.map((_, index) => (
                   <span 
@@ -199,14 +255,6 @@ export default function Carousel({ images = [] }) {
               </div>
             )}
             <div className="carousel-menu" role="toolbar" aria-label="Image navigation">
-              <button 
-                type="button" 
-                onClick={exitExpanded}
-                aria-label="Exit Image Carousel"
-                className="carousel-btn carousel-btn-icon"
-              >
-                <img src="./Exit.svg" alt="" aria-hidden="true" />
-              </button>
               {images.length > 1 && (
                 <>
                   <button 
@@ -235,7 +283,45 @@ export default function Carousel({ images = [] }) {
               >
                 <img src="./Zoom.svg" alt="" aria-hidden="true" />
               </button>
+              {currentImage && (
+                <button
+                  type="button"
+                  onClick={openGuided}
+                  className="carousel-btn carousel-guided-btn"
+                  aria-label="Open guided description for current image"
+                >
+                  Guided Description
+                </button>
+              )}
             </div>
+            {showGuided && currentImage && (
+              <div className="carousel-guided-overlay">
+                <div
+                  className="carousel-guided-modal"
+                  ref={guidedRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Guided description"
+                >
+                  <button
+                    type="button"
+                    className="nav-btn icon-btn carousel-guided-close-btn"
+                    onClick={closeGuided}
+                    aria-label="Close guided description"
+                  >
+                    <img src="./Exit.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <div className="carousel-guided-body">
+                    <h2 className="carousel-guided-heading">
+                      Guided Description
+                    </h2>
+                    <p>
+                      {currentImage.description || currentImage.alt}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

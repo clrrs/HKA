@@ -65,11 +65,17 @@ export function useKeyboardNav() {
             : document.querySelector(".carousel-zoom") ||
               document.querySelector(".carousel-expanded") ||
               document;
-        const focusables = Array.from(
+        const rawFocusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-        ).filter(el => el.offsetParent !== null);
+        );
+        const focusables =
+          container.classList &&
+          (container.classList.contains("carousel-expanded") ||
+            container.classList.contains("carousel-zoom"))
+            ? rawFocusables
+            : rawFocusables.filter((el) => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
         if (idx > 0) focusables[idx - 1].focus();
         else if (focusables.length) focusables[focusables.length - 1].focus();
@@ -92,11 +98,17 @@ export function useKeyboardNav() {
             : document.querySelector(".carousel-zoom") ||
               document.querySelector(".carousel-expanded") ||
               document;
-        const focusables = Array.from(
+        const rawFocusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
-        ).filter(el => el.offsetParent !== null);
+        );
+        const focusables =
+          container.classList &&
+          (container.classList.contains("carousel-expanded") ||
+            container.classList.contains("carousel-zoom"))
+            ? rawFocusables
+            : rawFocusables.filter((el) => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
         if (idx < focusables.length - 1) focusables[idx + 1].focus();
         else if (focusables.length) focusables[0].focus();
