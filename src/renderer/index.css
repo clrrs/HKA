@@ -294,6 +294,71 @@ body {
   object-position: center;
 }
 
+/* Artifact video preview tile (for artifact videos only) */
+.artifact-media .artifact-video-preview {
+  width: 836px;
+  height: 614px;
+  margin: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.artifact-video-preview-frame {
+  flex: 1;
+  padding: 25px 31px 31px 31px;
+  box-sizing: border-box;
+  background: #111;
+  border: 2px solid white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.artifact-video-preview:focus-visible .artifact-video-preview-frame {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.artifact-video-preview-viewport {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.artifact-video-preview-viewport img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.artifact-video-preview-play-icon {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--btn-border);
+  background-color: var(--btn-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  color: var(--btn-text);
+}
+
+.artifact-video-preview-label {
+  margin-top: 12px;
+  text-align: center;
+  font-size: calc(26px * var(--text-scale));
+}
+
 /* Indicators pinned to bottom edge of carousel surface. */
 .artifact-media .carousel-indicators {
   flex-shrink: 0;
@@ -927,6 +992,129 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   border-color: var(--btn-focus-border);
   color: var(--btn-focus-text);
   outline: none;
+}
+
+/* Artifact Video Overlay (for artifact videos only) */
+.artifact-video-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.artifact-video-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.artifact-video-modal {
+  position: relative;
+  background: var(--bg-container);
+  border-radius: 16px;
+  border: 2px solid var(--btn-border);
+  padding: 40px 60px 48px 60px;
+  width: 92%;
+  height: 92%;
+  max-width: none;
+  max-height: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.artifact-video-exit-btn {
+  position: absolute;
+  top: -36px;
+  left: -36px;
+  width: 100px;
+  height: 100px;
+}
+
+.artifact-video-exit-btn img {
+  width: 36px;
+  height: 36px;
+}
+
+.artifact-video-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.artifact-video-body video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  background: #000;
+}
+
+.artifact-video-controls {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.artifact-video-control-btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 12px 32px;
+  border-radius: 999px;
+  border: 2px solid var(--btn-border);
+  font-family: 'APHb2', Arial, sans-serif;
+  font-weight: 400;
+  font-size: calc(var(--font-size-body) * var(--text-scale));
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.artifact-video-control-btn:focus-visible {
+  background-color: var(--btn-focus-bg);
+  border-color: var(--btn-focus-border);
+  color: var(--btn-focus-text);
+  outline: none;
+}
+
+.artifact-video-transcript-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3;
+}
+
+.artifact-video-transcript-modal {
+  position: relative;
+  max-width: 640px;
+  max-height: 80%;
+  width: 80%;
+  background: var(--bg-container);
+  padding: 32px 40px 40px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.artifact-video-transcript-close-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.artifact-video-transcript-body {
+  margin-top: 32px;
+}
+
+.artifact-video-transcript-heading {
+  margin: 0;
 }
 
 /* ============================================

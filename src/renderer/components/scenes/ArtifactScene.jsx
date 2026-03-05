@@ -1,11 +1,22 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme, getArtifact, getNextArtifact, getPrevArtifact } from "../../data/artifacts";
 import Carousel from "../Carousel";
-import VideoPlayer from "../VideoPlayer";
+import ArtifactVideoPreview from "../ArtifactVideoPreview";
+import ArtifactVideoOverlay from "../ArtifactVideoOverlay";
 
 export default function ArtifactScene() {
-  const { artifactId, goToScene, subscene, currentTheme, speechMode } = useAppState();
+  const {
+    artifactId,
+    goToScene,
+    subscene,
+    currentTheme,
+    speechMode,
+    setVideoOverlayOpen,
+  } = useAppState();
+
+  const [showVideoOverlay, setShowVideoOverlay] = useState(false);
+  const videoPreviewRef = useRef(null);
 
   const theme = getTheme(currentTheme);
   const artifact = getArtifact(currentTheme, artifactId);
@@ -42,9 +53,13 @@ export default function ArtifactScene() {
         </div>
         <div className="artifact-media">
           {artifact.type === "video" ? (
-            <VideoPlayer
-              src={artifact.videoSrc}
+            <ArtifactVideoPreview
+              ref={videoPreviewRef}
               poster={artifact.posterSrc}
+              onOpen={() => {
+                setShowVideoOverlay(true);
+                setVideoOverlayOpen(true);
+              }}
             />
           ) : (
             <Carousel images={artifact.images} />
@@ -88,6 +103,19 @@ export default function ArtifactScene() {
           )}
         </div>
       </nav>
+      {artifact.type === "video" && showVideoOverlay && (
+        <ArtifactVideoOverlay
+          src={artifact.videoSrc}
+          poster={artifact.posterSrc}
+          onClose={() => {
+            setShowVideoOverlay(false);
+            setVideoOverlayOpen(false);
+            if (videoPreviewRef.current) {
+              videoPreviewRef.current.focus();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
