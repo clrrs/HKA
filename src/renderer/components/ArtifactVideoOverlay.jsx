@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useStepScroll } from "./useStepScroll";
 
 function useFocusTrap(containerRef, isActive) {
   useEffect(() => {
@@ -52,6 +53,20 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
   const [showTranscript, setShowTranscript] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
 
+  const {
+    bodyRef: transcriptBodyRef,
+    closeButtonRef: transcriptCloseRef,
+    handleKeyDown: handleTranscriptKeyDown,
+    resetAnchors: resetTranscriptAnchors,
+  } = useStepScroll();
+
+  const {
+    bodyRef: guidedBodyRef,
+    closeButtonRef: guidedCloseRef,
+    handleKeyDown: handleGuidedKeyDown,
+    resetAnchors: resetGuidedAnchors,
+  } = useStepScroll();
+
   useFocusTrap(overlayRef, !showTranscript && !showGuided);
   useFocusTrap(transcriptRef, showTranscript);
   useFocusTrap(guidedRef, showGuided);
@@ -82,6 +97,10 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
   const openTranscript = () => {
     pause();
     setShowTranscript(true);
+    setShowGuided(false);
+    setTimeout(() => {
+      resetTranscriptAnchors();
+    }, 0);
   };
 
   const closeTranscript = () => {
@@ -95,6 +114,9 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
     pause();
     setShowTranscript(false);
     setShowGuided(true);
+    setTimeout(() => {
+      resetGuidedAnchors();
+    }, 0);
   };
 
   const closeGuided = () => {
@@ -163,7 +185,7 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
             aria-label={isPlaying ? "Pause video" : "Play video"}
             className="artifact-video-control-btn"
           >
-            {isPlaying ? "Pause ⏸" : "Play ▶"}
+            {isPlaying ? "Pause" : "Play"}
           </button>
           <button
             type="button"
@@ -193,18 +215,26 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
               role="dialog"
               aria-modal="true"
               aria-label="Transcript"
+              onKeyDown={handleTranscriptKeyDown}
             >
               <button
                 type="button"
                 className="exit-pill-btn artifact-video-transcript-close-btn"
                 onClick={closeTranscript}
                 aria-label="Close transcript"
+                ref={transcriptCloseRef}
               >
                 Exit
               </button>
               <div className="artifact-video-transcript-body">
                 <h2 className="artifact-video-transcript-heading">Transcript</h2>
-                <p>{transcriptText}</p>
+                <div
+                  className="artifact-document-transcript-text"
+                  ref={transcriptBodyRef}
+                  tabIndex={0}
+                >
+                  <p>{transcriptText}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -217,18 +247,26 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
               role="dialog"
               aria-modal="true"
               aria-label="Guided description"
+              onKeyDown={handleGuidedKeyDown}
             >
               <button
                 type="button"
                 className="exit-pill-btn artifact-video-transcript-close-btn"
                 onClick={closeGuided}
                 aria-label="Close guided description"
+                ref={guidedCloseRef}
               >
                 Exit
               </button>
               <div className="artifact-video-transcript-body">
                 <h2 className="artifact-video-transcript-heading">Guided Description</h2>
-                <p>{guidedText}</p>
+                <div
+                  className="artifact-document-transcript-text"
+                  ref={guidedBodyRef}
+                  tabIndex={0}
+                >
+                  <p>{guidedText}</p>
+                </div>
               </div>
             </div>
           </div>

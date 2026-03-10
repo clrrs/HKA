@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAppState } from "../state/StateProvider";
+import { useStepScroll } from "./useStepScroll";
 
 function useFocusTrap(containerRef, isActive) {
   useEffect(() => {
@@ -50,13 +51,15 @@ export default function DocumentViewer({ artifact }) {
   const overlayRef = useRef(null);
   const toolbarFirstButtonRef = useRef(null);
   const transcriptOverlayRef = useRef(null);
-  const transcriptBodyRef = useRef(null);
-  const transcriptCloseRef = useRef(null);
+  const {
+    bodyRef: transcriptBodyRef,
+    closeButtonRef: transcriptCloseRef,
+    handleKeyDown: handleTranscriptKeyDown,
+    resetAnchors: resetTranscriptAnchors,
+  } = useStepScroll();
   const guidedOverlayRef = useRef(null);
 
   const [position, setPosition] = useState("top");
-  const [scrollIndex, setScrollIndex] = useState(0);
-  const scrollAnchorsRef = useRef([0]);
 
   useFocusTrap(overlayRef, isOpen && !showTranscript && !showGuided);
   useFocusTrap(transcriptOverlayRef, isOpen && showTranscript);
@@ -67,7 +70,6 @@ export default function DocumentViewer({ artifact }) {
     setShowTranscript(false);
     setShowGuided(false);
     setPosition("top");
-    setScrollIndex(0);
     requestAnimationFrame(() => {
       if (toolbarFirstButtonRef.current) {
         toolbarFirstButtonRef.current.focus();
@@ -79,7 +81,6 @@ export default function DocumentViewer({ artifact }) {
     setIsOpen(false);
     setShowTranscript(false);
     setShowGuided(false);
-    setScrollIndex(0);
     if (surfaceRef.current) {
       surfaceRef.current.focus();
     }
@@ -101,72 +102,16 @@ export default function DocumentViewer({ artifact }) {
   const openTranscript = () => {
     setShowGuided(false);
     setShowTranscript(true);
-    setScrollIndex(0);
-    scrollAnchorsRef.current = [0];
 
     requestAnimationFrame(() => {
-      if (!transcriptBodyRef.current) return;
-      const body = transcriptBodyRef.current;
-      const step = Math.floor(body.clientHeight * 0.75) || body.clientHeight;
-      const max = body.scrollHeight - body.clientHeight;
-      const anchors = [0];
-      let pos = step;
-      while (pos < max) {
-        anchors.push(pos);
-        pos += step;
-      }
-      if (!anchors.includes(max) && max > 0) {
-        anchors.push(max);
-      }
-      scrollAnchorsRef.current = anchors;
-      body.scrollTop = 0;
-      if (transcriptBodyRef.current) {
-        transcriptBodyRef.current.focus();
-      }
+      resetTranscriptAnchors();
     });
   };
 
   const closeTranscript = () => {
     setShowTranscript(false);
-    setScrollIndex(0);
     if (toolbarFirstButtonRef.current) {
       toolbarFirstButtonRef.current.focus();
-    }
-  };
-
-  const handleTranscriptKeyDown = (event) => {
-    if (event.repeat) return;
-    const key = event.key.toLowerCase();
-    if (key !== "k" && key !== "l") return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const anchors = scrollAnchorsRef.current;
-    if (!transcriptBodyRef.current || anchors.length === 0) return;
-
-    const body = transcriptBodyRef.current;
-
-    if (key === "l") {
-      if (scrollIndex < anchors.length - 1) {
-        const nextIndex = scrollIndex + 1;
-        setScrollIndex(nextIndex);
-        body.scrollTo({ top: anchors[nextIndex], behavior: "smooth" });
-      } else if (transcriptCloseRef.current) {
-        transcriptCloseRef.current.focus();
-      }
-    } else if (key === "k") {
-      if (document.activeElement === transcriptCloseRef.current) {
-        body.focus();
-        body.scrollTo({ top: anchors[anchors.length - 1] || 0, behavior: "smooth" });
-        setScrollIndex(anchors.length - 1);
-        return;
-      }
-      if (scrollIndex > 0) {
-        const nextIndex = scrollIndex - 1;
-        setScrollIndex(nextIndex);
-        body.scrollTo({ top: anchors[nextIndex], behavior: "smooth" });
-      }
     }
   };
 

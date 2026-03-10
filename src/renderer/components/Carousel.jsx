@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAppState } from "../state/StateProvider";
 import ZoomControls from "./ZoomControls";
+import { useStepScroll } from "./useStepScroll";
 
 // Focus trap hook - keeps tab cycling within a container
 function useFocusTrap(containerRef, isActive) {
@@ -52,7 +53,19 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   const expandedRef = useRef(null);
   const zoomRef = useRef(null);
   const guidedRef = useRef(null);
+  const {
+    bodyRef: guidedBodyRef,
+    closeButtonRef: guidedCloseRef,
+    handleKeyDown: handleGuidedKeyDown,
+    resetAnchors: resetGuidedAnchors,
+  } = useStepScroll();
   const transcriptRef = useRef(null);
+  const {
+    bodyRef: transcriptBodyRef,
+    closeButtonRef: transcriptCloseRef,
+    handleKeyDown: handleTranscriptKeyDown,
+    resetAnchors: resetTranscriptAnchors,
+  } = useStepScroll();
 
   // Apply focus trap when in expanded, zoom, guided description, or transcript mode
   useFocusTrap(expandedRef, subscene === "expanded" && !showGuided && !showTranscript);
@@ -164,6 +177,9 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     if (!currentImage) return;
     setShowTranscript(false);
     setShowGuided(true);
+    setTimeout(() => {
+      resetGuidedAnchors();
+    }, 0);
     announce(
       `Guided description opened for image ${currentIndex + 1} of ${images.length}.`
     );
@@ -326,12 +342,14 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   role="dialog"
                   aria-modal="true"
                   aria-label="Guided description"
+                  onKeyDown={handleGuidedKeyDown}
                 >
                   <button
                     type="button"
                     className="exit-pill-btn carousel-guided-close-btn"
                     onClick={closeGuided}
                     aria-label="Close guided description"
+                    ref={guidedCloseRef}
                   >
                     Exit
                   </button>
@@ -339,9 +357,15 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                     <h2 className="carousel-guided-heading">
                       Guided Description
                     </h2>
-                    <p>
-                      {currentImage.description || currentImage.alt}
-                    </p>
+                    <div
+                      className="artifact-document-transcript-text"
+                      ref={guidedBodyRef}
+                      tabIndex={0}
+                    >
+                      <p>
+                        {currentImage.description || currentImage.alt}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -354,6 +378,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   role="dialog"
                   aria-modal="true"
                   aria-label="Image transcript"
+                  onKeyDown={handleTranscriptKeyDown}
                 >
                   <button
                     type="button"
@@ -363,12 +388,23 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                       announce("Closed transcript.");
                     }}
                     aria-label="Close transcript"
+                    ref={transcriptCloseRef}
                   >
                     Exit
                   </button>
                   <div className="carousel-guided-body">
                     <h2 className="carousel-guided-heading">Transcript</h2>
-                    <p>{transcriptText || "Transcript coming soon."}</p>
+                    <div
+                      className="artifact-document-transcript-text"
+                      ref={transcriptBodyRef}
+                      tabIndex={0}
+                      onFocus={() => {
+                        // recompute anchors when the text area gains focus
+                        resetTranscriptAnchors();
+                      }}
+                    >
+                      <p>{transcriptText || "Transcript coming soon."}</p>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,10 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useStepScroll } from "./useStepScroll";
 
 export default function VideoPlayer({ src, poster, transcriptText, guidedDescription }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
+  const {
+    bodyRef: transcriptBodyRef,
+    closeButtonRef: transcriptCloseRef,
+    handleKeyDown: handleTranscriptKeyDown,
+    resetAnchors: resetTranscriptAnchors,
+  } = useStepScroll();
+  const {
+    bodyRef: guidedBodyRef,
+    closeButtonRef: guidedCloseRef,
+    handleKeyDown: handleGuidedKeyDown,
+    resetAnchors: resetGuidedAnchors,
+  } = useStepScroll();
 
   const play = () => {
     videoRef.current?.play();
@@ -54,11 +67,11 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
         <div className="video-controls-row">
           {!isPlaying ? (
             <button onClick={play} aria-label="Play video">
-              Play ▶
+              Play
             </button>
           ) : (
             <button onClick={pause} aria-label="Pause video">
-              Pause ⏸
+              Pause
             </button>
           )}
         </div>
@@ -68,6 +81,9 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
             onClick={() => {
               setShowGuided(false);
               setShowTranscript(true);
+              setTimeout(() => {
+                resetTranscriptAnchors();
+              }, 0);
             }}
             aria-label="Open transcript"
           >
@@ -78,6 +94,9 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
             onClick={() => {
               setShowTranscript(false);
               setShowGuided(true);
+              setTimeout(() => {
+                resetGuidedAnchors();
+              }, 0);
             }}
             aria-label="Open guided description"
           >
@@ -87,17 +106,24 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
       </div>
       {showTranscript && (
         <div className="video-overlay" role="dialog" aria-modal="true" aria-label="Transcript">
-          <div className="video-overlay-body">
+          <div className="video-overlay-body" onKeyDown={handleTranscriptKeyDown}>
             <button
               type="button"
               className="video-overlay-close"
               onClick={() => setShowTranscript(false)}
               aria-label="Close transcript"
+              ref={transcriptCloseRef}
             >
               Exit
             </button>
             <h2>Transcript</h2>
-            <p>{transcriptText || "Transcript coming soon."}</p>
+            <div
+              className="artifact-document-transcript-text"
+              ref={transcriptBodyRef}
+              tabIndex={0}
+            >
+              <p>{transcriptText || "Transcript coming soon."}</p>
+            </div>
           </div>
         </div>
       )}
@@ -108,17 +134,24 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
           aria-modal="true"
           aria-label="Guided description"
         >
-          <div className="video-overlay-body">
+          <div className="video-overlay-body" onKeyDown={handleGuidedKeyDown}>
             <button
               type="button"
               className="video-overlay-close"
               onClick={() => setShowGuided(false)}
               aria-label="Close guided description"
+              ref={guidedCloseRef}
             >
               Exit
             </button>
             <h2>Guided Description</h2>
-            <p>{guidedDescription || "Guided description coming soon."}</p>
+            <div
+              className="artifact-document-transcript-text"
+              ref={guidedBodyRef}
+              tabIndex={0}
+            >
+              <p>{guidedDescription || "Guided description coming soon."}</p>
+            </div>
           </div>
         </div>
       )}

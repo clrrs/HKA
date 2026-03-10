@@ -1016,14 +1016,15 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .carousel-guided-modal {
   position: relative;
-  max-width: 640px;
-  max-height: 80%;
-  width: 80%;
+  max-width: 900px;
+  max-height: 90%;
+  width: 90%;
   background: var(--bg-container);
   padding: 32px 40px 40px;
   border-radius: 16px;
   box-sizing: border-box;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .carousel-guided-close-btn {
@@ -1273,14 +1274,15 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .artifact-video-transcript-modal {
   position: relative;
-  max-width: 640px;
-  max-height: 80%;
-  width: 80%;
+  max-width: 900px;
+  max-height: 90%;
+  width: 90%;
   background: var(--bg-container);
   padding: 32px 40px 40px;
   border-radius: 16px;
   box-sizing: border-box;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .artifact-video-transcript-close-btn {
@@ -1309,14 +1311,13 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .artifact-document-transcript-modal {
   position: relative;
-  max-width: 640px;
-  max-height: 80%;
-  width: 80%;
+  max-width: 900px;
+  max-height: 90%;
+  width: 90%;
   background: var(--bg-container);
   padding: 32px 40px 40px;
   border-radius: 16px;
   box-sizing: border-box;
-  overflow: auto;
 }
 
 .artifact-document-transcript-close-btn {
@@ -1335,7 +1336,7 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .artifact-document-transcript-text {
   margin-top: 16px;
-  max-height: 60vh;
+  max-height: 75vh;
   overflow: auto;
 }
 
