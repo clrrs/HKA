@@ -198,7 +198,8 @@ export const themes = {
         title: "Video of Biplane Flight, 1919",
         displayTitle: "Helen Keller Takes a Ride in an Airplane",
         year: "1919",
-        description: "A rare historical video showing Helen Keller's biplane flight in 1919.",
+        description:
+          "In this clip from her 1919 silent movie “Deliverance,” Helen puts on a leather flight jacket and crash helmet, and rides in the open cockpit of a biplane. Anne Sullivan and Polly Thomson, Helen's teacher and assistant, respectively, help Helen gear up. Helen’s brother Phillips Brooks Keller, an Army pilot in WWI, keeps a watchful eye on his sister during her flight.",
         type: "video",
         videoSrc: "3A1Biplane.mp4",
         posterSrc: "3A1Biplane_frame.png",
@@ -218,7 +219,8 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         title: "Japanese Luncheon Set, 1948",
         displayTitle: "Japanese Luncheon Set",
         year: "1948",
-        description: "Kazuo Honma, the founder of the Japanese Braille Library, gifted Helen a New Year's luncheon set in 1948. The black lacquer set has gold symbols and carved abalone inlays, all set in a carrying stand with a brass handle. It contains six drawers, six trays, and a pair of cylindrical flasks.",
+        description:
+          "Kazuo Honma, the founder of the Japanese Braille Library, gifted Helen a New Year's luncheon set in 1948. The black lacquer set has gold symbols and carved abalone inlays, all set in a carrying stand with a brass handle. It contains six drawers, six trays, and a pair of cylindrical flasks.",
         type: "images",
         images: [
           {
@@ -246,7 +248,8 @@ The lacquer luncheon set is shown fully assembled in its carrying stand, viewed 
         title: "Photograph with Bantu Chief, 1951",
         displayTitle: "Photograph with Bantu Chief",
         year: "1951",
-        description: "A photograph of Helen Keller meeting with a Bantu Chief during her travels in 1951.",
+        description:
+          "In this photograph, Helen and her assistant Polly Thomson pose with a Bantu Chieftain and his wife in South Africa on April 11, 1951. Helen was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. The Bantu couple seen here are wearing traditional beaded garments. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes.",
         type: "images",
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
@@ -267,7 +270,8 @@ The lacquer luncheon set is shown fully assembled in its carrying stand, viewed 
         title: "Global Travel Schedule, 1948-49",
         displayTitle: "Global Travel Schedule",
         year: "1948\u201349",
-        description: "Helen Keller's global travel schedule from 1948-49, showing her extensive travels around the world.",
+        description:
+          "From March of 1948 to April 1949, Helen embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
         type: "document",
         images: [
           { src: "3A4_Schedule.png", alt: "Helen Keller's global travel schedule from 1948-49" }
@@ -315,7 +319,8 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         title: "Photograph of Helen Dancing with Italian Veteran, 1946",
         displayTitle: "Dancing with Italian Veteran",
         year: "1946",
-        description: "A photograph showing Helen Keller dancing with an Italian veteran in 1946.",
+        description:
+          "In this photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind. Although he may have served with the Axis during the war, their warm embrace is apparent, signaling a global fatigue with the war and a desire for peace.",
         type: "images",
         images: [
           { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
@@ -329,7 +334,8 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         title: "Photograph with Golda Meir, 1952",
         displayTitle: "Photograph with Golda Meir",
         year: "1952",
-        description: "A photograph of Helen Keller meeting with Golda Meir in Israel in 1952.",
+        description:
+          "Helen meets with future Prime Minister of Israel Golda Meir in 1952. In this photograph, Helen “listens” to her companion Polly Thomson by placing her thumb on Polly's throat and fingers on her lips.",
         type: "images",
         images: [
           { src: "3A6Israel1.jpeg", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
@@ -348,8 +354,9 @@ Transcript: Black-and-white photograph showing Helen Keller seated on a sofa bes
         title: "Syria Travel Itinerary, 1952",
         displayTitle: "Syria Travel Itinerary",
         year: "1952",
-        description: "Helen Keller's travel itinerary for her trip to Syria in 1952.",
-        type: "images",
+        description:
+          "Helen traveled to the Middle East in 1952, spending 5 days in Syria. The handwriting on the top of the page indicates that these days were packed between her travels to other countries in the region, including Egypt, Lebanon, and Jordan.",
+        type: "document",
         images: [
           { src: "3A7Syria1.jpeg", alt: "Helen Keller's Syria travel itinerary from 1952" }
         ],
