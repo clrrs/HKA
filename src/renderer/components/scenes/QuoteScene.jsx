@@ -6,6 +6,23 @@ export default function QuoteScene() {
   const { currentTheme, goToScene, scene } = useAppState();
   const theme = getTheme(currentTheme);
   const readyRef = useRef(false);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+
+    if (scene === "quote") {
+      audioEl.currentTime = 0;
+      const playPromise = audioEl.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
+    } else {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+    }
+  }, [scene]);
 
   useEffect(() => {
     if (scene !== "quote" || !theme) {
@@ -50,6 +67,11 @@ export default function QuoteScene() {
       <p className="quote-scene-hint" aria-hidden="true">
         Press any key to continue
       </p>
+      <audio
+        ref={audioRef}
+        src="/AdventureQuoteVO.m4a"
+        preload="auto"
+      />
     </div>
   );
 }

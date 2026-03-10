@@ -190,7 +190,7 @@ export const themes = {
     id: "adventure",
     number: 3,
     label: "Adventure",
-    quote: "\u201CLife is either a daring adventure or nothing.\u201D",
+    quote: "\u201CLife is either a daring adventure or nothing at all.\u201D",
     description: "Whether exploring one of the 39 different countries she traveled to, or piloting an airplane over Europe, Helen\u2019s lust for adventure was an inspiration to the world. Each of her travels left a lasting impression on the people and nations that she visited. \u201CLife is either a daring adventure or nothing.\u201D",
     artifacts: [
       {
