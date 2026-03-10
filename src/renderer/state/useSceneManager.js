@@ -72,7 +72,7 @@ export function useKeyboardNav() {
         if (scene === "instruction") return;
         if (Date.now() - lastTtsToggle < 500) return;
         e.preventDefault();
-        goToScene("home");
+        goToScene("start");
         return;
       }
 
