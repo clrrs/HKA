@@ -1,0 +1,338 @@
+import React, { useEffect, useRef, useState } from "react";
+import { useAppState } from "../state/StateProvider";
+
+function useFocusTrap(containerRef, isActive) {
+  useEffect(() => {
+    if (!isActive || !containerRef.current) return;
+
+    const container = containerRef.current;
+    const focusableSelector =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    const handleKeyDown = (event) => {
+      if (event.repeat) return;
+      if (event.key !== "Tab") return;
+
+      const focusables = container.querySelectorAll(focusableSelector);
+      if (!focusables.length) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+
+    const focusables = container.querySelectorAll(focusableSelector);
+    if (focusables.length > 0) {
+      focusables[0].focus();
+    }
+
+    return () => {
+      container.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [containerRef, isActive]);
+}
+
+export default function DocumentViewer({ artifact }) {
+  const { speechMode } = useAppState();
+  const [isOpen, setIsOpen] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const surfaceRef = useRef(null);
+  const overlayRef = useRef(null);
+  const toolbarFirstButtonRef = useRef(null);
+  const transcriptOverlayRef = useRef(null);
+  const transcriptBodyRef = useRef(null);
+  const transcriptCloseRef = useRef(null);
+
+  const [position, setPosition] = useState("top");
+  const [scrollIndex, setScrollIndex] = useState(0);
+  const scrollAnchorsRef = useRef([0]);
+
+  useFocusTrap(overlayRef, isOpen && !showTranscript);
+  useFocusTrap(transcriptOverlayRef, isOpen && showTranscript);
+
+  const openViewer = () => {
+    setIsOpen(true);
+    setShowTranscript(false);
+    setPosition("top");
+    setScrollIndex(0);
+    requestAnimationFrame(() => {
+      if (toolbarFirstButtonRef.current) {
+        toolbarFirstButtonRef.current.focus();
+      }
+    });
+  };
+
+  const closeViewer = () => {
+    setIsOpen(false);
+    setShowTranscript(false);
+    setScrollIndex(0);
+    if (surfaceRef.current) {
+      surfaceRef.current.focus();
+    }
+  };
+
+  const atTop = position === "top";
+  const atBottom = position === "bottom";
+
+  const snapToTop = () => {
+    if (atTop) return;
+    setPosition("top");
+  };
+
+  const snapToBottom = () => {
+    if (atBottom) return;
+    setPosition("bottom");
+  };
+
+  const openTranscript = () => {
+    setShowTranscript(true);
+    setScrollIndex(0);
+    scrollAnchorsRef.current = [0];
+
+    requestAnimationFrame(() => {
+      if (!transcriptBodyRef.current) return;
+      const body = transcriptBodyRef.current;
+      const step = Math.floor(body.clientHeight * 0.75) || body.clientHeight;
+      const max = body.scrollHeight - body.clientHeight;
+      const anchors = [0];
+      let pos = step;
+      while (pos < max) {
+        anchors.push(pos);
+        pos += step;
+      }
+      if (!anchors.includes(max) && max > 0) {
+        anchors.push(max);
+      }
+      scrollAnchorsRef.current = anchors;
+      body.scrollTop = 0;
+      if (transcriptBodyRef.current) {
+        transcriptBodyRef.current.focus();
+      }
+    });
+  };
+
+  const closeTranscript = () => {
+    setShowTranscript(false);
+    setScrollIndex(0);
+    if (toolbarFirstButtonRef.current) {
+      toolbarFirstButtonRef.current.focus();
+    }
+  };
+
+  const handleTranscriptKeyDown = (event) => {
+    if (event.repeat) return;
+    const key = event.key.toLowerCase();
+    if (key !== "k" && key !== "l") return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const anchors = scrollAnchorsRef.current;
+    if (!transcriptBodyRef.current || anchors.length === 0) return;
+
+    const body = transcriptBodyRef.current;
+
+    if (key === "l") {
+      if (scrollIndex < anchors.length - 1) {
+        const nextIndex = scrollIndex + 1;
+        setScrollIndex(nextIndex);
+        body.scrollTo({ top: anchors[nextIndex], behavior: "smooth" });
+      } else if (transcriptCloseRef.current) {
+        transcriptCloseRef.current.focus();
+      }
+    } else if (key === "k") {
+      if (document.activeElement === transcriptCloseRef.current) {
+        body.focus();
+        body.scrollTo({ top: anchors[anchors.length - 1] || 0, behavior: "smooth" });
+        setScrollIndex(anchors.length - 1);
+        return;
+      }
+      if (scrollIndex > 0) {
+        const nextIndex = scrollIndex - 1;
+        setScrollIndex(nextIndex);
+        body.scrollTo({ top: anchors[nextIndex], behavior: "smooth" });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (event) => {
+      if (event.repeat) return;
+      if (event.key !== "Escape") return;
+
+      event.preventDefault();
+      if (showTranscript) {
+        closeTranscript();
+      } else {
+        closeViewer();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, showTranscript]);
+
+  const image = artifact.images && artifact.images.length > 0 ? artifact.images[0] : null;
+  const transcriptTitle = artifact.transcriptTitle || "Transcript";
+  const transcriptText = artifact.transcriptText || "Transcript coming soon.";
+
+  return (
+    <>
+      <div
+        className="document-surface"
+        tabIndex={speechMode ? 0 : -1}
+        role="button"
+        aria-label="Open document"
+        onClick={openViewer}
+        onKeyDown={(event) => {
+          if (event.repeat) return;
+          if (event.key === "Enter") {
+            event.preventDefault();
+            openViewer();
+          }
+        }}
+        ref={surfaceRef}
+      >
+        <div className="document-surface-frame">
+          <div className="document-surface-viewport">
+            {image ? (
+              <img src={image.src} alt={image.alt} />
+            ) : (
+              <div className="document-empty">No document available</div>
+            )}
+          </div>
+          <div className="document-surface-prompt" aria-hidden="true">
+            <span>Open Document</span>
+          </div>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div
+          className="carousel-layer document-viewer-expanded"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Document viewer"
+        >
+          <div className="document-viewer-backdrop" />
+          <div className="document-viewer-content" ref={overlayRef}>
+            <button
+              type="button"
+              className="nav-btn icon-btn document-viewer-exit-btn"
+              onClick={closeViewer}
+              aria-label="Close document viewer"
+            >
+              <img src="./Exit.svg" alt="" aria-hidden="true" />
+            </button>
+
+            <div className="document-viewer-body">
+              <div className="document-panel">
+                <div className="document-window">
+                  {image ? (
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      className={`document-image document-image--${position}`}
+                    />
+                  ) : (
+                    <div className="document-empty">No document available</div>
+                  )}
+                </div>
+                <div
+                  className="document-toolbar-center"
+                  role="toolbar"
+                  aria-label="Document transcript control"
+                >
+                  <button
+                    type="button"
+                    onClick={openTranscript}
+                    className="carousel-btn"
+                    aria-label="Open document transcript"
+                    ref={toolbarFirstButtonRef}
+                  >
+                    Transcript
+                  </button>
+                </div>
+                <div
+                  className="document-toolbar-arrows"
+                  role="toolbar"
+                  aria-label="Document scroll controls"
+                >
+                  <button
+                    type="button"
+                    onClick={snapToTop}
+                    className={`carousel-btn carousel-btn-icon document-arrow-up${
+                      atTop ? " document-arrow-disabled" : ""
+                    }`}
+                    aria-label="Scroll to top of document"
+                  >
+                    <img src="./Back.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={snapToBottom}
+                    className={`carousel-btn carousel-btn-icon document-arrow-down${
+                      atBottom ? " document-arrow-disabled" : ""
+                    }`}
+                    aria-label="Scroll to bottom of document"
+                  >
+                    <img src="./Back.svg" alt="" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {showTranscript && (
+              <div className="artifact-document-transcript-overlay">
+                <div
+                  className="artifact-document-transcript-modal"
+                  ref={transcriptOverlayRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Document transcript"
+                  onKeyDown={handleTranscriptKeyDown}
+                >
+                  <button
+                    type="button"
+                    className="nav-btn icon-btn artifact-document-transcript-close-btn"
+                    onClick={closeTranscript}
+                    aria-label="Close document transcript"
+                    ref={transcriptCloseRef}
+                  >
+                    <img src="./Exit.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <div className="artifact-document-transcript-body">
+                    <h2 className="artifact-document-transcript-heading">{transcriptTitle}</h2>
+                    <div
+                      className="artifact-document-transcript-text"
+                      ref={transcriptBodyRef}
+                      tabIndex={0}
+                    >
+                      {transcriptText.split("\n").map((line, index) => (
+                        <p key={index}>{line}</p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+

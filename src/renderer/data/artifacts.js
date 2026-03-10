@@ -240,10 +240,45 @@ export const themes = {
         displayTitle: "Global Travel Schedule",
         year: "1948\u201349",
         description: "Helen Keller's global travel schedule from 1948-49, showing her extensive travels around the world.",
-        type: "images",
+        type: "document",
         images: [
           { src: "3A4_Schedule.png", alt: "Helen Keller's global travel schedule from 1948-49" }
-        ]
+        ],
+        transcriptTitle:
+          'Transcription for Tentative schedule for Helen Keller\'s visit to the "Orient and Near East."',
+        transcriptText: `TENTATIVE ITINERARY OF HELEN KELLER'S VISIT
+
+TO COUNTRIES OF THE ORIENT AND NEAR EAST (March \u201948 - April '49)
+
+Mar. 21 - Aug. 15 - Australia and New Zealand Leave San Francisco by plane Mar. 25 &, for Sydney, Australia. Guest of Hon. Mr. Justice Maxwell, President of the Royal Industrial Institute for the Blind, Sydney, Australia. August 15 Enroute to Japan via Manila or Singapore and Bangkok.
+
+Sept. 1 - Oct. 20 - Japan [underlined], where eleven cities will be visited - Tokyo, Sendai, Sapporo, Kanazawa, Nagoya, Osaka, Kyoto, Hiroshima, Fukuoka, Nagasaki, and Takamatsu. Arrange-, ments are in the hands of a nation-wide committee. (Takeo Iwahashi of the Lighthouse in Osaka, is chief correspondent).
+
+Oct. 20 -Nov. 5 - Korea where at least 4 cities in S. Korea will [be visited] Arrangements in the hands of a National Committee, consisting of Koreans, missionaries, government and military representatives. (R.C.Coen and [George Paik, correspondents).]
+
+Nov.-Dec.2S - China [underlined]
+
+Tentative list of cities to be visited - Peiping, Tsinan, Tientsin, Hankow, Nanking, Shanghai, Soochow, Hangchow, Foochow, Amoy, Canton and Hongkong. National Committee now being set up in consultation with government representatives, National Agencies for the blind and the National Christian Council.
+
+Dec. 28-Jan.4 - Brief stop-overs at Bangkok, Siam and Rangoon, Burma. enroute to India, (Singapore also a possibility of an invitation from the Lord Bishop of Singapore.)
+
+Jan.4-Feb.10 India [underlined] and Pakistan [underlined]
+
+Tentative list of cities to be visited: Calcutta, Madras, Bangalore, Vellore, Travancore, Nagpur, New Delhi, Bombay, Lahore and Karachi. (Final itinerary to be agreed upon after consultation with Government representatives, the India Association for the Welfare of the Blind, the National Christian Council of India, the All-India Council of Women and other groups.
+
+Feb.10-Mar.25-Egypt., Iran, Iraq, Syria, Lebanon and Palestine. Itinerary to be worked out in consultation with Regional Councils, Government authorities, individuals, and local city groups.
+
+Mar,25-30 - Return to U.S.A [underlined], - stop-over at Istanbul, Turkey, if returning by plane.
+
+GENERAL STATEMENT [underlined]
+
+The tour, after leaving Japan, will be under the auspices of the JOHN MILTON SOCIETY for the Blind, of which Miss Helen Keller has been the honored President since 1928. This non-sectarian and inter-denominational Society is the officially appointed agency of more than 40 Protestant denominations in the United States and Canada. It exists primarily to provide Christian literature in Braille to the blind of the U.S., Canada and throughout the world.
+
+Its monthly religious magazines for adults and children, together with its other occasional publications, reach more than 10,000 Braille readers residing in every state and in 26 foreign countries. Among these readers are more than 600 blind ministers and Sunday School teachers. Leave of absence for this world tour has been granted to Miss Keller by the American Foundation for the Blind of which she is Counsellor. It is hoped that a substantial part of the cost. of this tour will be provided by special gifts from interested friends.
+
+The program to be set up in each city will include press interviews, public meetings, visits to schools and hospitals, official receptions and informal conferences with workers among the blind.
+
+There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, her companion and secretary, Dr. Milton T. Stauffer, General Secretary of the John Milton Society for the Blind, Mrs. Stauffer and in addition, if possible, an experiences educator of the blind in this country whose knowledge and counsel on educational matters would be of special value in Worker's Conferences.`
       },
       {
         id: "3A5",

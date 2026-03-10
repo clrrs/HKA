@@ -82,7 +82,8 @@ export function useKeyboardNav() {
         const container =
           showSettings
             ? document.querySelector(".settings-panel") || document
-            : document.querySelector(".carousel-zoom") ||
+            : document.querySelector(".document-viewer-expanded") ||
+              document.querySelector(".carousel-zoom") ||
               document.querySelector(".carousel-expanded") ||
               document;
         const rawFocusables = Array.from(
@@ -115,7 +116,8 @@ export function useKeyboardNav() {
         const container =
           showSettings
             ? document.querySelector(".settings-panel") || document
-            : document.querySelector(".carousel-zoom") ||
+            : document.querySelector(".document-viewer-expanded") ||
+              document.querySelector(".carousel-zoom") ||
               document.querySelector(".carousel-expanded") ||
               document;
         const rawFocusables = Array.from(

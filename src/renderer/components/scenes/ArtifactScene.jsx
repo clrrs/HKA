@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme, getArtifact, getNextArtifact, getPrevArtifact } from "../../data/artifacts";
 import Carousel from "../Carousel";
+import DocumentViewer from "../DocumentViewer";
 import ArtifactVideoPreview from "../ArtifactVideoPreview";
 import ArtifactVideoOverlay from "../ArtifactVideoOverlay";
 
@@ -52,7 +53,7 @@ export default function ArtifactScene() {
           <p tabIndex={speechMode ? 0 : -1}>{artifact.description}</p>
         </div>
         <div className="artifact-media">
-          {artifact.type === "video" ? (
+          {artifact.type === "video" && (
             <ArtifactVideoPreview
               ref={videoPreviewRef}
               poster={artifact.posterSrc}
@@ -61,7 +62,9 @@ export default function ArtifactScene() {
                 setVideoOverlayOpen(true);
               }}
             />
-          ) : (
+          )}
+          {artifact.type === "document" && <DocumentViewer artifact={artifact} />}
+          {artifact.type !== "video" && artifact.type !== "document" && (
             <Carousel images={artifact.images} />
           )}
         </div>

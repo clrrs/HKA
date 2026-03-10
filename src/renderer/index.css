@@ -268,6 +268,13 @@ body {
   flex-shrink: 0;
 }
 
+.artifact-media .document-surface {
+  width: 836px;
+  height: 614px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
 .artifact-media .carousel-surface {
   width: 100%;
   height: 100%;
@@ -292,6 +299,176 @@ body {
   max-height: 100%;
   object-fit: contain;
   object-position: center;
+}
+
+.document-surface-frame {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 25px 31px 31px 31px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 2px solid white;
+  background: #111;
+  position: relative;
+}
+
+.document-surface-viewport {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.document-surface-viewport img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.document-surface-prompt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 18px;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+.document-viewer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.document-viewer-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.document-viewer-expanded::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: -1;
+}
+
+.document-viewer-content {
+  position: relative;
+  background: var(--bg-container);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  padding: 40px 80px 80px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-viewer-exit-btn {
+  position: fixed;
+  top: 32px;
+  left: 32px;
+  width: 56px;
+  height: 56px;
+  z-index: 3; /* always above document content */
+}
+
+.document-viewer-exit-btn img {
+  width: 28px;
+  height: 28px;
+}
+
+.document-viewer-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.document-panel {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.document-window {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.document-image {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: auto;
+}
+
+.document-image--top {
+  top: 0;
+  bottom: auto;
+}
+
+.document-image--bottom {
+  bottom: 300px;
+  top: auto;
+}
+
+.document-toolbar-center {
+  position: fixed;
+  left: 50%;
+  bottom: 60px;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 0 0;
+  flex-wrap: wrap;
+  z-index: 3; /* always above document content */
+}
+
+.document-toolbar-arrows {
+  position: fixed;
+  right: 300px;
+  bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+
+.document-arrow-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.document-arrow-up img {
+  transform: rotate(90deg);
+}
+
+.document-arrow-down img {
+  transform: rotate(-90deg);
 }
 
 /* Artifact video preview tile (for artifact videos only) */
@@ -1115,6 +1292,48 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .artifact-video-transcript-heading {
   margin: 0;
+}
+
+.artifact-document-transcript-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3;
+}
+
+.artifact-document-transcript-modal {
+  position: relative;
+  max-width: 640px;
+  max-height: 80%;
+  width: 80%;
+  background: var(--bg-container);
+  padding: 32px 40px 40px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.artifact-document-transcript-close-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.artifact-document-transcript-body {
+  margin-top: 32px;
+}
+
+.artifact-document-transcript-heading {
+  margin: 0;
+}
+
+.artifact-document-transcript-text {
+  margin-top: 16px;
+  max-height: 60vh;
+  overflow: auto;
 }
 
 /* ============================================

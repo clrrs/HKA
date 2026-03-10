@@ -69,12 +69,6 @@ export default function InstructionScene({ isActive }) {
         />
         {showSkip && (
           <>
-            <span
-              ref={emptyFocusRef}
-              tabIndex={0}
-              className="instruction-focus-anchor"
-              aria-hidden="true"
-            />
             <button
               ref={skipButtonRef}
               type="button"
@@ -84,6 +78,12 @@ export default function InstructionScene({ isActive }) {
             >
               Skip
             </button>
+            <span
+              ref={emptyFocusRef}
+              tabIndex={0}
+              className="instruction-focus-anchor"
+              aria-hidden="true"
+            />
           </>
         )}
       </div>
