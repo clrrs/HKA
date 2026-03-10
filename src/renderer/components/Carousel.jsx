@@ -41,21 +41,24 @@ function useFocusTrap(containerRef, isActive) {
   }, [isActive, containerRef]);
 }
 
-export default function Carousel({ images = [] }) {
+export default function Carousel({ images = [], transcriptText, guidedDescription }) {
   const { subscene, setSubscene } = useAppState();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
   const carouselRef = useRef(null);
   const announcerRef = useRef(null);
   const expandedRef = useRef(null);
   const zoomRef = useRef(null);
   const guidedRef = useRef(null);
+  const transcriptRef = useRef(null);
 
-  // Apply focus trap when in expanded, zoom, or guided description mode
-  useFocusTrap(expandedRef, subscene === "expanded" && !showGuided);
+  // Apply focus trap when in expanded, zoom, guided description, or transcript mode
+  useFocusTrap(expandedRef, subscene === "expanded" && !showGuided && !showTranscript);
   useFocusTrap(zoomRef, subscene === "zoom");
   useFocusTrap(guidedRef, showGuided);
+  useFocusTrap(transcriptRef, showTranscript);
 
   const announce = useCallback((message) => {
     if (announcerRef.current) {
@@ -86,6 +89,7 @@ export default function Carousel({ images = [] }) {
 
   const enterExpanded = () => {
     setSubscene("expanded");
+    setShowTranscript(false);
     announce(
       `Expanded view. Image ${currentIndex + 1} of ${images.length}. ${
         images[currentIndex]?.alt || ""
@@ -105,6 +109,7 @@ export default function Carousel({ images = [] }) {
 
   const exitExpanded = () => {
     setShowGuided(false);
+    setShowTranscript(false);
     setSubscene(null);
     announce("Exited navigation mode.");
   };
@@ -135,6 +140,9 @@ export default function Carousel({ images = [] }) {
         if (showGuided) {
           setShowGuided(false);
           announce("Closed guided description.");
+        } else if (showTranscript) {
+          setShowTranscript(false);
+          announce("Closed transcript.");
         } else if (subscene === "zoom") {
           exitZoom();
         } else if (subscene === "expanded") {
@@ -147,12 +155,14 @@ export default function Carousel({ images = [] }) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [subscene, showGuided, announce, exitZoom]);
+  }, [subscene, showGuided, showTranscript, announce, exitZoom]);
 
   const currentImage = images.length > 0 ? images[currentIndex] : null;
+  const hasTranscript = Boolean(transcriptText);
 
   const openGuided = () => {
     if (!currentImage) return;
+    setShowTranscript(false);
     setShowGuided(true);
     announce(
       `Guided description opened for image ${currentIndex + 1} of ${images.length}.`
@@ -283,6 +293,20 @@ export default function Carousel({ images = [] }) {
               >
                 <img src="./Zoom.svg" alt="" aria-hidden="true" />
               </button>
+              {hasTranscript && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTranscript(true);
+                    setShowGuided(false);
+                    announce("Transcript opened for current image.");
+                  }}
+                  className="carousel-btn"
+                  aria-label="Open transcript for current image"
+                >
+                  Transcript
+                </button>
+              )}
               {currentImage && (
                 <button
                   type="button"
@@ -318,6 +342,33 @@ export default function Carousel({ images = [] }) {
                     <p>
                       {currentImage.description || currentImage.alt}
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showTranscript && (
+              <div className="carousel-guided-overlay">
+                <div
+                  className="carousel-guided-modal"
+                  ref={transcriptRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Image transcript"
+                >
+                  <button
+                    type="button"
+                    className="exit-pill-btn carousel-guided-close-btn"
+                    onClick={() => {
+                      setShowTranscript(false);
+                      announce("Closed transcript.");
+                    }}
+                    aria-label="Close transcript"
+                  >
+                    Exit
+                  </button>
+                  <div className="carousel-guided-body">
+                    <h2 className="carousel-guided-heading">Transcript</h2>
+                    <p>{transcriptText || "Transcript coming soon."}</p>
                   </div>
                 </div>
               </div>

@@ -40,17 +40,21 @@ function useFocusTrap(containerRef, isActive) {
   }, [containerRef, isActive]);
 }
 
-export default function ArtifactVideoOverlay({ src, poster, transcript, onClose }) {
+export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDescription, onClose }) {
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
   const transcriptRef = useRef(null);
   const transcriptButtonRef = useRef(null);
+  const guidedRef = useRef(null);
+  const guidedButtonRef = useRef(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showGuided, setShowGuided] = useState(false);
 
-  useFocusTrap(overlayRef, !showTranscript);
+  useFocusTrap(overlayRef, !showTranscript && !showGuided);
   useFocusTrap(transcriptRef, showTranscript);
+  useFocusTrap(guidedRef, showGuided);
 
   const play = () => {
     if (!videoRef.current) return;
@@ -87,6 +91,19 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
     }
   };
 
+  const openGuided = () => {
+    pause();
+    setShowTranscript(false);
+    setShowGuided(true);
+  };
+
+  const closeGuided = () => {
+    setShowGuided(false);
+    if (guidedButtonRef.current) {
+      guidedButtonRef.current.focus();
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.repeat) return;
@@ -95,6 +112,9 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
       if (showTranscript) {
         event.preventDefault();
         closeTranscript();
+      } else if (showGuided) {
+        event.preventDefault();
+        closeGuided();
       } else {
         event.preventDefault();
         handleCloseOverlay();
@@ -105,9 +125,10 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showTranscript]);
+  }, [showTranscript, showGuided]);
 
   const transcriptText = transcript || "Transcript coming soon.";
+  const guidedText = guidedDescription || "Guided description coming soon.";
 
   return (
     <div
@@ -149,9 +170,18 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
             onClick={openTranscript}
             ref={transcriptButtonRef}
             className="artifact-video-control-btn"
-            aria-label="Open video transcript"
+            aria-label="Open transcript"
           >
-            Video Transcript
+            Transcript
+          </button>
+          <button
+            type="button"
+            onClick={openGuided}
+            ref={guidedButtonRef}
+            className="artifact-video-control-btn"
+            aria-label="Open guided description"
+          >
+            Guided Description
           </button>
         </div>
 
@@ -162,19 +192,43 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
               ref={transcriptRef}
               role="dialog"
               aria-modal="true"
-              aria-label="Video transcript"
+              aria-label="Transcript"
             >
               <button
                 type="button"
                 className="exit-pill-btn artifact-video-transcript-close-btn"
                 onClick={closeTranscript}
-                aria-label="Close video transcript"
+                aria-label="Close transcript"
               >
                 Exit
               </button>
               <div className="artifact-video-transcript-body">
-                <h2 className="artifact-video-transcript-heading">Video Transcript</h2>
+                <h2 className="artifact-video-transcript-heading">Transcript</h2>
                 <p>{transcriptText}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {showGuided && (
+          <div className="artifact-video-transcript-overlay">
+            <div
+              className="artifact-video-transcript-modal"
+              ref={guidedRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Guided description"
+            >
+              <button
+                type="button"
+                className="exit-pill-btn artifact-video-transcript-close-btn"
+                onClick={closeGuided}
+                aria-label="Close guided description"
+              >
+                Exit
+              </button>
+              <div className="artifact-video-transcript-body">
+                <h2 className="artifact-video-transcript-heading">Guided Description</h2>
+                <p>{guidedText}</p>
               </div>
             </div>
           </div>

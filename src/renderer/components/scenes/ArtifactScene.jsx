@@ -65,7 +65,11 @@ export default function ArtifactScene() {
           )}
           {artifact.type === "document" && <DocumentViewer artifact={artifact} />}
           {artifact.type !== "video" && artifact.type !== "document" && (
-            <Carousel images={artifact.images} />
+            <Carousel
+              images={artifact.images}
+              transcriptText={artifact.transcriptText}
+              guidedDescription={artifact.guidedDescription}
+            />
           )}
         </div>
       </div>
@@ -110,6 +114,8 @@ export default function ArtifactScene() {
         <ArtifactVideoOverlay
           src={artifact.videoSrc}
           poster={artifact.posterSrc}
+          transcript={artifact.transcriptText}
+          guidedDescription={artifact.guidedDescription}
           onClose={() => {
             setShowVideoOverlay(false);
             setVideoOverlayOpen(false);

@@ -202,7 +202,16 @@ export const themes = {
         type: "video",
         videoSrc: "3A1Biplane.mp4",
         posterSrc: "3A1Biplane_frame.png",
-        images: []
+        images: [],
+        transcriptTitle: "Transcript",
+        transcriptText: `Female narrator: It showed her first airplane ride. A daring feat at that time.
+Male audio description: In old, black and white footage, elegantly-dressed women help tidy Helen’s leather coat.
+[engine rumbles]
+Male audio description: She also wears a tight leather helmet on her head. An airplane drives across a field and takes off into the air. On the ground, Helen’s friends watch excitedly as the plane flies high in the sky.
+[uplifting orchestral music]
+Male audio description: Helen rides in the front and a pilot steers in the back of the two-seater aircraft. Wind flies over their heads in the open, roofless plane. The airplane safely lands on the flat, grassy ground. Dozens of people rush to the parked plane and assist Helen out of the sunken seat. Helen smiles broadly and hugs her teacher Anne Sullivan Macy.`,
+        guidedDescription:
+          "Grainy black-and-white film shows Helen preparing her leather flight jacket and helmet. Helen’s companions, Anne Sullivan and Polly Thomson, assist her, while Helen's mother and brother watch. Her brother wears the uniform of a US Army WWI aviator. Anne and Polly help Helen board the open front cockpit of a biplane, while the pilot sits in the rear cockpit. Groundcrew spins the propeller to start the engine, and the biplane makes a wobbly takeoff from a dusty field. The biplane is shown high in the sky, followed by a shot of Helen's friends and family watching from the ground. A smooth landing on grass is shown, and Helen is assisted out of the biplane and gives Anne a hug."
       },
       {
         id: "3A2",
@@ -220,7 +229,17 @@ export const themes = {
             src: "3A2Lunch2.jpeg",
             alt: "Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface"
           }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: `Red and black lacquer New Year's luncheon set; black lacquer with gold symbols and carved abalone inlays, all set in carrying stand with brass top handle; six drawers (boxes), one with cover, one medium size tray, five small ones, removable flask holder, pair of pewter cylinder flasks with top handles inlaid with red glass; interior of drawers in red lacquer.
+
+Gift from Kazuo Honma, Founder of Japanese Braille Library.  The Japan Braille Library was founded on November 10, 1940, by Honma,  a 25-year-old man who had been blind since childhood.  The library building was destroyed during WWII and rebuilt in Tokyo in 1948.
+
+The lacquer luncheon set is shown fully assembled in its carrying stand. The exterior is dark lacquer with gold decorative patterns and areas of abalone inlay. A brass handle is attached at the top of the stand. Several stacked drawers and trays are fitted into the left side, and a pewter flask is positioned in an open compartment on the right. Additional gold patterns appear along the sides and base of the stand.
+
+The lacquer luncheon set is shown fully assembled in its carrying stand, viewed from the front. The dark lacquer exterior features gold decorative patterns and abalone inlays across the drawers and side panels. A brass handle is visible at the top. A pewter flask is positioned in an open compartment on the right side of the stand. The stacked drawers and trays are visible on the left.`,
+        guidedDescription:
+          "A black lacquer luncheon set features gold decorations showing plants, symbols, and designs. Golden and carved abalone inlays show birds facing each other in a triangular pattern. An outer carrying stand with brass top handle holds six drawers, each with a red interior. One medium sized tray, five smaller trays, a removable bottle holder, and a pair of pewter cylinder bottles all fit into the carrying stand."
       },
       {
         id: "3A3",
@@ -232,7 +251,16 @@ export const themes = {
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
           { src: "3A3Bantu2.jpeg", alt: "Another view of Helen Keller's meeting with the Bantu Chief" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: `Taken outdoors in the sunshine during Helen Keller's visit to South Africa. Photographed standing left to right are a Bantu Chieftan, Keller, the Bantu Chieftan's wife and Polly Thomson. Keller was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. They are standing in front of a wall. Keller has her hand on the tip of the sword the chieftan is holding. The Bantu couple are wearing traditional beaded garments and head pieces. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes. [Typed caption: Helen Keller opened the Duncan Village Community Center for the Bantu people, East London, Cape Province. Her picture was taken with a tribal chief and his wife.]
+
+[Stamped: "WYNDON PHOTOS" S.A.N.L.A.M. BLDGS., FOR REPRINT QUOTE (followed by a blank line) EAST LONDON. PHONE 2633]
+
+[Handwritten note, top left corner: "Amer Fnd fr Blind" written above "2-5+7 (illegible)"]
+[Handwritten note, top center: "Helen Keller opened the Community Center for Bantu people. East London, Cape Province. Her picture was taken with a tribal chieftan and his wife"] [Handwritten note in left margin: "Chief and Wife (ineligible) April"] [Handwritten center note in red: "14 1/2 Picas" with arrows marking the dimension] [Handwritten center note in blue: "R3288"] [Handwritten center note: Please return to American Foundation] [Handwritten note: HK07.01.B058.F07.001] [Handwritten lower center note in red: "(ineligible) BP - 4482"] [Handwritten note in bottom right corner: "33.3"]`,
+        guidedDescription:
+          "A black-and-white photograph shows a dark-skinned male Bantu chief, the wife of the chief, Helen Keller, and her companion Polly Thomson standing in a row against a wall. Helen and Polly both wear similar dresses textured with horizontal stripes, belts at the waist, broaches on their left chests, pearl necklaces, and small hats. The chief wears a skull cap, a collar of beaded necklaces, beaded belts across his waist and chest, and bands around his shoulders and upper arms. The chief holds a spear while Helen's hand feels the spearhead. The chief’s wife wears similar belts over a light-colored dress, a large cloth hat, and has light colored dots of paint contrasting with the dark skin of her forehead, chin, and cheeks. She holds some textiles and a light-colored cloth bag. The photo is glued to a white board with notes typed and written on it, and yellowed glue is showing near the bottom."
       },
       {
         id: "3A4",
@@ -278,7 +306,9 @@ Its monthly religious magazines for adults and children, together with its other
 
 The program to be set up in each city will include press interviews, public meetings, visits to schools and hospitals, official receptions and informal conferences with workers among the blind.
 
-There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, her companion and secretary, Dr. Milton T. Stauffer, General Secretary of the John Milton Society for the Blind, Mrs. Stauffer and in addition, if possible, an experiences educator of the blind in this country whose knowledge and counsel on educational matters would be of special value in Worker's Conferences.`
+There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, her companion and secretary, Dr. Milton T. Stauffer, General Secretary of the John Milton Society for the Blind, Mrs. Stauffer and in addition, if possible, an experiences educator of the blind in this country whose knowledge and counsel on educational matters would be of special value in Worker's Conferences.`,
+        guidedDescription:
+          "Two sheets of paper show staple holes and the indentation of a triangular paper clip in the top left corner, but are otherwise in excellent condition. The text has been typed in black ink. There is light fading of the typing towards the top of each page, which may show that this was a printed copy of the original typed agenda."
       },
       {
         id: "3A5",
@@ -290,7 +320,9 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         images: [
           { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
           { src: "3A5ItalyVet2.jpeg", alt: "Another view of Helen Keller with the Italian veteran" }
-        ]
+        ],
+        guidedDescription:
+          "A black-and-white photo shows Helen dancing in the embrace of a blinded Italian veteran. He is still wearing his wartime San Marco Marine uniform jumper with an insignia patch on his left chest, which shows a winged lion with sword standing on an open book. Polly Thomson spells into Helen's right hand while it is being held by the veteran's left. Several people in civilian clothes watch in the background. The smile on the face of the veteran shows missing teeth, possibly also a result of the wounds that blinded him. The text logo of an Italian Ministry partially appears in the bottom left corner of the photo. The rear shows information in a purple -ink stamp in Italian, and in black typing and handwritten notes."
       },
       {
         id: "3A6",
@@ -302,7 +334,14 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         images: [
           { src: "3A6Israel1.jpeg", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
           { src: "3A6Israel2.jpeg", alt: "Another photograph from Helen Keller's meeting with Golda Meir" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: `Title: Transcription for Photograph of Helen Keller, Polly Thomson, Golda Meir and Zipporah Sharett in Israel. 1952
+Transcript: Black-and-white photograph showing Helen Keller seated on a sofa beside Polly Thomson, with Keller’s hand placed on Thomson’s mouth and Thomson holding Keller’s wrist. Across a round coffee table, Golda Meir and Zipporah Sharett sit facing them. Meir rests her index finger and thumb on her chin, and Sharett sits with her hands intertwined on her knee. Keller and Thomson wear dresses and hats, while Meir and Sharett are dressed in darker clothing. Several items, including ashtrays, are on the table.
+
+[Handwritten note: Helen Keller, Polly Thompson, Golda Myerson, Mrs. ^ Zypora Sharett 1952] [Stamp: (Hebrew) STATE OF ISRAEL  Government Press Division]`,
+        guidedDescription:
+          "A black-and-white photograph shows Helen Keller sitting on a sofa beside Polly Thomson, with Helen’s hand placed on Polly’s mouth and Polly holding Helen’s wrist. Golda Meir and Zipporah Sharett sit on the other side of a round coffee table filled with several items, including ash trays. Keller and Thomson wear colorful dresses and hats, while Meir and Sharett dress in darker clothing. The back of the photos has a purple stamp of the State of Israel in Hebrew and English, and handwritten notes in pencil."
       },
       {
         id: "3A7",
@@ -313,7 +352,94 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         type: "images",
         images: [
           { src: "3A7Syria1.jpeg", alt: "Helen Keller's Syria travel itinerary from 1952" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: `[Handwritten note in blue ink: Pages 1-6 - Egypt Pages 6-8 Lebanon Page 9 - Syria Pages 10-13 - Jordan (a grouping brace) all each country]
+-9-
+Helen Keller's Visit to Syria [circled in red ink] (Damascus)
+from May 5, evening to May 9, morning. 1952
+Tuesday, May 6.
+11.00 a.m. Press conference at the Hotel with 19 journalists from Damascus, Amman and Jerusalem.
+11.45 "" Visit to Mr. Grand Parr, Public Affair Officer and to Mr. Donald Snock, Cultural Officer of the American Legation, Damascus.
+3.30 p.m. Drive through the old city, shopping.
+5.00 "" Visit to Mr. Cavendish Cannon, Minister of U.S.A.
+Wednesday May 7.
+Rest in the morning.
+3.15 p.m. Mrs. Abed, mother and daughter, pay a visit to Helen and Polly in the Hotel.
+4.00 "" Talk at the hall of the ""Milk Distribution Center"" of Mrs. Abed, where about 150 persons are present, mostly women. Helen asks these women:
+1. to create a women's organisation for the Welfare of the Blind.
+2. to take upon their hearts the necessity for opening a school and workshops for the Blind.
+5.30 p.m. Reception at the U.S. - Residence. Farewell to MInister and Mrs. C.Cannon.
+Thursday, May 8.
+8.30 a.m. Visit to the Museum. (Director: Mr. Selim bey Adel Abdul Hak)
+9.30 "" Visit to the Palais Azem, old arabic architecture.
+10.30 "" Visit to the House of General Selo: Helen writes down her name in the ""Golden Book of Syria"".
+11.30 "" Dr. and Mrs. C Zurayk, President of the Syrian University, Damascus, together with Dr. Djemil Saliba, Dean of the Medical Faculty and Dr. A. Chahina, Dean of the Educational Faculty, pay a visit to Helen and Polly. Dr. Saliba translated into Arabic sections out of ""The Story of my Life"". It was printed by the Ministry of Education in ""EL MOOLLEM EL ARABY"", He had sent to Helen a specimen of all the books that have as content her life's story.
+6.00 p.m. Lecture at the French-Arabic Lycee. [underlined] (Mr. Marc Manger, Director) About 600 persons were present and almost just as many stood outside, as they couldn't find place in the hall! Introduction by Dr. Taher Muradi, M.D. cancer specialist.
+11•00 a.m.
+11.45 M
+3*30 p.m.
+5.00 “
+3.15 p.m.
+4.00 H
+5.30 p.m.
+8.30 a.m.
+9.30 M
+10.30 **
+11.30 H
+6.00 p.m.
+May 5, evening to May 9, morning. 1952
+Taesday.May 6.
+Press Conference at the Hotel with 19 journalists from
+Damascus, Amman and Jerusalem.
+Visit to Mr.Grand Parr, Public Affair Officer and to
+Mr.Donald Snock, Cultural Officer of the American Legation,
+Damascus.
+Drive through the old city, shopping.
+Visit to Mr.Cavendish Cannon, Minister of U.S.A.
+Wednesday,May 7.
+Rest in the morning.
+Mrs.Abed, mother and daughter, pay a visit to Helen and Polly
+in the Hotel.
+Talk at the hall of the H Milk Distribution Center” of
+Mrs.Abed, where about 150 persons are present, mostly women.
+Helen asks these women:
+1. to create a women’s organisation for the Welfare of the
+2. to take upon their hearts the necessity for opening a
+school and workshops for the Blind.
+Reception at the U.S.- Residence. Parewell to Minister and
+Mrs.C.Cannon.
+Thursday.May 8.
+Visit to the Museum. (Director: Mr.Selim bey Adel Abdul Hak)
+Visit to the Palais Azem, old arabic architecture.
+Visit to the House of General Selo: Helen writes down her
+name in the H Golden Book of Syria”.
+Dr.and Mrs.C.Zurayk, President of the Syrian University,
+Damascus, together with Dr.Djemil Saliba, Dean of the Medical
+Faculty and Dr.A.Chahina, Dean of the Educational Faculty,
+pay a visit to Helen and Polly. Dr.Saliba translated into
+Arabic selections out of ’’The Story of my Life”. It was prin-
+ted by the Ministry of Education in ”EL MOOLLEM EL ARABY”, He
+had sent to Helen a specimen of all the books that have as
+content her life’s story.
+Lecture at the French-Arabic Lycde. (Mr.Marc Manger,Director)
+About 600 persons were present and almost just as many stood
+outside, as they couldn’t find place in the hallI Introduction
+by Dr. Taher Muradi, M.D. cancer specialist.
+11.00 a.m.
+11.45 ”
+3*30 p.m.
+5.00 ”
+3.15 p.m.
+4.00 ”
+5.30 p.m.
+8.30 a.m.
+9.30 ”
+10.30 ”
+11.30 ”
+6.00 p.m.`,
+        guidedDescription:
+          "A typed page with times of the day in a left column and underlined dates in a heading a column of appointments on the right-hand side. A brief table of contents for Helen's entire trip to the Middle East is written in bright blue ink in the top left corner, with the word \"Syria\" circled in red both in that table, and in the underlined heading on the top of the page."
       }
     ]
   },

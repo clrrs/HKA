@@ -45,23 +45,27 @@ export default function DocumentViewer({ artifact }) {
   const { speechMode } = useAppState();
   const [isOpen, setIsOpen] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showGuided, setShowGuided] = useState(false);
   const surfaceRef = useRef(null);
   const overlayRef = useRef(null);
   const toolbarFirstButtonRef = useRef(null);
   const transcriptOverlayRef = useRef(null);
   const transcriptBodyRef = useRef(null);
   const transcriptCloseRef = useRef(null);
+  const guidedOverlayRef = useRef(null);
 
   const [position, setPosition] = useState("top");
   const [scrollIndex, setScrollIndex] = useState(0);
   const scrollAnchorsRef = useRef([0]);
 
-  useFocusTrap(overlayRef, isOpen && !showTranscript);
+  useFocusTrap(overlayRef, isOpen && !showTranscript && !showGuided);
   useFocusTrap(transcriptOverlayRef, isOpen && showTranscript);
+  useFocusTrap(guidedOverlayRef, isOpen && showGuided);
 
   const openViewer = () => {
     setIsOpen(true);
     setShowTranscript(false);
+    setShowGuided(false);
     setPosition("top");
     setScrollIndex(0);
     requestAnimationFrame(() => {
@@ -74,6 +78,7 @@ export default function DocumentViewer({ artifact }) {
   const closeViewer = () => {
     setIsOpen(false);
     setShowTranscript(false);
+    setShowGuided(false);
     setScrollIndex(0);
     if (surfaceRef.current) {
       surfaceRef.current.focus();
@@ -94,6 +99,7 @@ export default function DocumentViewer({ artifact }) {
   };
 
   const openTranscript = () => {
+    setShowGuided(false);
     setShowTranscript(true);
     setScrollIndex(0);
     scrollAnchorsRef.current = [0];
@@ -174,6 +180,8 @@ export default function DocumentViewer({ artifact }) {
       event.preventDefault();
       if (showTranscript) {
         closeTranscript();
+      } else if (showGuided) {
+        setShowGuided(false);
       } else {
         closeViewer();
       }
@@ -183,11 +191,12 @@ export default function DocumentViewer({ artifact }) {
     return () => {
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, showTranscript]);
+  }, [isOpen, showTranscript, showGuided]);
 
   const image = artifact.images && artifact.images.length > 0 ? artifact.images[0] : null;
   const transcriptTitle = artifact.transcriptTitle || "Transcript";
   const transcriptText = artifact.transcriptText || "Transcript coming soon.";
+  const guidedDescription = artifact.guidedDescription || "Guided description coming soon.";
 
   return (
     <>
@@ -265,6 +274,17 @@ export default function DocumentViewer({ artifact }) {
                   >
                     Transcript
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTranscript(false);
+                      setShowGuided(true);
+                    }}
+                    className="carousel-btn"
+                    aria-label="Open document guided description"
+                  >
+                    Guided Description
+                  </button>
                 </div>
                 <div
                   className="document-toolbar-arrows"
@@ -324,6 +344,32 @@ export default function DocumentViewer({ artifact }) {
                       {transcriptText.split("\n").map((line, index) => (
                         <p key={index}>{line}</p>
                       ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showGuided && (
+              <div className="artifact-document-transcript-overlay">
+                <div
+                  className="artifact-document-transcript-modal"
+                  ref={guidedOverlayRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Document guided description"
+                >
+                  <button
+                    type="button"
+                    className="nav-btn icon-btn artifact-document-transcript-close-btn"
+                    onClick={() => setShowGuided(false)}
+                    aria-label="Close document guided description"
+                  >
+                    Exit
+                  </button>
+                  <div className="artifact-document-transcript-body">
+                    <h2 className="artifact-document-transcript-heading">Guided Description</h2>
+                    <div className="artifact-document-transcript-text">
+                      <p>{guidedDescription}</p>
                     </div>
                   </div>
                 </div>
