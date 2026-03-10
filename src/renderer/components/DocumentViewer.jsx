@@ -231,11 +231,11 @@ export default function DocumentViewer({ artifact }) {
           <div className="document-viewer-content" ref={overlayRef}>
             <button
               type="button"
-              className="nav-btn icon-btn document-viewer-exit-btn"
+              className="exit-pill-btn document-viewer-exit-btn"
               onClick={closeViewer}
               aria-label="Close document viewer"
             >
-              <img src="./Exit.svg" alt="" aria-hidden="true" />
+              Exit
             </button>
 
             <div className="document-viewer-body">
@@ -312,7 +312,7 @@ export default function DocumentViewer({ artifact }) {
                     aria-label="Close document transcript"
                     ref={transcriptCloseRef}
                   >
-                    <img src="./Exit.svg" alt="" aria-hidden="true" />
+                    Exit
                   </button>
                   <div className="artifact-document-transcript-body">
                     <h2 className="artifact-document-transcript-heading">{transcriptTitle}</h2>

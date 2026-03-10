@@ -120,11 +120,11 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
       <div className="artifact-video-modal" ref={overlayRef}>
         <button
           type="button"
-          className="nav-btn icon-btn artifact-video-exit-btn"
+          className="exit-pill-btn artifact-video-exit-btn"
           onClick={handleCloseOverlay}
           aria-label="Close video player"
         >
-          <img src="./Exit.svg" alt="" aria-hidden="true" />
+          Exit
         </button>
         <div className="artifact-video-body">
           <video
@@ -166,11 +166,11 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, onClose 
             >
               <button
                 type="button"
-                className="nav-btn icon-btn artifact-video-transcript-close-btn"
+                className="exit-pill-btn artifact-video-transcript-close-btn"
                 onClick={closeTranscript}
                 aria-label="Close video transcript"
               >
-                <img src="./Exit.svg" alt="" aria-hidden="true" />
+                Exit
               </button>
               <div className="artifact-video-transcript-body">
                 <h2 className="artifact-video-transcript-heading">Video Transcript</h2>

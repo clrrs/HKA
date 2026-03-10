@@ -121,11 +121,11 @@ export default function StartScene() {
           <div className="start-video-modal" ref={modalRef}>
             <button
               type="button"
-              className="nav-btn icon-btn start-video-exit-btn"
+              className="exit-pill-btn start-video-exit-btn"
               onClick={closeVideo}
               aria-label="Close instructional video"
             >
-              <img src="./Exit.svg" alt="" aria-hidden="true" />
+              Exit
             </button>
             <div className="start-video-body">
               <video

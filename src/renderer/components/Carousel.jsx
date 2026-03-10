@@ -229,9 +229,9 @@ export default function Carousel({ images = [] }) {
                 type="button" 
                 onClick={exitExpanded}
                 aria-label="Exit image carousel"
-                className="nav-btn icon-btn carousel-exit-btn"
+                className="exit-pill-btn carousel-exit-btn"
               >
-                <img src="./Exit.svg" alt="" aria-hidden="true" />
+                Exit
               </button>
             )}
             <div className="carousel-image-display">
@@ -305,11 +305,11 @@ export default function Carousel({ images = [] }) {
                 >
                   <button
                     type="button"
-                    className="nav-btn icon-btn carousel-guided-close-btn"
+                    className="exit-pill-btn carousel-guided-close-btn"
                     onClick={closeGuided}
                     aria-label="Close guided description"
                   >
-                    <img src="./Exit.svg" alt="" aria-hidden="true" />
+                    Exit
                   </button>
                   <div className="carousel-guided-body">
                     <h2 className="carousel-guided-heading">

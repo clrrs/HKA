@@ -387,14 +387,7 @@ body {
   position: fixed;
   top: 32px;
   left: 32px;
-  width: 56px;
-  height: 56px;
   z-index: 3; /* always above document content */
-}
-
-.document-viewer-exit-btn img {
-  width: 28px;
-  height: 28px;
 }
 
 .document-viewer-body {
@@ -1090,7 +1083,8 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   flex-wrap: wrap;
 }
 
-.zoom-btn {
+.zoom-btn,
+.exit-pill-btn {
   background-color: var(--btn-bg);
   color: var(--btn-text);
   padding: 12px 24px;
@@ -1105,14 +1099,16 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   min-height: 44px;
 }
 
-.zoom-btn:focus-visible {
+.zoom-btn:focus-visible,
+.exit-pill-btn:focus-visible {
   background-color: var(--btn-focus-bg);
   border-color: var(--btn-focus-border);
   color: var(--btn-focus-text);
   outline: none;
 }
 
-.zoom-btn:disabled {
+.zoom-btn:disabled,
+.exit-pill-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
