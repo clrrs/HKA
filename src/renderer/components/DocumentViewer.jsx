@@ -202,7 +202,7 @@ export default function DocumentViewer({ artifact }) {
     <>
       <div
         className="document-surface"
-        tabIndex={speechMode ? 0 : -1}
+        tabIndex={0}
         role="button"
         aria-label="Open document"
         onClick={openViewer}

@@ -341,6 +341,13 @@ body {
   font-size: 18px;
   font-weight: 400;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.document-surface:focus .document-surface-prompt,
+.document-surface:focus-visible .document-surface-prompt {
+  opacity: 1;
 }
 
 .document-viewer-backdrop {
