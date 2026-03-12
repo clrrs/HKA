@@ -130,7 +130,7 @@ export default function StartScene() {
             <div className="start-video-body">
               <video
                 ref={videoRef}
-                src="/3HK7_Instructional-VO_v01-260227_SMALL.mov"
+                src="3HK7_Instructional-VO_v01-260227_SMALL.mp4"
                 onEnded={handleVideoEnded}
                 autoPlay
                 tabIndex={0}
