@@ -1,6 +1,6 @@
 {
   "name": "hka-kiosk",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "author": "Solid Light",
   "description": "Helen Keller Archive Kiosk Application",
   "main": "src/main/main.js",
