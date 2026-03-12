@@ -9,15 +9,13 @@ Helen Keller Archive
 1. Go to the [Releases page](https://github.com/clrrs/HKA/releases/latest)
 2. Download the `.exe` file (e.g. `HKA-Kiosk-Setup-1.0.0.exe`)
 3. Run the installer. It will install and launch the app
+4. (Optional, since you will have to repeat this step for every release) To pin the Electron app to the taskbar, hit Windows+Tab to minimize, then right click on the Electron icon in the taskbar. Click "Pin to Taskbar"
 
 ### NVDA (Screen Reader)
 
 [NVDA](https://www.nvaccess.org/download/) must be installed and running **before** the app launches. The app uses `role="application"` to put NVDA into focus mode, which only works if NVDA is already active at page load.
 
-Speech mode (Q): Press **Q** to toggle NVDA speech on or off. When speech is off, the app hides the gold focus outline and on artifact pages keyboard navigation (L/K) moves only between buttons and media controls (title and description stay in the DOM for screen-reader order when speech is on).
-
-For kiosk deployment, configure NVDA to start automatically:
-NVDA menu > Preferences > Settings > General > **"Start NVDA after I sign in"**
+Once NVDA is running in the Electron app, you can toggle speech mode. TTS button (Q): Press **Q** to toggle NVDA speech on or off. When speech is *off,* the app hides the gold focus outline, and on artifact pages the keypad navigation (L/K) moves *only* between buttons and media controls (title and description stay in the DOM for screen-reader order when speech is on). This different focus/nav behavior for speech on vs speech off is controlled by the app, not NVDA.
 
 1. Download the pre-configured NVDA settings file: [nvda.ini](nvda.ini)
 2. Copy this onto your clipboard: %APPDATA%\nvda
@@ -28,7 +26,7 @@ NVDA menu > Preferences > Settings > General > **"Start NVDA after I sign in"**
 
 ---
 
-## To Note
+## Cloning the Repo *for development, not for demo install*
 
 ### Prerequisites
 
