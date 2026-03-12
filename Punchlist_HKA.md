@@ -1,10 +1,9 @@
 # Punchlist
 
-- [ ]  Instructional Video
-    - [ ]  Skip should come up earlier, ~1 second after video starts
-- [ ]  Full Screen Quote:
-    - Audio should come up sooner
-    - Remove press any key to continue, automatically go to the theme page 1s after audio plays. allow key presses after 2s which allows you to skip even if audio isn’t done playing
+- [x]  Instructional Video
+    - [x]  Skip should come up earlier, ~1 second after video starts
+- [x]  Full Screen Quote:
+    - (ignore, we will revisit later) Remove press any key to continue, automatically go to the theme page 1s after audio plays. allow key presses after 2s which allows you to skip even if audio isn’t done playing
     - When you press the back button on this screen, it takes you forward (any key press takes you to the theme page). pressing back should go back to the category selection page
 - [ ]  Adventure theme Page
     - Text looks small and not the same size as artifact text

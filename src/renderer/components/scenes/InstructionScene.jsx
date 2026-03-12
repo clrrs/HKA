@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 
-const SKIP_DELAY_SECONDS = 11;
+const SKIP_DELAY_SECONDS = 1;
 
 export default function InstructionScene({ isActive }) {
   const { goToScene } = useAppState();

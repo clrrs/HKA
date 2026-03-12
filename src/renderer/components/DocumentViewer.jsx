@@ -51,13 +51,20 @@ export default function DocumentViewer({ artifact }) {
   const overlayRef = useRef(null);
   const toolbarFirstButtonRef = useRef(null);
   const transcriptOverlayRef = useRef(null);
+  const guidedOverlayRef = useRef(null);
   const {
     bodyRef: transcriptBodyRef,
     closeButtonRef: transcriptCloseRef,
     handleKeyDown: handleTranscriptKeyDown,
     resetAnchors: resetTranscriptAnchors,
   } = useStepScroll();
-  const guidedOverlayRef = useRef(null);
+  const {
+    bodyRef: guidedBodyRef,
+    closeButtonRef: guidedCloseRef,
+    handleKeyDown: handleGuidedKeyDown,
+    resetAnchors: resetGuidedAnchors,
+  } = useStepScroll();
+  const guidedButtonRef = useRef(null);
 
   const [position, setPosition] = useState("top");
 
@@ -106,6 +113,21 @@ export default function DocumentViewer({ artifact }) {
     requestAnimationFrame(() => {
       resetTranscriptAnchors();
     });
+  };
+
+  const openGuided = () => {
+    setShowTranscript(false);
+    setShowGuided(true);
+    requestAnimationFrame(() => {
+      resetGuidedAnchors();
+    });
+  };
+
+  const closeGuided = () => {
+    setShowGuided(false);
+    if (guidedButtonRef.current) {
+      guidedButtonRef.current.focus();
+    }
   };
 
   const closeTranscript = () => {
@@ -221,12 +243,10 @@ export default function DocumentViewer({ artifact }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowTranscript(false);
-                      setShowGuided(true);
-                    }}
+                    onClick={openGuided}
                     className="carousel-btn"
                     aria-label="Open document guided description"
+                    ref={guidedButtonRef}
                   >
                     Guided Description
                   </button>
@@ -272,7 +292,7 @@ export default function DocumentViewer({ artifact }) {
                 >
                   <button
                     type="button"
-                    className="nav-btn icon-btn artifact-document-transcript-close-btn"
+                    className="exit-pill-btn artifact-document-transcript-close-btn"
                     onClick={closeTranscript}
                     aria-label="Close document transcript"
                     ref={transcriptCloseRef}
@@ -302,18 +322,24 @@ export default function DocumentViewer({ artifact }) {
                   role="dialog"
                   aria-modal="true"
                   aria-label="Document guided description"
+                  onKeyDown={handleGuidedKeyDown}
                 >
                   <button
                     type="button"
-                    className="nav-btn icon-btn artifact-document-transcript-close-btn"
-                    onClick={() => setShowGuided(false)}
+                    className="exit-pill-btn artifact-document-transcript-close-btn"
+                    onClick={closeGuided}
                     aria-label="Close document guided description"
+                    ref={guidedCloseRef}
                   >
                     Exit
                   </button>
                   <div className="artifact-document-transcript-body">
                     <h2 className="artifact-document-transcript-heading">Guided Description</h2>
-                    <div className="artifact-document-transcript-text">
+                    <div
+                      className="artifact-document-transcript-text"
+                      ref={guidedBodyRef}
+                      tabIndex={0}
+                    >
                       <p>{guidedDescription}</p>
                     </div>
                   </div>

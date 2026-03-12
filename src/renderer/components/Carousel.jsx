@@ -53,6 +53,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   const expandedRef = useRef(null);
   const zoomRef = useRef(null);
   const guidedRef = useRef(null);
+  const guidedButtonRef = useRef(null);
   const {
     bodyRef: guidedBodyRef,
     closeButtonRef: guidedCloseRef,
@@ -60,6 +61,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     resetAnchors: resetGuidedAnchors,
   } = useStepScroll();
   const transcriptRef = useRef(null);
+  const transcriptButtonRef = useRef(null);
   const {
     bodyRef: transcriptBodyRef,
     closeButtonRef: transcriptCloseRef,
@@ -188,11 +190,8 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   const closeGuided = () => {
     setShowGuided(false);
     announce("Closed guided description.");
-    if (carouselRef.current) {
-      const btn = carouselRef.current.querySelector(".carousel-guided-btn");
-      if (btn) {
-        btn.focus();
-      }
+    if (guidedButtonRef.current) {
+      guidedButtonRef.current.focus();
     }
   };
 
@@ -319,6 +318,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   }}
                   className="carousel-btn"
                   aria-label="Open transcript for current image"
+                  ref={transcriptButtonRef}
                 >
                   Transcript
                 </button>
@@ -329,6 +329,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   onClick={openGuided}
                   className="carousel-btn carousel-guided-btn"
                   aria-label="Open guided description for current image"
+                  ref={guidedButtonRef}
                 >
                   Guided Description
                 </button>
@@ -386,6 +387,9 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                     onClick={() => {
                       setShowTranscript(false);
                       announce("Closed transcript.");
+                      if (transcriptButtonRef.current) {
+                        transcriptButtonRef.current.focus();
+                      }
                     }}
                     aria-label="Close transcript"
                     ref={transcriptCloseRef}

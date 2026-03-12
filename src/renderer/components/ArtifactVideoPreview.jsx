@@ -1,9 +1,10 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useState } from "react";
 
 const ArtifactVideoPreview = forwardRef(function ArtifactVideoPreview(
   { poster, onOpen },
   ref
 ) {
+  const [isHovering, setIsHovering] = useState(false);
   const handleActivate = () => {
     if (onOpen) {
       onOpen();
@@ -26,6 +27,10 @@ const ArtifactVideoPreview = forwardRef(function ArtifactVideoPreview(
       aria-label="Open video player"
       onClick={handleActivate}
       onKeyDown={handleKeyDown}
+      onFocus={() => setIsHovering(true)}
+      onBlur={() => setIsHovering(false)}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
       ref={ref}
     >
       <div className="artifact-video-preview-frame">
@@ -38,7 +43,11 @@ const ArtifactVideoPreview = forwardRef(function ArtifactVideoPreview(
           ▶
         </div>
       </div>
-      <div className="artifact-video-preview-label">Open Video Player</div>
+      {isHovering && (
+        <div className="artifact-video-preview-prompt" aria-hidden="true">
+          <span>Open Video Player</span>
+        </div>
+      )}
     </div>
   );
 });

@@ -18,6 +18,8 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
     handleKeyDown: handleGuidedKeyDown,
     resetAnchors: resetGuidedAnchors,
   } = useStepScroll();
+  const transcriptButtonRef = useRef(null);
+  const guidedButtonRef = useRef(null);
 
   const play = () => {
     videoRef.current?.play();
@@ -86,6 +88,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
               }, 0);
             }}
             aria-label="Open transcript"
+            ref={transcriptButtonRef}
           >
             Transcript
           </button>
@@ -99,6 +102,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
               }, 0);
             }}
             aria-label="Open guided description"
+            ref={guidedButtonRef}
           >
             Guided Description
           </button>
@@ -110,7 +114,12 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
             <button
               type="button"
               className="video-overlay-close"
-              onClick={() => setShowTranscript(false)}
+              onClick={() => {
+                setShowTranscript(false);
+                if (transcriptButtonRef.current) {
+                  transcriptButtonRef.current.focus();
+                }
+              }}
               aria-label="Close transcript"
               ref={transcriptCloseRef}
             >
@@ -138,7 +147,12 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
             <button
               type="button"
               className="video-overlay-close"
-              onClick={() => setShowGuided(false)}
+              onClick={() => {
+                setShowGuided(false);
+                if (guidedButtonRef.current) {
+                  guidedButtonRef.current.focus();
+                }
+              }}
               aria-label="Close guided description"
               ref={guidedCloseRef}
             >

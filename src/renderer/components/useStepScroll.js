@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * K/L key step-scrolling for a scrollable container, modeled on DocumentViewer.
+ * K/L key step-scrolling for transcript / guided description dialogs.
  *
- * - Computes scroll anchors based on container height (75% steps).
- * - L moves forward through anchors; at last anchor, moves focus to close button (if provided).
- * - K moves backward; from close button, jumps back into body at bottom.
+ * Behaviour (matches kiosk keypad spec):
+ * - L from text: step-scrolls down through anchors; at the bottom, moves focus to the Exit button.
+ * - L from Exit: moves focus back to the text at the TOP (scrollTop = 0).
+ * - K from text: step-scrolls up through anchors; at the top, moves focus to the Exit button.
+ * - K from Exit: moves focus back to the text without changing scroll position.
  *
  * Returns:
  * - bodyRef: attach to the scrollable element
+ * - closeButtonRef: attach to the Exit button
  * - handleKeyDown: attach to the dialog or scrollable element
  * - resetAnchors: call when (re)opening the overlay
  */
@@ -67,26 +70,39 @@ export function useStepScroll() {
     event.preventDefault();
     event.stopPropagation();
 
+    const closeEl = closeButtonRef.current;
+
     if (key === "l") {
+      // From Exit: jump back to top of text.
+      if (document.activeElement === closeEl) {
+        body.focus();
+        body.scrollTo({ top: 0, behavior: "smooth" });
+        setScrollIndex(0);
+        return;
+      }
+
+      // From text: step down; at bottom, move focus to Exit.
       if (scrollIndex < activeAnchors.length - 1) {
         const nextIndex = scrollIndex + 1;
         setScrollIndex(nextIndex);
         body.scrollTo({ top: activeAnchors[nextIndex], behavior: "smooth" });
-      } else if (closeButtonRef.current) {
-        closeButtonRef.current.focus();
+      } else if (closeEl) {
+        closeEl.focus();
       }
     } else if (key === "k") {
-      if (document.activeElement === closeButtonRef.current) {
+      // From Exit: move back to text, keep current scroll position.
+      if (document.activeElement === closeEl) {
         body.focus();
-        const lastIndex = activeAnchors.length - 1;
-        body.scrollTo({ top: activeAnchors[lastIndex] || 0, behavior: "smooth" });
-        setScrollIndex(lastIndex);
         return;
       }
+
+      // From text: step up; at top, move focus to Exit.
       if (scrollIndex > 0) {
         const nextIndex = scrollIndex - 1;
         setScrollIndex(nextIndex);
         body.scrollTo({ top: activeAnchors[nextIndex], behavior: "smooth" });
+      } else if (closeEl) {
+        closeEl.focus();
       }
     }
   };

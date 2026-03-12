@@ -277,7 +277,7 @@ The lacquer luncheon set is shown fully assembled in its carrying stand, viewed 
           { src: "3A4_Schedule.png", alt: "Helen Keller's global travel schedule from 1948-49" }
         ],
         transcriptTitle:
-          'Transcription for Tentative schedule for Helen Keller\'s visit to the "Orient and Near East."',
+          'Transcript',
         transcriptText: `TENTATIVE ITINERARY OF HELEN KELLER'S VISIT
 
 TO COUNTRIES OF THE ORIENT AND NEAR EAST (March \u201948 - April '49)

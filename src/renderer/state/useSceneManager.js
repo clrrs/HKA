@@ -79,13 +79,14 @@ export function useKeyboardNav() {
       // Back (K) - simulate Shift+Tab
       if (key === "k") {
         e.preventDefault();
-        const container =
-          showSettings
-            ? document.querySelector(".settings-panel") || document
-            : document.querySelector(".document-viewer-expanded") ||
-              document.querySelector(".carousel-zoom") ||
-              document.querySelector(".carousel-expanded") ||
-              document;
+        const container = showSettings
+          ? document.querySelector(".settings-panel") || document
+          : document.querySelector(".artifact-video-transcript-modal") ||
+            document.querySelector(".artifact-video-modal") ||
+            document.querySelector(".document-viewer-expanded") ||
+            document.querySelector(".carousel-zoom") ||
+            document.querySelector(".carousel-expanded") ||
+            document;
         const rawFocusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -113,13 +114,14 @@ export function useKeyboardNav() {
       // Next (L) - simulate Tab
       if (key === "l") {
         e.preventDefault();
-        const container =
-          showSettings
-            ? document.querySelector(".settings-panel") || document
-            : document.querySelector(".document-viewer-expanded") ||
-              document.querySelector(".carousel-zoom") ||
-              document.querySelector(".carousel-expanded") ||
-              document;
+        const container = showSettings
+          ? document.querySelector(".settings-panel") || document
+          : document.querySelector(".artifact-video-transcript-modal") ||
+            document.querySelector(".artifact-video-modal") ||
+            document.querySelector(".document-viewer-expanded") ||
+            document.querySelector(".carousel-zoom") ||
+            document.querySelector(".carousel-expanded") ||
+            document;
         const rawFocusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'

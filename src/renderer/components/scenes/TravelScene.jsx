@@ -21,7 +21,7 @@ function getThumbnailSrc(artifact) {
 }
 
 export default function TravelScene() {
-  const { goToScene, goBack, currentTheme } = useAppState();
+  const { goToScene, goBack, currentTheme, speechMode } = useAppState();
   const theme = getTheme(currentTheme);
 
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -68,6 +68,24 @@ export default function TravelScene() {
 
     const idx = focusedIndexRef.current;
 
+    // In screen reader / speech mode, let the global keypad handler
+    // manage most focus order, but preserve the behavior where Back
+    // from the title (no artifact focused) returns to the theme selector.
+    if (speechMode) {
+      const active = document.activeElement;
+      const onTitle =
+        active &&
+        active.classList &&
+        active.classList.contains("travel-title");
+
+      if (isBack && idx < 0 && onTitle) {
+        e.preventDefault();
+        e.stopPropagation();
+        goToScene("home");
+      }
+      return;
+    }
+
     if (isSelect && idx >= 0) {
       const artifact = artifacts[idx];
       if (artifact) goToScene("artifact", { artifactId: artifact.id });
@@ -92,14 +110,16 @@ export default function TravelScene() {
       }
     } else {
       if (idx < 0) {
-        goBack();
+        // From the idle/heading state, Back should return to the
+        // theme selector (home) rather than the quote scene.
+        goToScene("home");
       } else if (idx === 0) {
         headingRef.current?.focus();
       } else {
         circleRefs.current[idx - 1]?.focus();
       }
     }
-  }, [goToScene, goBack, showCarousel, artifacts]);
+  }, [goToScene, goBack, showCarousel, artifacts, speechMode]);
 
   if (!theme) {
     return (
@@ -124,9 +144,24 @@ export default function TravelScene() {
           onFocus={handleHeadingFocus}
           aria-label={`${theme.label}. ${theme.description}. Select an artifact.`}
         >
-          <h1 className="travel-title" aria-hidden="true">{theme.label}</h1>
-          <p className="travel-description" aria-hidden="true">{theme.description}</p>
-          <h4 className="travel-cta" aria-hidden="true">Select an Artifact</h4>
+          <h1
+            className="travel-title"
+            tabIndex={speechMode ? 0 : -1}
+          >
+            {theme.label}
+          </h1>
+          <p
+            className="travel-description"
+            tabIndex={speechMode ? 0 : -1}
+          >
+            {theme.description}
+          </p>
+          <h4
+            className="travel-cta"
+            tabIndex={speechMode ? 0 : -1}
+          >
+            Select an Artifact
+          </h4>
         </div>
       </div>
 
