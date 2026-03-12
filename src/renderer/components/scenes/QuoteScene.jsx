@@ -69,7 +69,7 @@ export default function QuoteScene() {
       </p>
       <audio
         ref={audioRef}
-        src="/AdventureQuoteVO.m4a"
+        src="AdventureQuoteVO.m4a"
         preload="auto"
       />
     </div>

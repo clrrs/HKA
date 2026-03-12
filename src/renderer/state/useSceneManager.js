@@ -30,9 +30,9 @@ export function useSceneFocus(sceneId, isActive) {
 
 export function useKeyboardNav() {
   const { scene, goToScene, goBack, toggleSettings, showSettings, toggleSpeechMode } = useAppState();
+  const lastTtsToggleRef = useRef(0);
 
   useEffect(() => {
-    let lastTtsToggle = 0;
     const ENABLE_TEST_SHORTCUTS = true;
 
     const handleKeyDown = (e) => {
@@ -70,7 +70,7 @@ export function useKeyboardNav() {
       // Home (S) — guard against synthetic S from toggle-tts (Insert+S); disabled on instruction scene
       if (key === "s") {
         if (scene === "instruction") return;
-        if (Date.now() - lastTtsToggle < 500) return;
+        if (Date.now() - lastTtsToggleRef.current < 500) return;
         e.preventDefault();
         goToScene("start");
         return;
@@ -142,7 +142,7 @@ export function useKeyboardNav() {
       // TTS (Q) - toggle NVDA speech via Electron IPC and in-app state
       if (key === "q") {
         e.preventDefault();
-        lastTtsToggle = Date.now();
+        lastTtsToggleRef.current = Date.now();
         toggleSpeechMode();
         window.kioskApi?.send("toggle-tts");
         return;
