@@ -19,7 +19,12 @@ Speech mode (Q): Press **Q** to toggle NVDA speech on or off. When speech is off
 For kiosk deployment, configure NVDA to start automatically:
 NVDA menu > Preferences > Settings > General > **"Start NVDA after I sign in"**
 
-A pre-configured NVDA settings file will be added to this repo in the future.
+1. Download the pre-configured NVDA settings file: [nvda.ini](nvda.ini)
+2. Copy this onto your clipboard: %APPDATA%\nvda
+3. Paste it into file explorer or the search bar.
+4. Make sure NVDA is not running.
+5. Replace the nvda.ini with the downloaded one.
+6. Open NVDA
 
 ---
 
