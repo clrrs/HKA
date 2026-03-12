@@ -1,0 +1,31 @@
+# Punchlist
+
+- [ ]  Instructional Video
+    - [ ]  Skip should come up earlier, ~1 second after video starts
+- [ ]  Full Screen Quote:
+    - Audio should come up sooner
+    - Remove press any key to continue, automatically go to the theme page 1s after audio plays. allow key presses after 2s which allows you to skip even if audio isn’t done playing
+    - When you press the back button on this screen, it takes you forward (any key press takes you to the theme page). pressing back should go back to the category selection page
+- [ ]  Adventure theme Page
+    - Text looks small and not the same size as artifact text
+    - Delete the "life is but a daring adventure" quote here.
+- [ ]  Artifact page:
+    - Going back on artifact home page should take you to the themes, not the full screen quote.
+    - The navigation buttons should be accessible in this order: next artifact, previous artifact, back to theme (in a loop) Don’t change the position of the buttons, just the order they can be navigated to. when we are on a page that doesn’t have a previous/next artifact button, we skip that one in the loop.
+- [ ]  Transcript pop-up
+    - When you exit out of transcript pop up, the focus should be on the transcript button
+    - Transcript does not advance/scroll with forward button (l) every time, only about 50% of the time
+- [ ]  video player:
+    - When you navigate across play, transcript, guided description, it does not go to exit, (so it doesn’t loop) and it just does not highlight any next step. it seems like when you have the video popoup open you’re still navigating around in the artifact page
+    - buttons should be like 20 pixels down from the bottom line of the video player (no overlap)
+    - Format video player (not a pop up, should be full screen, make it look better)
+- [ ]  Image carousel
+    - After closing image carousel, user should be prompted to go to next artifact (move focus to next artifact button)
+    - The image carousel button/viewer on the artifact should always show the first image + first image indicator, even if you exit while viewing a different image
+- [ ]  Guided description
+    - when this pop up is open i can navigate to all the buttons behind it, not just exit to close out the guided description. we should only be able to scroll or go to the exit button in a closed loop when the guided description pop up is open. when we close it our focus should be on the guided description button.
+- [ ]  Transcription
+    - Window should just be labeled “Transcription” to match style of “Guided Description."
+- [ ]  Exit buttons
+    - all exit buttons should use the same component/style. the target exit button we want is the one in the image carousel (the button bg is a pill shape)
+- [ ] Make information button on start screen a lowercase "i" in a round button (not the svg) 
