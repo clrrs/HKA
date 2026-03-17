@@ -106,7 +106,11 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
   const closeTranscript = () => {
     setShowTranscript(false);
     if (transcriptButtonRef.current) {
-      transcriptButtonRef.current.focus();
+      setTimeout(() => {
+        if (transcriptButtonRef.current) {
+          transcriptButtonRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -122,7 +126,11 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
   const closeGuided = () => {
     setShowGuided(false);
     if (guidedButtonRef.current) {
-      guidedButtonRef.current.focus();
+      setTimeout(() => {
+        if (guidedButtonRef.current) {
+          guidedButtonRef.current.focus();
+        }
+      }, 0);
     }
   };
 

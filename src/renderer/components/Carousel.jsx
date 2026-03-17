@@ -162,9 +162,19 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
         if (showGuided) {
           setShowGuided(false);
           announce("Closed guided description.");
+          if (guidedButtonRef.current) {
+            setTimeout(() => {
+              guidedButtonRef.current && guidedButtonRef.current.focus();
+            }, 0);
+          }
         } else if (showTranscript) {
           setShowTranscript(false);
           announce("Closed transcript.");
+          if (transcriptButtonRef.current) {
+            setTimeout(() => {
+              transcriptButtonRef.current && transcriptButtonRef.current.focus();
+            }, 0);
+          }
         } else if (subscene === "zoom") {
           exitZoom();
         } else if (subscene === "expanded") {
@@ -198,7 +208,9 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     setShowGuided(false);
     announce("Closed guided description.");
     if (guidedButtonRef.current) {
-      guidedButtonRef.current.focus();
+      setTimeout(() => {
+        guidedButtonRef.current && guidedButtonRef.current.focus();
+      }, 0);
     }
   };
 
@@ -395,7 +407,10 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                       setShowTranscript(false);
                       announce("Closed transcript.");
                       if (transcriptButtonRef.current) {
-                        transcriptButtonRef.current.focus();
+                        setTimeout(() => {
+                          transcriptButtonRef.current &&
+                            transcriptButtonRef.current.focus();
+                        }, 0);
                       }
                     }}
                     aria-label="Close transcript"

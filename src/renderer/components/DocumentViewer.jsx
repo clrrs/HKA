@@ -126,14 +126,22 @@ export default function DocumentViewer({ artifact }) {
   const closeGuided = () => {
     setShowGuided(false);
     if (guidedButtonRef.current) {
-      guidedButtonRef.current.focus();
+      setTimeout(() => {
+        if (guidedButtonRef.current) {
+          guidedButtonRef.current.focus();
+        }
+      }, 0);
     }
   };
 
   const closeTranscript = () => {
     setShowTranscript(false);
     if (toolbarFirstButtonRef.current) {
-      toolbarFirstButtonRef.current.focus();
+      setTimeout(() => {
+        if (toolbarFirstButtonRef.current) {
+          toolbarFirstButtonRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -148,7 +156,7 @@ export default function DocumentViewer({ artifact }) {
       if (showTranscript) {
         closeTranscript();
       } else if (showGuided) {
-        setShowGuided(false);
+        closeGuided();
       } else {
         closeViewer();
       }
