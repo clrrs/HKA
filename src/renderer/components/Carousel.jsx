@@ -32,10 +32,16 @@ function useFocusTrap(containerRef, isActive) {
 
     container.addEventListener('keydown', handleKeyDown);
     
-    // Focus first focusable element when trap activates
-    const focusables = container.querySelectorAll(focusableSelector);
-    if (focusables.length > 0) {
-      focusables[0].focus();
+    // Focus preferred autofocus target when trap activates (if any),
+    // otherwise fall back to the first focusable element.
+    const autofocusTarget = container.querySelector("[data-autofocus]");
+    if (autofocusTarget) {
+      autofocusTarget.focus();
+    } else {
+      const focusables = container.querySelectorAll(focusableSelector);
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
     }
 
     return () => container.removeEventListener('keydown', handleKeyDown);

@@ -163,6 +163,7 @@ export default function ZoomControls({ image, onExit }) {
         <div className="zoom-btn-group">
           <button 
             type="button" 
+            data-autofocus
             onClick={zoomIn}
             onMouseDown={() => startHoldToRepeat(zoomIn)}
             onMouseUp={stopHoldToRepeat}
