@@ -5,8 +5,8 @@ import { getTheme } from "../../data/artifacts";
 export default function QuoteScene() {
   const { currentTheme, goToScene, scene } = useAppState();
   const theme = getTheme(currentTheme);
-  const readyRef = useRef(false);
   const audioRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -26,31 +26,33 @@ export default function QuoteScene() {
 
   useEffect(() => {
     if (scene !== "quote" || !theme) {
-      readyRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       return;
     }
 
-    // Short delay prevents the keypress that activated the quote scene
-    // (e.g. holding J to select a theme) from immediately dismissing it.
-    readyRef.current = false;
-    const armTimer = setTimeout(() => { readyRef.current = true; }, 250);
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
 
-    const dismiss = (e) => {
-      if (e.type === "keydown" && e.repeat) return;
-      if (!readyRef.current) return;
-      goToScene("travel");
+    const handleEnded = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        goToScene("travel");
+      }, 1000);
     };
 
-    window.addEventListener("keydown", dismiss);
-    window.addEventListener("mousedown", dismiss);
-    window.addEventListener("touchstart", dismiss);
+    audioEl.addEventListener("ended", handleEnded);
 
     return () => {
-      clearTimeout(armTimer);
-      readyRef.current = false;
-      window.removeEventListener("keydown", dismiss);
-      window.removeEventListener("mousedown", dismiss);
-      window.removeEventListener("touchstart", dismiss);
+      audioEl.removeEventListener("ended", handleEnded);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
   }, [goToScene, scene, theme]);
 
@@ -63,9 +65,6 @@ export default function QuoteScene() {
       </div>
       <p className="quote-scene-attribution" aria-hidden="true">
         — Helen Keller
-      </p>
-      <p className="quote-scene-hint" aria-hidden="true">
-        Press any key to continue
       </p>
       <audio
         ref={audioRef}
