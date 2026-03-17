@@ -76,14 +76,16 @@ export default function ArtifactScene() {
 
       <nav className="artifact-nav">
         <div className="artifact-nav-left">
-          <button
-            className="nav-btn nav-btn-icon-white"
-            onClick={() => goToScene("travel")}
-            aria-label="Back to theme, return to artifact list"
-          >
-            <img src="./Menu.svg" alt="" aria-hidden="true" />
-            Back to Theme
-          </button>
+          {nextArtifact && (
+            <button
+              className="nav-btn"
+              onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
+              aria-label="Next Artifact"
+            >
+              Next Artifact
+              <img src="./Forward.svg" alt="" aria-hidden="true" />
+            </button>
+          )}
           {prevArtifact && (
             <button
               className="nav-btn"
@@ -94,20 +96,14 @@ export default function ArtifactScene() {
               Previous Artifact
             </button>
           )}
-        </div>
-        <div className="artifact-nav-right">
-          {nextArtifact ? (
-            <button
-              className="nav-btn"
-              onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
-              aria-label="Next Artifact"
-            >
-              Next Artifact
-              <img src="./Forward.svg" alt="" aria-hidden="true" />
-            </button>
-          ) : (
-            <span />
-          )}
+          <button
+            className="nav-btn nav-btn-icon-white"
+            onClick={() => goToScene("travel")}
+            aria-label="Back to theme, return to artifact list"
+          >
+            <img src="./Menu.svg" alt="" aria-hidden="true" />
+            Back to Theme
+          </button>
         </div>
       </nav>
       {artifact.type === "video" && showVideoOverlay && (

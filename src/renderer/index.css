@@ -583,21 +583,17 @@ body {
   margin-top: auto;
   padding: 0 84px 60px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
   width: 100%;
   box-sizing: border-box;
 }
 
 .artifact-nav-left {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 16px;
-}
-
-.artifact-nav-right {
-  display: flex;
-  align-items: center;
 }
 
 .artifact-nav .nav-btn {
@@ -1982,15 +1978,15 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 .travel-heading {
   position: absolute;
   z-index: 1;
-  left: 101px;
-  top: 50%;
-  transform: translateY(-50%);
-  max-width: 440px;
+  left: 84px;
+  top: 200px;
+  transform: none;
+  max-width: 756px;
   transition: transform 0.55s ease-in-out, opacity 0.45s ease-in-out;
 }
 
 .travel-heading--hidden {
-  transform: translateY(-50%) translateX(-700px);
+  transform: translateX(-700px);
   opacity: 0;
 }
 

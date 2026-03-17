@@ -6,7 +6,7 @@ const ITEM_WIDTH = 600;
 const GAP = 77;
 const ITEM_STEP = ITEM_WIDTH + GAP;
 const SCREEN_CENTER = 960;
-const IDLE_OFFSET = 800;
+const IDLE_OFFSET = 1000;
 
 function getTrackTranslateX(focusedIndex) {
   if (focusedIndex < 0) return IDLE_OFFSET;
@@ -160,7 +160,7 @@ export default function TravelScene() {
             className="travel-cta"
             tabIndex={speechMode ? 0 : -1}
           >
-            Select an Artifact
+            Select an artifact to begin
           </h4>
         </div>
       </div>

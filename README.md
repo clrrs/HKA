@@ -4,12 +4,14 @@ Helen Keller Archive
 
 > **Note:** This is a demo/prototyping version. Installation and update processes described here are for testing purposes and will change for the final release.
 
-## For Solid Light/WET: Installing the Windows App
+## For Solid Light/WET: Installing the Electron App
 
 1. Go to the [Releases page](https://github.com/clrrs/HKA/releases/latest)
 2. Download the `.exe` file (e.g. `HKA-Kiosk-Setup-1.0.0.exe`)
 3. Run the installer. It will install and launch the app
 4. (Optional, since you will have to repeat this step for every release) To pin the Electron app to the taskbar, hit Windows+Tab to minimize, then right click on the Electron icon in the taskbar. Click "Pin to Taskbar"
+
+*BTW I added keyboard shortcuts for testing. Use 1,2,3 to skip to different pages quickly.*
 
 ### NVDA (Screen Reader)
 
