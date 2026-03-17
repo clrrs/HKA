@@ -600,10 +600,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: calc(30px * var(--text-scale));
+  font-size: calc(20px * var(--text-scale));
   font-weight: 300;
-  min-height: 60px;
-  padding: 12px 24px;
+  min-height: 40px;
+  padding: 8px 20px;
 }
 
 .artifact-nav .nav-btn img {

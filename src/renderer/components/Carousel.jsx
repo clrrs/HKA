@@ -126,6 +126,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     setShowGuided(false);
     setShowTranscript(false);
     setSubscene(null);
+    setCurrentIndex(0);
     announce("Exited navigation mode.");
   };
 
