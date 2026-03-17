@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useAppState } from "../state/StateProvider";
 import { useStepScroll } from "./useStepScroll";
 
 function useFocusTrap(containerRef, isActive) {
@@ -42,6 +43,7 @@ function useFocusTrap(containerRef, isActive) {
 }
 
 export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDescription, onClose }) {
+  const { speechMode } = useAppState();
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
   const transcriptRef = useRef(null);
@@ -183,7 +185,17 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
             src={src}
             poster={poster}
             onEnded={handleEnded}
-            tabIndex={0}
+            tabIndex={speechMode ? 0 : -1}
+            onClick={(event) => {
+              // Prevent direct interaction; use explicit controls instead
+              event.preventDefault();
+            }}
+            onKeyDown={(event) => {
+              // Block Enter/Space from toggling playback when focused
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+              }
+            }}
           />
         </div>
         <div className="artifact-video-controls" role="toolbar" aria-label="Artifact video controls">
