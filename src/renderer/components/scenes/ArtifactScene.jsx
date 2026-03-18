@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useAppState } from "../../state/StateProvider";
+import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme, getArtifact, getNextArtifact, getPrevArtifact } from "../../data/artifacts";
 import Carousel from "../Carousel";
 import DocumentViewer from "../DocumentViewer";
@@ -18,6 +19,7 @@ export default function ArtifactScene() {
 
   const [showVideoOverlay, setShowVideoOverlay] = useState(false);
   const videoPreviewRef = useRef(null);
+  const announce = useAnnounce();
 
   const theme = getTheme(currentTheme);
   const artifact = getArtifact(currentTheme, artifactId);
@@ -53,10 +55,34 @@ export default function ArtifactScene() {
             className="artifact-title"
             tabIndex={speechMode ? 0 : -1}
             data-autofocus={speechMode ? true : undefined}
+            onFocus={() => {
+              announce(artifact.title, {
+                politeness: "assertive",
+                source: "ArtifactScene:title",
+                eventType: "focus-title",
+                dedupeMs: 150,
+                dom: false,
+                bridgeDelayMs: 55,
+              });
+            }}
           >
             {artifact.title}
           </p>
-          <p tabIndex={speechMode ? 0 : -1}>{artifact.description}</p>
+          <p
+            tabIndex={speechMode ? 0 : -1}
+            onFocus={() => {
+              announce(artifact.description, {
+                politeness: "assertive",
+                source: "ArtifactScene:description",
+                eventType: "focus-description",
+                dedupeMs: 150,
+                dom: false,
+                bridgeDelayMs: 55,
+              });
+            }}
+          >
+            {artifact.description}
+          </p>
         </div>
         <div className="artifact-media">
           {artifact.type === "video" && (

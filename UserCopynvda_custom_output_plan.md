@@ -521,7 +521,259 @@ Docs added/updated:
 - Updated: `docs/NVDA_Custom_Output_Goal.md` deliverables list
 - Updated: this file handoff + starter prompt for Electron phase
 
+### Iteration 2026-03-18-O — Electron Announcement Bridge (E1 Vertical Slice)
+
+Cluster:
+- Full renderer → preload IPC → main process → NVDA Controller bridge path.
+- Scope: all existing announce calls now route through Electron IPC in addition to aria-live.
+
+Changes made:
+- `src/renderer/state/AnnouncerProvider.jsx`:
+  - Added correlation ID generation (`ann-{seq}-{timestamp}`) to every announce call.
+  - Normalized payload: `text`, `brailleText?`, `politeness`, `interrupt`, `source`, `eventType`, `correlationId`, `timestamp`.
+  - After aria-live DOM write, forwards payload to `window.kioskApi.announce()` when available.
+  - Updated `exportText()` to include correlation IDs.
+  - New options accepted: `brailleText`, `eventType` (both optional, backward-compatible).
+- `src/main/preload.js`:
+  - Added `kioskApi.announce(payload)` method exposed to renderer.
+  - Validates and sanitizes all payload fields (type checks, length caps).
+  - Forwards sanitized payload via `ipcRenderer.send("kiosk:announce", ...)`.
+  - Logs at preload layer with correlation ID.
+- `src/main/main.js`:
+  - Added `ipcMain.on("kiosk:announce", ...)` handler with validation and structured logging.
+  - Calls `nvdaBridge.dispatch(payload)`.
+  - Initializes bridge on app ready.
+- `src/main/nvdaControllerBridge.js` (new file):
+  - Adapter for NVDA Controller Client (nvdaControllerClient64.dll via ffi-napi).
+  - Graceful fallback to mock mode when ffi-napi or NVDA not available.
+  - `dispatch(payload)`: if `interrupt=true`, cancels speech first, then speaks + sends braille.
+  - All operations log with correlation ID for traceability.
+
+Design decisions:
+- Bridge starts in mock mode by default (ffi-napi is optional). Full NVDA dispatch activates when the DLL and ffi-napi are both present.
+- Assertive politeness → `interrupt=true` → cancel-before-speak pattern.
+- Existing aria-live behavior preserved as fallback — IPC bridge is additive, not replacing.
+- Braille dispatch uses `brailleText` if provided, otherwise falls back to `text`.
+
+Correlation log chain (per announcement):
+1. `[Announcer]` renderer log entry with `correlationId`
+2. `[preload]` console.log with `cid=`
+3. `[main]` console.log with `cid=`
+4. `[NvdaBridge]` dispatch/cancel/speak/braille logs with `cid=`
+
+First validation cluster (recommended):
+- Carousel expanded: enter, next image, prev image, exit.
+- All assertive, all interrupt=true.
+
+Regressions expected:
+- None. IPC bridge is additive. Existing aria-live path is unchanged.
+
+Operator test procedure:
+1. `npm run electron:dev`
+2. Open Electron main process console (terminal) to see `[main]` and `[NvdaBridge]` logs.
+3. Open renderer DevTools console to see `[preload]` logs.
+4. Clear debug logs: `window.__HKA_CLEAR_DEBUG_LOGS__()`
+5. Execute carousel expanded cluster on 3A2.
+6. Export renderer logs: `window.__HKA_EXPORT_DEBUG_LOGS__()`
+7. Check main process terminal for matching correlation IDs.
+8. Report: observed NVDA speech + braille vs expected contract.
+
+Next steps after operator results:
+- If mock-mode logs show correct sequence and no duplicates, proceed to install ffi-napi + nvdaControllerClient64.dll for live NVDA dispatch.
+- If duplicates or ordering issues appear, fix before moving to live dispatch.
+
+### Iteration 2026-03-18-P — Windows Toolchain Blocker + Koffi Bridge + Focus-Hidden Fix
+
+Cluster:
+- Enable live NVDA dispatch without requiring local node-gyp/Python toolchain.
+- Resolve runtime warning: focused element inside `aria-hidden` ancestor.
+
+Observed blocker:
+- `npm install ffi-napi ref-napi` failed on this machine (`node-gyp` could not find Python toolchain).
+- Bridge remained in mock mode (`ffi-napi/ref-napi not available`) so NVDA still announced native role/context (`section`/`paragraph`).
+
+Changes made:
+- Dependency:
+  - Added `koffi` to `package.json` (prebuilt native FFI, no local compile required).
+- `src/main/nvdaControllerBridge.js`:
+  - Replaced ffi/ref loader path with `koffi`.
+  - Added DLL resolution candidates:
+    - local app directory
+    - Electron resources path
+    - `C:\\Program Files\\NVDA\\nvdaControllerClient64.dll`
+    - `C:\\Program Files (x86)\\NVDA\\nvdaControllerClient64.dll`
+  - Keeps mock fallback when DLL is missing or NVDA not running.
+  - Keeps same dispatch behavior: `interrupt` -> cancel speech -> speak text -> braille text.
+- Focus-hidden warning fix:
+  - `src/renderer/components/scenes/TravelScene.jsx`:
+    - `handleFocus()` now calls `showCarousel()` before setting focused index.
+  - `src/renderer/components/scenes/HomeScene.jsx`:
+    - same `handleFocus()` adjustment.
+
+Rationale:
+- `koffi` avoids fragile native build setup on kiosk/dev machines while still calling NVDA Controller DLL directly.
+- Ensuring carousel is unhidden at focus time prevents AT-invalid state (`aria-hidden` ancestor with focused descendant), which can destabilize NVDA announcements.
+
+Operator verify:
+1. Restart Electron app.
+2. Confirm DevTools warning about focused element in hidden carousel no longer appears during theme/artifact focus movement.
+3. Confirm main log now shows either:
+   - successful DLL connection (`Connected to NVDA Controller Client via ...`), or
+   - explicit missing DLL/NVDA fallback reason.
+4. Re-run 3A2 first cluster and compare observed speech/braille.
+
+Next step:
+- If DLL is found and NVDA is running, validate assertive interrupt behavior against the contract.
+- If still in mock mode, place/copy `nvdaControllerClient64.dll` into one of the searched locations and retry.
+
 ## Success Definition (short)
+
+### Iteration 2026-03-18-Q — 3A2 Title/Description Focus Routed Through Bridge
+
+Cluster:
+- Artifact scene entry focus only (`title` + `description`) for 3A2 validation.
+
+Issue observed:
+- Even with NVDA bridge connected, title focus still ended with native role speech (`paragraph`).
+- Root cause: title/description focus events in `ArtifactScene` were not using shared `announce()`; they relied on native NVDA focus output only.
+
+Changes made:
+- `src/renderer/components/scenes/ArtifactScene.jsx`
+  - Imported `useAnnounce`.
+  - Added assertive `announce()` on title focus:
+    - `source: ArtifactScene:title`
+    - `eventType: focus-title`
+    - `dedupeMs: 150`
+  - Added assertive `announce()` on description focus:
+    - `source: ArtifactScene:description`
+    - `eventType: focus-description`
+    - `dedupeMs: 150`
+
+Expected result:
+- On focusing title/description, bridge path now receives deterministic payloads and can cancel in-flight speech before speaking contract text.
+- Should reduce/override trailing native role/context chatter compared to native-focus-only path.
+
+Operator verify (tiny cluster):
+1. Launch NVDA + app, confirm bridge connected.
+2. Enter artifact 3A2.
+3. Focus lands on title, then move to description.
+4. Capture:
+   - renderer announce logs (`__HKA_EXPORT_DEBUG_LOGS__`)
+   - main terminal `[main]` + `[NvdaBridge]` logs
+   - observed NVDA speech + braille
+5. Report if `paragraph` still appears, and whether it is before/after custom phrase.
+
+### Iteration 2026-03-18-R — 3A2 Focus De-Dupe (Bridge-Only + Delayed Cancel)
+
+Cluster:
+- Artifact 3A2 scene-entry title/description only.
+
+Observed issue from operator transcript:
+- Repeated title phrase plus trailing native `paragraph`.
+- Pattern indicated mixed output channels (native focus + renderer live region + bridge dispatch).
+
+Changes made:
+- `src/renderer/state/AnnouncerProvider.jsx`
+  - Added optional announce options:
+    - `dom` (default `true`) to control whether aria-live DOM region is written.
+    - `bridgeDelayMs` (default `0`) to delay bridge dispatch timing.
+  - Logging now captures `dom` and `bridgeDelayMs` for correlation.
+- `src/renderer/components/scenes/ArtifactScene.jsx`
+  - Title and description focus announces now use:
+    - `dom: false` (bridge-only path for this cluster)
+    - `bridgeDelayMs: 90` (allow native focus utterance to start, then cancel+replace)
+
+Rationale:
+- `dom: false` avoids duplicate speech from live region + bridge for these events.
+- Slight bridge delay improves chance that `nvdaController_cancelSpeech` cuts off native focus role suffix before final phrase output.
+
+Operator verify:
+1. Restart app + NVDA (bridge connected).
+2. Enter 3A2 and capture only title then description focus.
+3. Export logs via `window.__HKA_EXPORT_DEBUG_LOGS__()`.
+4. Report spoken order exactly, including whether `paragraph` still appears.
+
+### Iteration 2026-03-18-S — Bridge Encoding Fix (UTF-16 Wide String)
+
+Cluster:
+- NVDA controller bridge text encoding correctness for speech + braille dispatch.
+
+Observed regression:
+- Operator heard malformed output (`superscript ...`) instead of intended title phrase.
+- This occurred even with bridge connected and valid event flow.
+
+Root cause:
+- Bridge was calling controller functions with `const char*` payloads.
+- NVDA controller API expects wide-string text payloads for speech/braille.
+
+Changes made:
+- `src/main/nvdaControllerBridge.js`
+  - Added `toWideCString(text)` helper (`utf16le` + null terminator).
+  - Updated function bindings:
+    - `nvdaController_speakText(const void *text)`
+    - `nvdaController_brailleMessage(const void *message)`
+  - Now passes UTF-16 buffers to both calls.
+
+Expected result:
+- Spoken/braille output should return to normal readable phrases (no superscript/garble artifacts).
+
+Operator verify:
+1. Restart app + NVDA.
+2. Enter 3A2.
+3. Capture first title announcement and transcript it verbatim.
+4. If phrase is clean but `paragraph` still appears, continue timing/semantics tuning from this corrected baseline.
+
+### Iteration 2026-03-18-T — Stutter Reduction (Lower Bridge Delay)
+
+Cluster:
+- 3A2 title/description focus delivery smoothness.
+
+Observed:
+- Role suffix suppression improved, but operator heard brief start/cut stutter at announcement onset.
+
+Change made:
+- `src/renderer/components/scenes/ArtifactScene.jsx`
+  - Reduced `bridgeDelayMs` for title and description focus from `90` -> `20`.
+  - Kept `dom: false` and assertive bridge path unchanged.
+
+Rationale:
+- 90ms delay allowed too much native speech onset before cancel/replace.
+- Lower delay should reduce perceptible interruption stutter while preserving suppression.
+
+Operator verify:
+1. Restart app + NVDA.
+2. Enter 3A2 and listen for title then description.
+3. Record whether:
+   - stutter is reduced
+   - `paragraph` remains suppressed
+4. If `paragraph` returns, next test is midpoint delay (e.g., 35-50ms) rather than reverting all the way to 90.
+
+### Iteration 2026-03-18-U — Midpoint Timing Rebalance (55ms)
+
+Cluster:
+- 3A2 title/description focus timing only.
+
+Observed after T (20ms):
+- Regression: duplicate focused-item speech returned.
+- Trailing `paragraph` also returned.
+
+Change made:
+- `src/renderer/components/scenes/ArtifactScene.jsx`
+  - Updated `bridgeDelayMs` for title and description from `20` -> `55`.
+  - Kept `dom: false`, assertive, and dedupe unchanged.
+
+Rationale:
+- 20ms likely too early to reliably cancel native focus utterance.
+- 90ms suppressed better but produced onset stutter.
+- 55ms is a midpoint attempt to balance suppression and smoothness.
+
+Operator verify:
+1. Restart app + NVDA.
+2. Enter 3A2 and listen to title then description.
+3. Report only:
+   - duplicate phrase? (yes/no)
+   - trailing `paragraph`? (yes/no)
+   - onset stutter severity: none / mild / strong.
 
 - 3A2 passes deterministic speech+braille contract repeatedly
 - Same policy scales scene-by-scene without regressions

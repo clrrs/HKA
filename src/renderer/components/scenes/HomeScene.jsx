@@ -48,8 +48,9 @@ export default function HomeScene() {
   }, []);
 
   const handleFocus = useCallback((index) => {
+    showCarousel();
     setFocusedIndex(index);
-  }, []);
+  }, [showCarousel]);
 
   const handleHeadingFocus = useCallback(() => {
     setFocusedIndex(-1);

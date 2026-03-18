@@ -42,8 +42,9 @@ export default function TravelScene() {
   }, []);
 
   const handleFocus = useCallback((index) => {
+    showCarousel();
     setFocusedIndex(index);
-  }, []);
+  }, [showCarousel]);
 
   const handleHeadingFocus = useCallback(() => {
     setFocusedIndex(-1);

@@ -11,6 +11,12 @@ const ANNOUNCE_LOG_START =
     ? (window.__HKA_ANNOUNCE_START__ = window.__HKA_ANNOUNCE_START__ || Date.now())
     : Date.now();
 
+let correlationCounter = 0;
+function makeCorrelationId() {
+  correlationCounter += 1;
+  return `ann-${correlationCounter}-${Date.now()}`;
+}
+
 function writeAnnouncementLog(entry) {
   if (typeof window === "undefined") return;
   if (!window[ANNOUNCE_LOG_KEY]) {
@@ -37,7 +43,7 @@ function ensureAnnouncementTools() {
       const lines = (window[ANNOUNCE_LOG_KEY] || [])
         .map(
           (entry) =>
-            `${entry.seq}. +${entry.sinceStartMs}ms [${entry.politeness}] [${entry.source}] ${entry.message}`
+            `${entry.seq}. +${entry.sinceStartMs}ms [${entry.politeness}] [${entry.source}] [${entry.correlationId || "-"}] ${entry.message}`
         )
         .join("\n");
       return lines || "[no announcement logs recorded yet]";
@@ -87,7 +93,14 @@ export default function AnnouncerProvider({ children }) {
       dedupeMs = 0,
       clear = false,
       source = "unknown",
+      brailleText,
+      eventType,
+      dom = true,
+      bridgeDelayMs = 0,
     } = options;
+
+    const correlationId = makeCorrelationId();
+    const interrupt = politeness === "assertive";
 
     if (clear) {
       if (politeRef.current) politeRef.current.textContent = "";
@@ -99,6 +112,7 @@ export default function AnnouncerProvider({ children }) {
         seq: sequenceRef.current,
         ts: new Date().toISOString(),
         sinceStartMs: Date.now() - ANNOUNCE_LOG_START,
+        correlationId,
         politeness,
         source,
         message: "[clear]",
@@ -122,6 +136,7 @@ export default function AnnouncerProvider({ children }) {
         seq: sequenceRef.current,
         ts: new Date().toISOString(),
         sinceStartMs: now - ANNOUNCE_LOG_START,
+        correlationId,
         politeness,
         source,
         message,
@@ -136,27 +151,57 @@ export default function AnnouncerProvider({ children }) {
     const target =
       politeness === "assertive" ? assertiveRef.current : politeRef.current;
 
-    if (!target) return;
+    if (dom && !target) return;
 
-    // Clear then set on next tick so the browser treats it as a new announcement
-    target.textContent = "";
-    setTimeout(() => {
-      if (target) target.textContent = message;
-    }, 50);
+    if (dom) {
+      target.textContent = "";
+      setTimeout(() => {
+        if (target) target.textContent = message;
+      }, 50);
+    }
 
     ensureAnnouncementTools();
     sequenceRef.current += 1;
+
+    const payload = {
+      text: message,
+      brailleText: brailleText || undefined,
+      politeness,
+      interrupt,
+      source,
+      eventType: eventType || undefined,
+      correlationId,
+      timestamp: now,
+    };
+
     const entry = {
       seq: sequenceRef.current,
       ts: new Date().toISOString(),
       sinceStartMs: now - ANNOUNCE_LOG_START,
+      correlationId,
       message,
       politeness,
       dedupeMs,
       source,
+      dom,
+      bridgeDelayMs,
       status: "emitted",
     };
     writeAnnouncementLog(entry);
+
+    if (window.kioskApi?.announce) {
+      try {
+        const sendToBridge = () => window.kioskApi.announce(payload);
+        if (bridgeDelayMs > 0) {
+          setTimeout(sendToBridge, bridgeDelayMs);
+        } else {
+          sendToBridge();
+        }
+      } catch (err) {
+        console.error("[Announcer] IPC bridge error:", err);
+      }
+    }
+
     if (window.__ANNOUNCE_DIAGNOSTIC__) {
       console.log("[Announcer]", entry);
     }

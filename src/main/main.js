@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
 const { autoUpdater } = require("electron-updater");
+const nvdaBridge = require("./nvdaControllerBridge");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -85,8 +86,20 @@ ipcMain.on("volume-down", () => {
   );
 });
 
+ipcMain.on("kiosk:announce", (_event, payload) => {
+  if (!payload || typeof payload.text !== "string") {
+    console.warn("[main] kiosk:announce received invalid payload", payload);
+    return;
+  }
+  console.log(
+    `[main] kiosk:announce cid=${payload.correlationId} politeness=${payload.politeness} text="${payload.text}"`
+  );
+  nvdaBridge.dispatch(payload);
+});
+
 app.whenReady().then(() => {
   ensurePowerShell();
+  nvdaBridge.init();
   createWindow();
 
   // Auto-update from GitHub Releases (only works in packaged app)
