@@ -1,17 +1,21 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAnnounce } from "../state/AnnouncerProvider";
+import { useAppState } from "../state/StateProvider";
+import { getElementSummary, logInputEvent } from "../state/interactionLog";
 
 export default function ZoomControls({ image, onExit }) {
+  const { scene, subscene } = useAppState();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const imgRef = useRef(null);
   const holdTimerRef = useRef(null);
   const holdIntervalRef = useRef(null);
   const scaleRef = useRef(1);
+  const positionRef = useRef({ x: 0, y: 0 });
   const globalAnnounce = useAnnounce();
 
-  const announce = useCallback((message, options) => {
-    globalAnnounce(message, options);
+  const announce = useCallback((message, options = {}) => {
+    globalAnnounce(message, { source: "ZoomControls", ...options });
   }, [globalAnnounce]);
 
   // Calculate max pan based on zoom level
@@ -22,6 +26,15 @@ export default function ZoomControls({ image, onExit }) {
   }, [scale]);
 
   const zoomIn = useCallback(() => {
+    if (scene === "artifact") {
+      logInputEvent({
+        source: "ZoomControls",
+        scene,
+        subscene,
+        action: "zoom-in",
+        target: getElementSummary(document.activeElement),
+      });
+    }
     if (scaleRef.current >= 4) {
       announce("Maximum zoom.", { dedupeMs: 300 });
       return;
@@ -30,9 +43,18 @@ export default function ZoomControls({ image, onExit }) {
     scaleRef.current = newScale;
     setScale(newScale);
     announce(`Zoomed in. ${Math.round((newScale - 1) * 100)} percent.`, { dedupeMs: 150 });
-  }, [announce]);
+  }, [announce, scene, subscene]);
 
   const zoomOut = useCallback(() => {
+    if (scene === "artifact") {
+      logInputEvent({
+        source: "ZoomControls",
+        scene,
+        subscene,
+        action: "zoom-out",
+        target: getElementSummary(document.activeElement),
+      });
+    }
     if (scaleRef.current <= 0.25) {
       announce("Minimum zoom.", { dedupeMs: 300 });
       return;
@@ -42,70 +64,95 @@ export default function ZoomControls({ image, onExit }) {
     setScale(newScale);
 
     if (newScale <= 1) {
-      setPosition({ x: 0, y: 0 });
+      const resetPosition = { x: 0, y: 0 };
+      positionRef.current = resetPosition;
+      setPosition(resetPosition);
     } else {
       const maxPanVal = Math.min((newScale - 1) * 100, 150);
-      setPosition(prev => ({
-        x: Math.max(-maxPanVal, Math.min(maxPanVal, prev.x)),
-        y: Math.max(-maxPanVal, Math.min(maxPanVal, prev.y))
-      }));
+      const nextPosition = {
+        x: Math.max(-maxPanVal, Math.min(maxPanVal, positionRef.current.x)),
+        y: Math.max(-maxPanVal, Math.min(maxPanVal, positionRef.current.y)),
+      };
+      positionRef.current = nextPosition;
+      setPosition(nextPosition);
     }
 
     announce(`Zoomed out. ${Math.round((newScale - 1) * 100)} percent.`, { dedupeMs: 150 });
-  }, [announce]);
+  }, [announce, scene, subscene]);
 
   const pan = useCallback((direction) => {
+    if (scene === "artifact") {
+      logInputEvent({
+        source: "ZoomControls",
+        scene,
+        subscene,
+        action: `pan-${direction}`,
+        target: getElementSummary(document.activeElement),
+      });
+    }
     const maxPan = getMaxPan();
     const increment = 10;
-    
-    setPosition(prev => {
-      let { x, y } = prev;
-      
-      switch (direction) {
-        case "up":
-          if (y >= maxPan.y) {
-            announce("Top limit reached.", { dedupeMs: 300 });
-            return prev;
-          }
-          y = Math.min(y + increment, maxPan.y);
-          announce("Panned up.", { dedupeMs: 150 });
-          break;
-        case "down":
-          if (y <= -maxPan.y) {
-            announce("Bottom limit reached.", { dedupeMs: 300 });
-            return prev;
-          }
-          y = Math.max(y - increment, -maxPan.y);
-          announce("Panned down.", { dedupeMs: 150 });
-          break;
-        case "left":
-          if (x >= maxPan.x) {
-            announce("Left limit reached.", { dedupeMs: 300 });
-            return prev;
-          }
-          x = Math.min(x + increment, maxPan.x);
-          announce("Panned left.", { dedupeMs: 150 });
-          break;
-        case "right":
-          if (x <= -maxPan.x) {
-            announce("Right limit reached.", { dedupeMs: 300 });
-            return prev;
-          }
-          x = Math.max(x - increment, -maxPan.x);
-          announce("Panned right.", { dedupeMs: 150 });
-          break;
-      }
-      
-      return { x, y };
-    });
-  }, [getMaxPan, announce]);
+
+    let { x, y } = positionRef.current;
+
+    switch (direction) {
+      case "up":
+        if (y >= maxPan.y) {
+          announce("Top limit reached.", { dedupeMs: 300 });
+          return;
+        }
+        y = Math.min(y + increment, maxPan.y);
+        announce("Panned up.", { dedupeMs: 150 });
+        break;
+      case "down":
+        if (y <= -maxPan.y) {
+          announce("Bottom limit reached.", { dedupeMs: 300 });
+          return;
+        }
+        y = Math.max(y - increment, -maxPan.y);
+        announce("Panned down.", { dedupeMs: 150 });
+        break;
+      case "left":
+        if (x >= maxPan.x) {
+          announce("Left limit reached.", { dedupeMs: 300 });
+          return;
+        }
+        x = Math.min(x + increment, maxPan.x);
+        announce("Panned left.", { dedupeMs: 150 });
+        break;
+      case "right":
+        if (x <= -maxPan.x) {
+          announce("Right limit reached.", { dedupeMs: 300 });
+          return;
+        }
+        x = Math.max(x - increment, -maxPan.x);
+        announce("Panned right.", { dedupeMs: 150 });
+        break;
+      default:
+        return;
+    }
+
+    const nextPosition = { x, y };
+    positionRef.current = nextPosition;
+    setPosition(nextPosition);
+  }, [getMaxPan, announce, scene, subscene]);
 
   const reset = useCallback(() => {
+    if (scene === "artifact") {
+      logInputEvent({
+        source: "ZoomControls",
+        scene,
+        subscene,
+        action: "zoom-reset",
+        target: getElementSummary(document.activeElement),
+      });
+    }
     scaleRef.current = 1;
+    positionRef.current = { x: 0, y: 0 };
     setScale(1);
     setPosition({ x: 0, y: 0 });
     announce("Reset. Fit to screen.");
-  }, [announce]);
+  }, [announce, scene, subscene]);
 
   // Hold-to-repeat functionality
   const startHoldToRepeat = useCallback((action) => {
