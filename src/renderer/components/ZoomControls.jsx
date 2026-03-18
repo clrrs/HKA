@@ -1,23 +1,18 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useAnnounce } from "../state/AnnouncerProvider";
 
 export default function ZoomControls({ image, onExit }) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const imgRef = useRef(null);
-  const announcerRef = useRef(null);
   const holdTimerRef = useRef(null);
   const holdIntervalRef = useRef(null);
-  // Tracks scale synchronously so hold-to-repeat callbacks never read stale state
   const scaleRef = useRef(1);
+  const globalAnnounce = useAnnounce();
 
-  const announce = useCallback((message) => {
-    if (announcerRef.current) {
-      announcerRef.current.textContent = '';
-      setTimeout(() => {
-        announcerRef.current.textContent = message;
-      }, 50);
-    }
-  }, []);
+  const announce = useCallback((message, options) => {
+    globalAnnounce(message, options);
+  }, [globalAnnounce]);
 
   // Calculate max pan based on zoom level
   const getMaxPan = useCallback(() => {
@@ -28,25 +23,24 @@ export default function ZoomControls({ image, onExit }) {
 
   const zoomIn = useCallback(() => {
     if (scaleRef.current >= 4) {
-      announce("Maximum zoom.");
+      announce("Maximum zoom.", { dedupeMs: 300 });
       return;
     }
     const newScale = Math.min(scaleRef.current + 0.25, 4);
     scaleRef.current = newScale;
     setScale(newScale);
-    announce(`Zoomed in. ${Math.round((newScale - 1) * 100)} percent.`);
+    announce(`Zoomed in. ${Math.round((newScale - 1) * 100)} percent.`, { dedupeMs: 150 });
   }, [announce]);
 
   const zoomOut = useCallback(() => {
     if (scaleRef.current <= 0.25) {
-      announce("Minimum zoom.");
+      announce("Minimum zoom.", { dedupeMs: 300 });
       return;
     }
     const newScale = Math.max(scaleRef.current - 0.25, 0.25);
     scaleRef.current = newScale;
     setScale(newScale);
 
-    // At or below 1x, always re-center; above 1x, constrain to valid pan range
     if (newScale <= 1) {
       setPosition({ x: 0, y: 0 });
     } else {
@@ -57,7 +51,7 @@ export default function ZoomControls({ image, onExit }) {
       }));
     }
 
-    announce(`Zoomed out. ${Math.round((newScale - 1) * 100)} percent.`);
+    announce(`Zoomed out. ${Math.round((newScale - 1) * 100)} percent.`, { dedupeMs: 150 });
   }, [announce]);
 
   const pan = useCallback((direction) => {
@@ -70,35 +64,35 @@ export default function ZoomControls({ image, onExit }) {
       switch (direction) {
         case "up":
           if (y >= maxPan.y) {
-            announce("Top limit reached.");
+            announce("Top limit reached.", { dedupeMs: 300 });
             return prev;
           }
           y = Math.min(y + increment, maxPan.y);
-          announce("Panned up.");
+          announce("Panned up.", { dedupeMs: 150 });
           break;
         case "down":
           if (y <= -maxPan.y) {
-            announce("Bottom limit reached.");
+            announce("Bottom limit reached.", { dedupeMs: 300 });
             return prev;
           }
           y = Math.max(y - increment, -maxPan.y);
-          announce("Panned down.");
+          announce("Panned down.", { dedupeMs: 150 });
           break;
         case "left":
           if (x >= maxPan.x) {
-            announce("Left limit reached.");
+            announce("Left limit reached.", { dedupeMs: 300 });
             return prev;
           }
           x = Math.min(x + increment, maxPan.x);
-          announce("Panned left.");
+          announce("Panned left.", { dedupeMs: 150 });
           break;
         case "right":
           if (x <= -maxPan.x) {
-            announce("Right limit reached.");
+            announce("Right limit reached.", { dedupeMs: 300 });
             return prev;
           }
           x = Math.max(x - increment, -maxPan.x);
-          announce("Panned right.");
+          announce("Panned right.", { dedupeMs: 150 });
           break;
       }
       
@@ -260,13 +254,6 @@ export default function ZoomControls({ image, onExit }) {
         </button>
       </div>
       
-      {/* Screen reader announcer */}
-      <div 
-        ref={announcerRef}
-        className="sr-only" 
-        aria-live="polite" 
-        aria-atomic="true"
-      />
     </div>
   );
 }

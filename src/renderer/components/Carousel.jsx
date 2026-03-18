@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAppState } from "../state/StateProvider";
+import { useAnnounce } from "../state/AnnouncerProvider";
 import ZoomControls from "./ZoomControls";
 import { useStepScroll } from "./useStepScroll";
 
@@ -50,12 +51,12 @@ function useFocusTrap(containerRef, isActive) {
 
 export default function Carousel({ images = [], transcriptText, guidedDescription }) {
   const { subscene, setSubscene } = useAppState();
+  const globalAnnounce = useAnnounce();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const carouselRef = useRef(null);
-  const announcerRef = useRef(null);
   const expandedRef = useRef(null);
   const zoomRef = useRef(null);
   const guidedRef = useRef(null);
@@ -75,26 +76,20 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     resetAnchors: resetTranscriptAnchors,
   } = useStepScroll();
 
-  // Apply focus trap when in expanded, zoom, guided description, or transcript mode
   useFocusTrap(expandedRef, subscene === "expanded" && !showGuided && !showTranscript);
   useFocusTrap(zoomRef, subscene === "zoom");
   useFocusTrap(guidedRef, showGuided);
   useFocusTrap(transcriptRef, showTranscript);
 
-  const announce = useCallback((message) => {
-    if (announcerRef.current) {
-      announcerRef.current.textContent = '';
-      setTimeout(() => {
-        announcerRef.current.textContent = message;
-      }, 50);
-    }
-  }, []);
+  const announce = useCallback((message, options) => {
+    globalAnnounce(message, options);
+  }, [globalAnnounce]);
 
   const nextSlide = () => {
     setCurrentIndex(prev => {
       if (images.length === 0) return prev;
       const next = (prev + 1) % images.length;
-      announce(`Image ${next + 1} of ${images.length}`);
+      announce(`Image ${next + 1} of ${images.length}`, { dedupeMs: 200 });
       return next;
     });
   };
@@ -103,7 +98,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     setCurrentIndex(prev => {
       if (images.length === 0) return prev;
       const next = prev === 0 ? images.length - 1 : prev - 1;
-      announce(`Image ${next + 1} of ${images.length}`);
+      announce(`Image ${next + 1} of ${images.length}`, { dedupeMs: 200 });
       return next;
     });
   };
@@ -114,7 +109,8 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     announce(
       `Expanded view. Image ${currentIndex + 1} of ${images.length}. ${
         images[currentIndex]?.alt || ""
-      }`
+      }`,
+      { politeness: "assertive" }
     );
     // Ensure focus moves into the expanded carousel so keypad L/K navigation works
     setTimeout(() => {
@@ -138,7 +134,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
 
   const enterZoom = () => {
     setSubscene("zoom");
-    announce("Zoom mode. Use controls to zoom and pan.");
+    announce("Zoom mode. Use controls to zoom and pan.", { politeness: "assertive" });
   };
 
   const exitZoom = () => {
@@ -200,7 +196,8 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       resetGuidedAnchors();
     }, 0);
     announce(
-      `Guided description opened for image ${currentIndex + 1} of ${images.length}.`
+      `Guided description opened for image ${currentIndex + 1} of ${images.length}.`,
+      { politeness: "assertive" }
     );
   };
 
@@ -333,7 +330,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   onClick={() => {
                     setShowTranscript(true);
                     setShowGuided(false);
-                    announce("Transcript opened for current image.");
+                    announce("Transcript opened for current image.", { politeness: "assertive" });
                   }}
                   className="carousel-btn"
                   aria-label="Open transcript for current image"
@@ -449,13 +446,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
         </div>
       )}
 
-      {/* Screen reader announcer */}
-      <div 
-        ref={announcerRef}
-        className="sr-only" 
-        aria-live="polite" 
-        aria-atomic="true"
-      />
     </div>
   );
 }
