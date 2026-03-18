@@ -11,14 +11,14 @@ export default function AccessibilityScene() {
       
       <AccessibilityMenu />
       
-      <nav>
+      <div>
         <button 
           className="nav-btn"
           onClick={goBack}
         >
           Close Accessibility Settings
         </button>
-      </nav>
+      </div>
     </div>
   );
 }

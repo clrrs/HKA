@@ -13,7 +13,7 @@ export default function SceneContainer() {
   const { scene } = useAppState();
 
   return (
-    <main className="scene-container">
+    <div className="scene-container">
       <Scene id="attract" isActive={scene === "attract"}>
         <AttractScene isActive={scene === "attract"} />
       </Scene>
@@ -39,7 +39,7 @@ export default function SceneContainer() {
       <Scene id="artifact" isActive={scene === "artifact"}>
         <ArtifactScene />
       </Scene>
-    </main>
+    </div>
   );
 }
 

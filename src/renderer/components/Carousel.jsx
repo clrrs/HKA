@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAppState } from "../state/StateProvider";
+import { useAnnounce } from "../state/AnnouncerProvider";
+import { getElementSummary, logInputEvent } from "../state/interactionLog";
 import ZoomControls from "./ZoomControls";
 import { useStepScroll } from "./useStepScroll";
 
@@ -49,13 +51,16 @@ function useFocusTrap(containerRef, isActive) {
 }
 
 export default function Carousel({ images = [], transcriptText, guidedDescription }) {
-  const { subscene, setSubscene } = useAppState();
+  const { scene, subscene, setSubscene } = useAppState();
+  const globalAnnounce = useAnnounce();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
   const [isHovering, setIsHovering] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const exitingExpandedRef = useRef(false);
   const carouselRef = useRef(null);
-  const announcerRef = useRef(null);
+  const surfaceRef = useRef(null);
   const expandedRef = useRef(null);
   const zoomRef = useRef(null);
   const guidedRef = useRef(null);
@@ -75,46 +80,53 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     resetAnchors: resetTranscriptAnchors,
   } = useStepScroll();
 
-  // Apply focus trap when in expanded, zoom, guided description, or transcript mode
   useFocusTrap(expandedRef, subscene === "expanded" && !showGuided && !showTranscript);
   useFocusTrap(zoomRef, subscene === "zoom");
   useFocusTrap(guidedRef, showGuided);
   useFocusTrap(transcriptRef, showTranscript);
 
-  const announce = useCallback((message) => {
-    if (announcerRef.current) {
-      announcerRef.current.textContent = '';
-      setTimeout(() => {
-        announcerRef.current.textContent = message;
-      }, 50);
+  const announce = useCallback((message, options = {}) => {
+    globalAnnounce(message, { source: "Carousel", ...options });
+  }, [globalAnnounce]);
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
+  useEffect(() => {
+    if (subscene !== null || !exitingExpandedRef.current) return;
+    exitingExpandedRef.current = false;
+    if (surfaceRef.current) {
+      surfaceRef.current.focus();
     }
-  }, []);
+    announce("Exited image carousel.");
+  }, [subscene, announce]);
 
   const nextSlide = () => {
-    setCurrentIndex(prev => {
-      if (images.length === 0) return prev;
-      const next = (prev + 1) % images.length;
-      announce(`Image ${next + 1} of ${images.length}`);
-      return next;
-    });
+    if (images.length === 0) return;
+    const next = (currentIndexRef.current + 1) % images.length;
+    currentIndexRef.current = next;
+    setCurrentIndex(next);
+    announce(`Image ${next + 1} of ${images.length}`, { dedupeMs: 200 });
   };
 
   const prevSlide = () => {
-    setCurrentIndex(prev => {
-      if (images.length === 0) return prev;
-      const next = prev === 0 ? images.length - 1 : prev - 1;
-      announce(`Image ${next + 1} of ${images.length}`);
-      return next;
-    });
+    if (images.length === 0) return;
+    const next =
+      currentIndexRef.current === 0 ? images.length - 1 : currentIndexRef.current - 1;
+    currentIndexRef.current = next;
+    setCurrentIndex(next);
+    announce(`Image ${next + 1} of ${images.length}`, { dedupeMs: 200 });
   };
 
   const enterExpanded = () => {
     setSubscene("expanded");
     setShowTranscript(false);
     announce(
-      `Expanded view. Image ${currentIndex + 1} of ${images.length}. ${
-        images[currentIndex]?.alt || ""
-      }`
+      `Expanded view. Image ${currentIndexRef.current + 1} of ${images.length}. ${
+        images[currentIndexRef.current]?.alt || ""
+      }`,
+      { politeness: "assertive" }
     );
     // Ensure focus moves into the expanded carousel so keypad L/K navigation works
     setTimeout(() => {
@@ -129,16 +141,17 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   };
 
   const exitExpanded = () => {
+    exitingExpandedRef.current = true;
     setShowGuided(false);
     setShowTranscript(false);
     setSubscene(null);
+    currentIndexRef.current = 0;
     setCurrentIndex(0);
-    announce("Exited navigation mode.");
   };
 
   const enterZoom = () => {
     setSubscene("zoom");
-    announce("Zoom mode. Use controls to zoom and pan.");
+    announce("Zoom mode. Use controls to zoom and pan.", { politeness: "assertive" });
   };
 
   const exitZoom = () => {
@@ -150,6 +163,16 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     if (e.repeat) return;
     if (e.key === "Enter" && !subscene) {
       e.preventDefault();
+      if (scene === "artifact") {
+        logInputEvent({
+          source: "Carousel",
+          scene,
+          subscene,
+          key: "enter",
+          action: "open-expanded",
+          target: getElementSummary(e.currentTarget),
+        });
+      }
       enterExpanded();
     }
   };
@@ -160,6 +183,16 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       if (e.repeat) return;
       if (e.key === "Escape") {
         if (showGuided) {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "Carousel",
+              scene,
+              subscene,
+              key: "escape",
+              action: "close-guided-description",
+              target: getElementSummary(document.activeElement),
+            });
+          }
           setShowGuided(false);
           announce("Closed guided description.");
           if (guidedButtonRef.current) {
@@ -168,6 +201,16 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
             }, 0);
           }
         } else if (showTranscript) {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "Carousel",
+              scene,
+              subscene,
+              key: "escape",
+              action: "close-transcript",
+              target: getElementSummary(document.activeElement),
+            });
+          }
           setShowTranscript(false);
           announce("Closed transcript.");
           if (transcriptButtonRef.current) {
@@ -176,8 +219,28 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
             }, 0);
           }
         } else if (subscene === "zoom") {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "Carousel",
+              scene,
+              subscene,
+              key: "escape",
+              action: "exit-zoom",
+              target: getElementSummary(document.activeElement),
+            });
+          }
           exitZoom();
         } else if (subscene === "expanded") {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "Carousel",
+              scene,
+              subscene,
+              key: "escape",
+              action: "exit-expanded",
+              target: getElementSummary(document.activeElement),
+            });
+          }
           exitExpanded();
         }
       }
@@ -200,7 +263,8 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       resetGuidedAnchors();
     }, 0);
     announce(
-      `Guided description opened for image ${currentIndex + 1} of ${images.length}.`
+      `Guided description opened for image ${currentIndex + 1} of ${images.length}.`,
+      { politeness: "assertive" }
     );
   };
 
@@ -224,6 +288,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       {!subscene && (
         <div 
           className={`carousel-layer carousel-surface ${isHovering ? 'carousel-hovering' : ''}`}
+          ref={surfaceRef}
           tabIndex={0}
           role="button"
           aria-label={`Image carousel, ${images.length} images, press Enter to open`}
@@ -333,7 +398,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   onClick={() => {
                     setShowTranscript(true);
                     setShowGuided(false);
-                    announce("Transcript opened for current image.");
+                    announce("Transcript opened for current image.", { politeness: "assertive" });
                   }}
                   className="carousel-btn"
                   aria-label="Open transcript for current image"
@@ -449,13 +514,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
         </div>
       )}
 
-      {/* Screen reader announcer */}
-      <div 
-        ref={announcerRef}
-        className="sr-only" 
-        aria-live="polite" 
-        aria-atomic="true"
-      />
     </div>
   );
 }

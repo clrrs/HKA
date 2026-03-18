@@ -1,10 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useAppState } from "./StateProvider";
+import {
+  ensureInputLogTools,
+  getElementSummary,
+  logInputEvent,
+} from "./interactionLog";
 
 export function useSceneFocus(sceneId, isActive) {
   const lastFocusedRef = useRef(null);
   
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isActive) return;
     
     const sceneEl = document.querySelector(`[data-scene="${sceneId}"]`);
@@ -16,10 +21,7 @@ export function useSceneFocus(sceneId, isActive) {
       );
     
     if (first) {
-      // Small timeout to ensure visible
-      setTimeout(() => { 
-        first.focus(); 
-      }, 50);
+      first.focus({ preventScroll: true });
     }
     
     return () => { 
@@ -29,11 +31,20 @@ export function useSceneFocus(sceneId, isActive) {
 }
 
 export function useKeyboardNav() {
-  const { scene, goToScene, goBack, toggleSettings, showSettings, toggleSpeechMode } = useAppState();
+  const {
+    scene,
+    subscene,
+    goToScene,
+    goBack,
+    toggleSettings,
+    showSettings,
+    toggleSpeechMode,
+  } = useAppState();
   const lastTtsToggleRef = useRef(0);
 
   useEffect(() => {
     const ENABLE_TEST_SHORTCUTS = true;
+    ensureInputLogTools();
 
     const handleKeyDown = (e) => {
       if (e.repeat) return; // ignore key repeat (keypad hold)
@@ -99,14 +110,39 @@ export function useKeyboardNav() {
             ? rawFocusables
             : rawFocusables.filter((el) => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
-        if (idx > 0) focusables[idx - 1].focus();
-        else if (focusables.length) focusables[focusables.length - 1].focus();
+        let nextEl = null;
+        if (idx > 0) nextEl = focusables[idx - 1];
+        else if (focusables.length) nextEl = focusables[focusables.length - 1];
+        if (nextEl) {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "useKeyboardNav",
+              scene,
+              subscene,
+              key,
+              action: "navigate-prev-focus",
+              target: getElementSummary(nextEl),
+              details: `from=${getElementSummary(document.activeElement)}`,
+            });
+          }
+          nextEl.focus();
+        }
         return;
       }
 
       // Select (J) - simulate Enter
       if (key === "j") {
         e.preventDefault();
+        if (scene === "artifact") {
+          logInputEvent({
+            source: "useKeyboardNav",
+            scene,
+            subscene,
+            key,
+            action: "select-active",
+            target: getElementSummary(document.activeElement),
+          });
+        }
         document.activeElement?.click();
         return;
       }
@@ -134,8 +170,23 @@ export function useKeyboardNav() {
             ? rawFocusables
             : rawFocusables.filter((el) => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
-        if (idx < focusables.length - 1) focusables[idx + 1].focus();
-        else if (focusables.length) focusables[0].focus();
+        let nextEl = null;
+        if (idx < focusables.length - 1) nextEl = focusables[idx + 1];
+        else if (focusables.length) nextEl = focusables[0];
+        if (nextEl) {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "useKeyboardNav",
+              scene,
+              subscene,
+              key,
+              action: "navigate-next-focus",
+              target: getElementSummary(nextEl),
+              details: `from=${getElementSummary(document.activeElement)}`,
+            });
+          }
+          nextEl.focus();
+        }
         return;
       }
 
@@ -165,6 +216,14 @@ export function useKeyboardNav() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [scene, goToScene, goBack, toggleSettings, showSettings, toggleSpeechMode]);
+  }, [
+    scene,
+    subscene,
+    goToScene,
+    goBack,
+    toggleSettings,
+    showSettings,
+    toggleSpeechMode,
+  ]);
 }
 

@@ -28,7 +28,7 @@ export default function ArtifactScene() {
     return (
       <div className="artifact-page">
         <h1>Artifact not found</h1>
-        <nav className="artifact-nav">
+        <div className="artifact-nav">
           <button
             className="nav-btn nav-btn-icon-white"
             onClick={() => goToScene("travel")}
@@ -37,7 +37,7 @@ export default function ArtifactScene() {
             <img src="./Menu.svg" alt="" aria-hidden="true" />
             Back to Theme
           </button>
-        </nav>
+        </div>
       </div>
     );
   }
@@ -49,7 +49,13 @@ export default function ArtifactScene() {
           <h2 className="artifact-header">
             <span className="artifact-header-accent">{theme.label}</span>
           </h2>
-          <h1 tabIndex={speechMode ? 0 : -1}>{artifact.title}</h1>
+          <p
+            className="artifact-title"
+            tabIndex={speechMode ? 0 : -1}
+            data-autofocus={speechMode ? true : undefined}
+          >
+            {artifact.title}
+          </p>
           <p tabIndex={speechMode ? 0 : -1}>{artifact.description}</p>
         </div>
         <div className="artifact-media">
@@ -74,7 +80,7 @@ export default function ArtifactScene() {
         </div>
       </div>
 
-      <nav className="artifact-nav">
+      <div className="artifact-nav">
         <div className="artifact-nav-left">
           {nextArtifact && (
             <button
@@ -105,7 +111,7 @@ export default function ArtifactScene() {
             Back to Theme
           </button>
         </div>
-      </nav>
+      </div>
       {artifact.type === "video" && showVideoOverlay && (
         <ArtifactVideoOverlay
           src={artifact.videoSrc}

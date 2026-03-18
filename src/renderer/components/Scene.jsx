@@ -7,7 +7,6 @@ export default function Scene({ id, children, isActive }) {
   return (
     <div 
       data-scene={id} 
-      aria-hidden={!isActive}
       inert={!isActive ? "" : undefined}
       className={isActive ? "scene scene-active" : "scene scene-hidden"}
     >

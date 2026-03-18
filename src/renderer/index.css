@@ -572,6 +572,15 @@ body {
   margin-bottom: 32px;
 }
 
+.artifact-text .artifact-title {
+  display: block;
+  color: var(--text-heading);
+  font-weight: 700;
+  font-size: calc(58px * var(--text-scale));
+  line-height: 1.1;
+  margin-bottom: 32px;
+}
+
 .artifact-text p {
   font-size: calc(30px * var(--text-scale));
   line-height: 1.55;
@@ -1998,6 +2007,7 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 }
 
 .travel-title {
+  display: block;
   color: var(--text-heading);
   font-weight: 400;
   font-size: calc(58px * var(--text-scale));

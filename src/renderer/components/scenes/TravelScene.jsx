@@ -140,16 +140,16 @@ export default function TravelScene() {
           className="travel-heading-inner"
           ref={headingRef}
           tabIndex={-1}
-          data-autofocus
+          data-autofocus={speechMode ? undefined : true}
           onFocus={handleHeadingFocus}
-          aria-label={`${theme.label}. ${theme.description}. Select an artifact.`}
         >
-          <h1
+          <p
             className="travel-title"
             tabIndex={speechMode ? 0 : -1}
+            data-autofocus={speechMode ? true : undefined}
           >
             {theme.label}
-          </h1>
+          </p>
           <p
             className="travel-description"
             tabIndex={speechMode ? 0 : -1}

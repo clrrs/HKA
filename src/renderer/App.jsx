@@ -133,7 +133,7 @@ export default function App() {
   }, [showSettings]);
 
   return (
-    <div className="app" role="application">
+    <div className="app">
       <div id="app-scaler" className="app-scaler">
         <SceneContainer />
         {showSettings && (
