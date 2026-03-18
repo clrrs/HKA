@@ -141,21 +141,38 @@ Action:
    - `docs/NVDA_Custom_Output_Goal.md`
    - `docs/NVDA_Artifact3A2_Announcement_Contract.md`
    - `docs/NVDA_Test_Matrix.md`
+   - `docs/NVDA_Electron_Escalation_Findings.md`
    - this file
-2. Do not broaden scope yet; keep all work anchored to 3A2 behavior until stable.
-3. Assume focus/navigation = assertive interruption unless user explicitly says otherwise.
-4. Propose tiny iterations only (one cluster of events at a time).
-5. Keep this file updated after each iteration for continuity across machines/agents.
+2. Escalation decision is now accepted: move implementation to Electron/NVDA integration path.
+3. Keep functional validation anchored to 3A2 behavior until deterministic.
+4. Assume focus/navigation = assertive interruption unless user explicitly says otherwise.
+5. Propose tiny iterations only (one cluster of events at a time).
+6. Keep this file updated after each iteration for continuity across machines/agents.
 
-## Copy-Paste Starter Prompt (Next Agent)
+## Escalation Decision Snapshot (Accepted)
+
+Decision:
+- Web-only orchestration reached practical NVDA limits for strict "no structural role/context speech" requirement.
+- Next phase is Electron-level announcement control first, then NVDA app module if needed.
+
+Why:
+- Iterations `2026-03-18-A` through `2026-03-18-M` reduced chatter but could not fully eliminate NVDA focus-role suffixes (`section` -> `paragraph`).
+- See:
+  - `docs/NVDA_Electron_Escalation_Findings.md`
+  - iteration log in this file
+
+## Copy-Paste Starter Prompt (Next Agent — Electron Phase)
 
 Use this exact prompt to start the next chat:
 
 > Continue from `UserCopynvda_custom_output_plan.md` as source-of-truth.
-> Scope is ONLY artifact `3A2` (Japanese Luncheon Set) until deterministic behavior is confirmed.
-> Read first: `docs/NVDA_Custom_Output_Goal.md`, `docs/NVDA_Artifact3A2_Announcement_Contract.md`, `docs/NVDA_Test_Matrix.md`, and `UserCopynvda_custom_output_plan.md`.
+> We are now in the Electron escalation phase for NVDA determinism.
+> Scope remains anchored to artifact `3A2` (Japanese Luncheon Set) for validation, but implementation target is Electron/NVDA integration.
+> Read first: `docs/NVDA_Custom_Output_Goal.md`, `docs/NVDA_Electron_Escalation_Findings.md`, `docs/NVDA_Artifact3A2_Announcement_Contract.md`, `docs/NVDA_Test_Matrix.md`, and `UserCopynvda_custom_output_plan.md`.
 > Critical policy: focus/navigation announcements must interrupt previous speech (assertive behavior).
-> Work in small iterations: implement one cluster, wait for NVDA+braille test results, then refine.
+> Implement smallest vertical slice first: renderer -> preload IPC -> main process announcement bridge.
+> If needed, use NVDA Controller client wrapper for speech + braille dispatch; keep logs/correlation IDs.
+> Work in tiny iterations: implement one cluster, wait for NVDA+braille results, then refine.
 > Keep `UserCopynvda_custom_output_plan.md` updated after each iteration with decisions, regressions, and next steps.
 
 ## Open Questions To Resolve Next
@@ -480,6 +497,29 @@ Operator action:
    - `Adventure`
    - `Japanese Luncheon Set, 1948`
 3. Confirm whether `section` still appears.
+
+### Iteration 2026-03-18-N — Escalation Research + Phase Switch
+
+Cluster:
+- Research and decision for Electron/NVDA integration phase.
+
+Observed outcome after M:
+- NVDA output changed from `section` to `paragraph` on focused titles.
+- This confirms residual speech is native role/type output, not solely landmark verbosity.
+
+Research summary:
+- NVDA Controller Client API supports explicit speech + braille dispatch from external apps.
+- Windows UIA notification event is available but may still be subject to reader/user setting behavior.
+- NVDA app module is the strongest path to suppress default focus-role chatter for kiosk window events.
+
+Decision:
+- Escalation accepted.
+- Next implementation phase: Electron bridge first, then NVDA app module if role chatter persists.
+
+Docs added/updated:
+- Added: `docs/NVDA_Electron_Escalation_Findings.md`
+- Updated: `docs/NVDA_Custom_Output_Goal.md` deliverables list
+- Updated: this file handoff + starter prompt for Electron phase
 
 ## Success Definition (short)
 

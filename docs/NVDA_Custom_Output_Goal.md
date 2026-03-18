@@ -66,6 +66,7 @@ for the kiosk Electron window and produces fully scripted speech/braille output.
 | `NVDA_Artifact3A2_Announcement_Contract.md` | Exact event-to-phrase table for reference artifact |
 | `NVDA_Test_Matrix.md` | NVDA setting profiles and test log format |
 | `NVDA_Custom_Output_Goal.md` | This document — scope, criteria, escalation |
+| `NVDA_Electron_Escalation_Findings.md` | Why web-only reached limits and recommended Electron/NVDA path |
 
 ## Reference Files
 
