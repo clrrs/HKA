@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme, getArtifact, getNextArtifact, getPrevArtifact } from "../../data/artifacts";
 import Carousel from "../Carousel";
@@ -17,12 +17,23 @@ export default function ArtifactScene() {
   } = useAppState();
 
   const [showVideoOverlay, setShowVideoOverlay] = useState(false);
+  const titleRef = useRef(null);
   const videoPreviewRef = useRef(null);
 
   const theme = getTheme(currentTheme);
   const artifact = getArtifact(currentTheme, artifactId);
   const prevArtifact = getPrevArtifact(currentTheme, artifactId);
   const nextArtifact = getNextArtifact(currentTheme, artifactId);
+
+  // When switching artifacts (artifactId changes) while staying on the
+  // "artifact" scene, keep screen reader focus on the title only in
+  // speech mode. In speech-off mode, preserve focus on the nav button.
+  useEffect(() => {
+    if (!speechMode) return;
+    if (showVideoOverlay) return;
+    if (!artifact) return;
+    titleRef.current?.focus({ preventScroll: true });
+  }, [artifactId, speechMode, showVideoOverlay]);
 
   if (!artifact) {
     return (
@@ -53,6 +64,7 @@ export default function ArtifactScene() {
             className="artifact-title"
             tabIndex={speechMode ? 0 : -1}
             data-autofocus={speechMode ? true : undefined}
+            ref={titleRef}
           >
             {artifact.title}
           </p>
@@ -87,6 +99,7 @@ export default function ArtifactScene() {
               className="nav-btn"
               onClick={() => goToScene("artifact", { artifactId: nextArtifact.id })}
               aria-label="Next Artifact"
+              data-autofocus={speechMode ? undefined : true}
             >
               Next Artifact
               <img src="./Forward.svg" alt="" aria-hidden="true" />
@@ -97,6 +110,7 @@ export default function ArtifactScene() {
               className="nav-btn"
               onClick={() => goToScene("artifact", { artifactId: prevArtifact.id })}
               aria-label="Previous Artifact"
+              data-autofocus={speechMode ? undefined : !nextArtifact ? true : undefined}
             >
               <img src="./Back.svg" alt="" aria-hidden="true" />
               Previous Artifact
@@ -106,6 +120,9 @@ export default function ArtifactScene() {
             className="nav-btn nav-btn-icon-white"
             onClick={() => goToScene("travel")}
             aria-label="Back to theme, return to artifact list"
+            data-autofocus={
+              speechMode ? undefined : !nextArtifact && !prevArtifact ? true : undefined
+            }
           >
             <img src="./Menu.svg" alt="" aria-hidden="true" />
             Back to Theme
