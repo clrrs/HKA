@@ -42,7 +42,14 @@ function useFocusTrap(containerRef, isActive) {
   }, [containerRef, isActive]);
 }
 
-export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDescription, onClose }) {
+export default function ArtifactVideoOverlay({
+  src,
+  poster,
+  transcript,
+  guidedDescription,
+  onClose,
+  videoAlt,
+}) {
   const { speechMode } = useAppState();
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
@@ -186,6 +193,7 @@ export default function ArtifactVideoOverlay({ src, poster, transcript, guidedDe
             poster={poster}
             onEnded={handleEnded}
             tabIndex={speechMode ? 0 : -1}
+            aria-label={videoAlt || "Video preview"}
             onClick={(event) => {
               // Prevent direct interaction; use explicit controls instead
               event.preventDefault();

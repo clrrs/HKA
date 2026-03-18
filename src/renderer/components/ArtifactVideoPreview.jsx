@@ -1,7 +1,7 @@
 import React, { forwardRef, useState } from "react";
 
 const ArtifactVideoPreview = forwardRef(function ArtifactVideoPreview(
-  { poster, onOpen },
+  { poster, onOpen, videoAlt },
   ref
 ) {
   const [isHovering, setIsHovering] = useState(false);
@@ -19,12 +19,14 @@ const ArtifactVideoPreview = forwardRef(function ArtifactVideoPreview(
     }
   };
 
+  const ariaLabel = videoAlt ? `Open video player: ${videoAlt}` : "Open video player";
+
   return (
     <div
       className="artifact-video-preview"
       role="button"
       tabIndex={0}
-      aria-label="Open video player"
+      aria-label={ariaLabel}
       onClick={handleActivate}
       onKeyDown={handleKeyDown}
       onFocus={() => setIsHovering(true)}
@@ -36,7 +38,7 @@ const ArtifactVideoPreview = forwardRef(function ArtifactVideoPreview(
       <div className="artifact-video-preview-frame">
         {poster && (
           <div className="artifact-video-preview-viewport">
-            <img src={poster} alt="" />
+            <img src={poster} alt={videoAlt || ""} />
           </div>
         )}
         <div className="artifact-video-preview-play-icon" aria-hidden="true">

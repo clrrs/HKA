@@ -25,6 +25,15 @@ export default function ArtifactScene() {
   const prevArtifact = getPrevArtifact(currentTheme, artifactId);
   const nextArtifact = getNextArtifact(currentTheme, artifactId);
 
+  const videoPreviewAlt = (() => {
+    if (!artifact) return "";
+    if (artifact.id === "3A1") return "Helen Keller rides a biplane, 1919";
+
+    const base = artifact.displayTitle || artifact.title || "Video preview";
+    if (artifact.year) return `${base} (${artifact.year})`;
+    return base;
+  })();
+
   // When switching artifacts (artifactId changes) while staying on the
   // "artifact" scene, keep screen reader focus on the title only in
   // speech mode. In speech-off mode, preserve focus on the nav button.
@@ -75,6 +84,7 @@ export default function ArtifactScene() {
             <ArtifactVideoPreview
               ref={videoPreviewRef}
               poster={artifact.posterSrc}
+              videoAlt={videoPreviewAlt}
               onOpen={() => {
                 setShowVideoOverlay(true);
                 setVideoOverlayOpen(true);
@@ -135,6 +145,7 @@ export default function ArtifactScene() {
           poster={artifact.posterSrc}
           transcript={artifact.transcriptText}
           guidedDescription={artifact.guidedDescription}
+          videoAlt={videoPreviewAlt}
           onClose={() => {
             setShowVideoOverlay(false);
             setVideoOverlayOpen(false);
