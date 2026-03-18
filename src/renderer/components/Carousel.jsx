@@ -51,7 +51,7 @@ function useFocusTrap(containerRef, isActive) {
 }
 
 export default function Carousel({ images = [], transcriptText, guidedDescription }) {
-  const { scene, subscene, setSubscene } = useAppState();
+  const { scene, subscene, setSubscene, speechMode } = useAppState();
   const globalAnnounce = useAnnounce();
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentIndexRef = useRef(0);
@@ -107,7 +107,10 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     const next = (currentIndexRef.current + 1) % images.length;
     currentIndexRef.current = next;
     setCurrentIndex(next);
-    announce(`Image ${next + 1} of ${images.length}`, { dedupeMs: 200 });
+    const nextImageAlt = images[next]?.alt || "";
+    announce(`Image ${next + 1} of ${images.length}. ${nextImageAlt}`, {
+      dedupeMs: 200,
+    });
   };
 
   const prevSlide = () => {
@@ -116,27 +119,31 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       currentIndexRef.current === 0 ? images.length - 1 : currentIndexRef.current - 1;
     currentIndexRef.current = next;
     setCurrentIndex(next);
-    announce(`Image ${next + 1} of ${images.length}`, { dedupeMs: 200 });
+    const prevImageAlt = images[next]?.alt || "";
+    announce(`Image ${next + 1} of ${images.length}. ${prevImageAlt}`, {
+      dedupeMs: 200,
+    });
   };
 
   const enterExpanded = () => {
     setSubscene("expanded");
     setShowTranscript(false);
-    announce(
-      `Expanded view. Image ${currentIndexRef.current + 1} of ${images.length}. ${
-        images[currentIndexRef.current]?.alt || ""
-      }`,
-      { politeness: "assertive" }
-    );
+    announce("Image carousel opened.", { politeness: "assertive" });
     // Ensure focus moves into the expanded carousel so keypad L/K navigation works
     setTimeout(() => {
       if (!expandedRef.current) return;
+      // Prefer focusing the "Exit image carousel" button so the current image alt
+      // isn't announced immediately on open in speech/screen-reader mode.
+      const exitBtn = expandedRef.current.querySelector(".carousel-exit-btn");
+      if (exitBtn) {
+        exitBtn.focus();
+        return;
+      }
+
       const focusables = expandedRef.current.querySelectorAll(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       );
-      if (focusables.length > 0) {
-        focusables[0].focus();
-      }
+      focusables[0]?.focus();
     }, 0);
   };
 
@@ -348,6 +355,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                 <img 
                   src={currentImage.src} 
                   alt={currentImage.alt}
+                  tabIndex={speechMode ? 0 : -1}
                 />
               ) : (
                 <div className="carousel-empty">No images available</div>
@@ -377,7 +385,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   <button 
                     type="button" 
                     onClick={nextSlide}
-                    aria-label={`Image ${currentIndex + 1} of ${images.length}. ${currentImage.alt}. Next`}
+                    aria-label="Next button"
                     className="carousel-btn carousel-btn-icon"
                   >
                     <img src="./Forward.svg" alt="" aria-hidden="true" />
