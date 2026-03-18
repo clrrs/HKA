@@ -7,6 +7,8 @@ export default function ZoomControls({ image, onExit }) {
   const announcerRef = useRef(null);
   const holdTimerRef = useRef(null);
   const holdIntervalRef = useRef(null);
+  // Tracks scale synchronously so hold-to-repeat callbacks never read stale state
+  const scaleRef = useRef(1);
 
   const announce = useCallback((message) => {
     if (announcerRef.current) {
@@ -25,32 +27,38 @@ export default function ZoomControls({ image, onExit }) {
   }, [scale]);
 
   const zoomIn = useCallback(() => {
-    if (scale >= 4) {
+    if (scaleRef.current >= 4) {
       announce("Maximum zoom.");
       return;
     }
-    const newScale = Math.min(scale + 0.25, 4);
+    const newScale = Math.min(scaleRef.current + 0.25, 4);
+    scaleRef.current = newScale;
     setScale(newScale);
     announce(`Zoomed in. ${Math.round((newScale - 1) * 100)} percent.`);
-  }, [scale, announce]);
+  }, [announce]);
 
   const zoomOut = useCallback(() => {
-    if (scale <= 0.25) {
+    if (scaleRef.current <= 0.25) {
       announce("Minimum zoom.");
       return;
     }
-    const newScale = Math.max(scale - 0.25, 0.25);
+    const newScale = Math.max(scaleRef.current - 0.25, 0.25);
+    scaleRef.current = newScale;
     setScale(newScale);
-    
-    // Constrain pan when zooming out
-    const maxPan = { x: Math.min((newScale - 1) * 100, 150), y: Math.min((newScale - 1) * 100, 150) };
-    setPosition(prev => ({
-      x: Math.max(-maxPan.x, Math.min(maxPan.x, prev.x)),
-      y: Math.max(-maxPan.y, Math.min(maxPan.y, prev.y))
-    }));
-    
+
+    // At or below 1x, always re-center; above 1x, constrain to valid pan range
+    if (newScale <= 1) {
+      setPosition({ x: 0, y: 0 });
+    } else {
+      const maxPanVal = Math.min((newScale - 1) * 100, 150);
+      setPosition(prev => ({
+        x: Math.max(-maxPanVal, Math.min(maxPanVal, prev.x)),
+        y: Math.max(-maxPanVal, Math.min(maxPanVal, prev.y))
+      }));
+    }
+
     announce(`Zoomed out. ${Math.round((newScale - 1) * 100)} percent.`);
-  }, [scale, announce]);
+  }, [announce]);
 
   const pan = useCallback((direction) => {
     const maxPan = getMaxPan();
@@ -99,6 +107,7 @@ export default function ZoomControls({ image, onExit }) {
   }, [getMaxPan, announce]);
 
   const reset = useCallback(() => {
+    scaleRef.current = 1;
     setScale(1);
     setPosition({ x: 0, y: 0 });
     announce("Reset. Fit to screen.");
@@ -168,7 +177,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(zoomIn)}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            disabled={!canZoomIn}
+            aria-disabled={!canZoomIn}
             aria-label="Zoom in"
             className="zoom-btn"
           >
@@ -180,7 +189,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(zoomOut)}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            disabled={!canZoomOut}
+            aria-disabled={!canZoomOut}
             aria-label="Zoom out"
             className="zoom-btn"
           >
@@ -195,7 +204,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(() => pan("left"))}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            disabled={!canPanLeft}
+            aria-disabled={!canPanLeft}
             aria-label="Pan left"
             className="zoom-btn"
           >
@@ -208,7 +217,7 @@ export default function ZoomControls({ image, onExit }) {
               onMouseDown={() => startHoldToRepeat(() => pan("up"))}
               onMouseUp={stopHoldToRepeat}
               onMouseLeave={stopHoldToRepeat}
-              disabled={!canPanUp}
+              aria-disabled={!canPanUp}
               aria-label="Pan up"
               className="zoom-btn"
             >
@@ -220,7 +229,7 @@ export default function ZoomControls({ image, onExit }) {
               onMouseDown={() => startHoldToRepeat(() => pan("down"))}
               onMouseUp={stopHoldToRepeat}
               onMouseLeave={stopHoldToRepeat}
-              disabled={!canPanDown}
+              aria-disabled={!canPanDown}
               aria-label="Pan down"
               className="zoom-btn"
             >
@@ -233,7 +242,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(() => pan("right"))}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            disabled={!canPanRight}
+            aria-disabled={!canPanRight}
             aria-label="Pan right"
             className="zoom-btn"
           >

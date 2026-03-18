@@ -1123,9 +1123,11 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 }
 
 .zoom-btn:disabled,
+.zoom-btn[aria-disabled="true"],
 .exit-pill-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .zoom-btn-group,
