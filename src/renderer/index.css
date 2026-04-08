@@ -390,13 +390,6 @@ body {
   flex-direction: column;
 }
 
-.document-viewer-exit-btn {
-  position: fixed;
-  top: 32px;
-  left: 32px;
-  z-index: 3; /* always above document content */
-}
-
 .document-viewer-body {
   flex: 1;
   display: flex;
@@ -1004,14 +997,6 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   filter: var(--icon-focus-filter);
 }
 
-/* Carousel expanded close button (top-left circular icon) */
-.carousel-exit-btn {
-  position: absolute;
-  top: 32px;
-  left: 32px;
-  z-index: 2;
-}
-
 /* Guided Description pill button */
 .carousel-guided-btn {
   padding-inline: 32px;
@@ -1222,17 +1207,6 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.artifact-video-exit-btn {
-  position: absolute;
-  top: 32px;
-  left: 32px;
-}
-
-.artifact-video-exit-btn img {
-  width: 36px;
-  height: 36px;
 }
 
 .artifact-video-body {

@@ -129,22 +129,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     setSubscene("expanded");
     setShowTranscript(false);
     announce("Image carousel opened.", { politeness: "assertive" });
-    // Ensure focus moves into the expanded carousel so keypad L/K navigation works
-    setTimeout(() => {
-      if (!expandedRef.current) return;
-      // Prefer focusing the "Exit image carousel" button so the current image alt
-      // isn't announced immediately on open in speech/screen-reader mode.
-      const exitBtn = expandedRef.current.querySelector(".carousel-exit-btn");
-      if (exitBtn) {
-        exitBtn.focus();
-        return;
-      }
-
-      const focusables = expandedRef.current.querySelectorAll(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      focusables[0]?.focus();
-    }, 0);
   };
 
   const exitExpanded = () => {
@@ -340,22 +324,13 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
           aria-label="Image carousel, expanded view"
         >
           <div className="carousel-expanded-content">
-            {currentImage && (
-              <button 
-                type="button" 
-                onClick={exitExpanded}
-                aria-label="Exit image carousel"
-                className="exit-pill-btn carousel-exit-btn"
-              >
-                Exit
-              </button>
-            )}
             <div className="carousel-image-display">
               {currentImage ? (
                 <img 
                   src={currentImage.src} 
                   alt={currentImage.alt}
                   tabIndex={speechMode ? 0 : -1}
+                  data-autofocus={speechMode ? "" : undefined}
                 />
               ) : (
                 <div className="carousel-empty">No images available</div>
@@ -387,6 +362,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                     onClick={nextSlide}
                     aria-label="Next button"
                     className="carousel-btn carousel-btn-icon"
+                    data-autofocus={!speechMode && images.length > 1 ? "" : undefined}
                   >
                     <img src="./Forward.svg" alt="" aria-hidden="true" />
                   </button>
@@ -397,6 +373,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                 onClick={enterZoom}
                 aria-label="Zoom"
                 className="carousel-btn carousel-btn-icon"
+                data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
               >
                 <img src="./Zoom.svg" alt="" aria-hidden="true" />
               </button>
@@ -424,6 +401,16 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   ref={guidedButtonRef}
                 >
                   Guided Description
+                </button>
+              )}
+              {currentImage && (
+                <button
+                  type="button"
+                  onClick={exitExpanded}
+                  aria-label="Exit image carousel"
+                  className="carousel-btn carousel-exit-btn"
+                >
+                  Exit
                 </button>
               )}
             </div>

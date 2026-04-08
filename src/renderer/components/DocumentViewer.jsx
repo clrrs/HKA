@@ -31,9 +31,14 @@ function useFocusTrap(containerRef, isActive) {
 
     container.addEventListener("keydown", handleKeyDown);
 
-    const focusables = container.querySelectorAll(focusableSelector);
-    if (focusables.length > 0) {
-      focusables[0].focus();
+    const autofocusTarget = container.querySelector("[data-autofocus]");
+    if (autofocusTarget) {
+      autofocusTarget.focus();
+    } else {
+      const focusables = container.querySelectorAll(focusableSelector);
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
     }
 
     return () => {
@@ -77,11 +82,6 @@ export default function DocumentViewer({ artifact }) {
     setShowTranscript(false);
     setShowGuided(false);
     setPosition("top");
-    requestAnimationFrame(() => {
-      if (toolbarFirstButtonRef.current) {
-        toolbarFirstButtonRef.current.focus();
-      }
-    });
   };
 
   const closeViewer = () => {
@@ -213,15 +213,6 @@ export default function DocumentViewer({ artifact }) {
         >
           <div className="document-viewer-backdrop" />
           <div className="document-viewer-content" ref={overlayRef}>
-            <button
-              type="button"
-              className="exit-pill-btn document-viewer-exit-btn"
-              onClick={closeViewer}
-              aria-label="Close document viewer"
-            >
-              Exit
-            </button>
-
             <div className="document-viewer-body">
               <div className="document-panel">
                 <div className="document-window">
@@ -230,6 +221,8 @@ export default function DocumentViewer({ artifact }) {
                       src={image.src}
                       alt={image.alt}
                       className={`document-image document-image--${position}`}
+                      tabIndex={speechMode ? 0 : -1}
+                      data-autofocus={speechMode ? "" : undefined}
                     />
                   ) : (
                     <div className="document-empty">No document available</div>
@@ -240,6 +233,14 @@ export default function DocumentViewer({ artifact }) {
                   role="toolbar"
                   aria-label="Document transcript control"
                 >
+                  <button
+                    type="button"
+                    onClick={closeViewer}
+                    className="carousel-btn"
+                    aria-label="Close document viewer"
+                  >
+                    Exit
+                  </button>
                   <button
                     type="button"
                     onClick={openTranscript}
@@ -281,6 +282,7 @@ export default function DocumentViewer({ artifact }) {
                       atBottom ? " document-arrow-disabled" : ""
                     }`}
                     aria-label="Scroll to bottom of document"
+                    data-autofocus={!speechMode ? "" : undefined}
                   >
                     <img src="./Back.svg" alt="" aria-hidden="true" />
                   </button>

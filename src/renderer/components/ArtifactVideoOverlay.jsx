@@ -32,9 +32,14 @@ function useFocusTrap(containerRef, isActive) {
 
     container.addEventListener("keydown", handleKeyDown);
 
-    const focusables = container.querySelectorAll(focusableSelector);
-    if (focusables.length > 0) {
-      focusables[0].focus();
+    const autofocusTarget = container.querySelector("[data-autofocus]");
+    if (autofocusTarget) {
+      autofocusTarget.focus();
+    } else {
+      const focusables = container.querySelectorAll(focusableSelector);
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
     }
 
     return () => {
@@ -181,14 +186,6 @@ export default function ArtifactVideoOverlay({
     >
       <div className="artifact-video-backdrop" />
       <div className="artifact-video-modal" ref={overlayRef}>
-        <button
-          type="button"
-          className="exit-pill-btn artifact-video-exit-btn"
-          onClick={handleCloseOverlay}
-          aria-label="Close video player"
-        >
-          Exit
-        </button>
         <div className="artifact-video-body">
           <video
             ref={videoRef}
@@ -235,6 +232,14 @@ export default function ArtifactVideoOverlay({
             aria-label="Open guided description"
           >
             Guided Description
+          </button>
+          <button
+            type="button"
+            className="artifact-video-control-btn"
+            onClick={handleCloseOverlay}
+            aria-label="Close video player"
+          >
+            Exit
           </button>
         </div>
 
