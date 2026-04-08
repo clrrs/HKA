@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import { useStepScroll } from "./useStepScroll";
 
 export default function VideoPlayer({ src, poster, transcriptText, guidedDescription }) {
@@ -20,6 +21,8 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
   } = useStepScroll();
   const transcriptButtonRef = useRef(null);
   const guidedButtonRef = useRef(null);
+
+  useHeadphoneSinkEffect(videoRef, src);
 
   const play = () => {
     videoRef.current?.play();

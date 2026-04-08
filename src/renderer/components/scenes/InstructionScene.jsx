@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { useAppState } from "../../state/StateProvider";
 
 const SKIP_DELAY_SECONDS = 1;
@@ -9,6 +10,8 @@ export default function InstructionScene({ isActive }) {
   const videoRef = useRef(null);
   const emptyFocusRef = useRef(null);
   const skipButtonRef = useRef(null);
+
+  useHeadphoneSinkEffect(videoRef, isActive);
 
   // Focus trap: L/Tab from Skip goes to empty; K/Shift+Tab from empty goes to Skip (loop)
   const handleKeyDown = (e) => {

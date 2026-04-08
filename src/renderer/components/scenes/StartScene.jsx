@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { useAppState } from "../../state/StateProvider";
 
 export default function StartScene() {
@@ -7,6 +8,8 @@ export default function StartScene() {
   const helpButtonRef = useRef(null);
   const modalRef = useRef(null);
   const videoRef = useRef(null);
+
+  useHeadphoneSinkEffect(videoRef, showVideo);
 
   // Focus trap for the instructional video modal
   useEffect(() => {

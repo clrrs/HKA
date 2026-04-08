@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import { useAppState } from "../state/StateProvider";
 import { useStepScroll } from "./useStepScroll";
 
@@ -57,6 +58,8 @@ export default function ArtifactVideoOverlay({
   const transcriptButtonRef = useRef(null);
   const guidedRef = useRef(null);
   const guidedButtonRef = useRef(null);
+
+  useHeadphoneSinkEffect(videoRef, src);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);

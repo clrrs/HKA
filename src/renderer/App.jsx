@@ -3,15 +3,38 @@ import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import { useKeyboardNav } from "./state/useSceneManager";
 import { useAppState } from "./state/StateProvider";
+import { useAnnounce } from "./state/AnnouncerProvider";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
+const DEFAULT_IDLE_SEC = 60;
+const PARAGRAPH_SPEECH_IDLE_SEC = 300;
+const WARNING_SEC = 10;
+
+function isParagraphFocus() {
+  return document.activeElement?.tagName === "P";
+}
+
+function getIdleDismissAnnouncement(el) {
+  if (!el) return null;
+  const label = el.getAttribute("aria-label");
+  if (label) return label;
+  const labelledbyId = el.getAttribute("aria-labelledby");
+  if (labelledbyId) {
+    const ref = document.getElementById(labelledbyId);
+    if (ref) return ref.textContent?.trim();
+  }
+  return (el.textContent || "").trim() || null;
+}
+
 export default function App() {
   useKeyboardNav();
-  const { scene, showSettings, toggleSettings, resetToStart, videoOverlayOpen } = useAppState();
+  const { scene, showSettings, toggleSettings, resetToStart, videoOverlayOpen, speechMode } = useAppState();
+  const announce = useAnnounce();
   const [idleCountdown, setIdleCountdown] = useState(null);
   const lastActivityRef = useRef(Date.now());
+  const warningVisibleRef = useRef(false);
   const settingsPanelRef = useRef(null);
 
   const rescale = useCallback(() => {
@@ -34,6 +57,7 @@ export default function App() {
     // Disable inactivity timer whenever a video is playing (attract, instruction, or start popup)
     if (scene === "attract" || scene === "instruction" || videoOverlayOpen) {
       setIdleCountdown(null);
+      warningVisibleRef.current = false;
       lastActivityRef.current = Date.now();
       return;
     }
@@ -44,38 +68,65 @@ export default function App() {
     const handleActivity = () => {
       lastActivityRef.current = Date.now();
       setIdleCountdown(null);
+      warningVisibleRef.current = false;
     };
 
-    const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart", "focusin"];
-    activityEvents.forEach((eventName) => {
+    // Keydown gets its own capture handler: when the idle warning is showing,
+    // it swallows the event so useKeyboardNav never sees it, keeping focus in place.
+    const handleKeydownCapture = (e) => {
+      const wasWarning = warningVisibleRef.current;
+      lastActivityRef.current = Date.now();
+      setIdleCountdown(null);
+      warningVisibleRef.current = false;
+
+      if (wasWarning) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        requestAnimationFrame(() => {
+          const text = getIdleDismissAnnouncement(document.activeElement);
+          if (text) announce(text, { politeness: "assertive", source: "idle-dismiss", dedupeMs: 0 });
+        });
+      }
+    };
+
+    const passiveEvents = ["mousemove", "mousedown", "touchstart", "focusin"];
+    passiveEvents.forEach((eventName) => {
       window.addEventListener(eventName, handleActivity, true);
     });
+    window.addEventListener("keydown", handleKeydownCapture, true);
 
     const intervalId = setInterval(() => {
       const elapsedSeconds = Math.floor((Date.now() - lastActivityRef.current) / 1000);
+      const limitSec = speechMode && isParagraphFocus() ? PARAGRAPH_SPEECH_IDLE_SEC : DEFAULT_IDLE_SEC;
+      const warningStart = limitSec - WARNING_SEC;
 
-      if (elapsedSeconds >= 60) {
+      if (elapsedSeconds >= limitSec) {
         resetToStart();
         lastActivityRef.current = Date.now();
         setIdleCountdown(null);
+        warningVisibleRef.current = false;
         return;
       }
 
-      if (elapsedSeconds >= 50) {
-        const remaining = 60 - elapsedSeconds;
-        setIdleCountdown(remaining >= 1 && remaining <= 10 ? remaining : null);
+      if (elapsedSeconds >= warningStart) {
+        const remaining = limitSec - elapsedSeconds;
+        const show = remaining >= 1 && remaining <= WARNING_SEC;
+        setIdleCountdown(show ? remaining : null);
+        warningVisibleRef.current = show;
       } else {
         setIdleCountdown(null);
+        warningVisibleRef.current = false;
       }
     }, 1000);
 
     return () => {
-      activityEvents.forEach((eventName) => {
+      passiveEvents.forEach((eventName) => {
         window.removeEventListener(eventName, handleActivity, true);
       });
+      window.removeEventListener("keydown", handleKeydownCapture, true);
       clearInterval(intervalId);
     };
-  }, [resetToStart, scene, videoOverlayOpen]);
+  }, [resetToStart, scene, videoOverlayOpen, speechMode, announce]);
 
   const handleSettingsKeyDown = (e) => {
     if (e.repeat) return;

@@ -1,40 +1,97 @@
 import React, { useRef, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
+import { useAudioRouting } from "../../audio/AudioRoutingProvider";
+import { setMediaSink } from "../../audio/audioRoutingCore";
 
 // Test: aria-braillelabel (React: ariaBrailleLabel) — braille-specific string vs aria-label for speech.
 const ATTRACT_BRAILLE_LABEL_TEST =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
 
+const ATTRACT_SRC = "3HK7_Attract_v02-260227_small.mp4";
+
 export default function AttractScene({ isActive }) {
   const { goToScene } = useAppState();
   const advancingRef = useRef(false);
   const videoRef = useRef(null);
+  const mirrorRef = useRef(null);
+  const { ready, speakerSinkId, applyHeadphoneSink } = useAudioRouting();
 
-  // Initial mount: try to start playback once the video ref is ready
+  // Sync mirror playback to the visible (master) video
   useEffect(() => {
-    const video = videoRef.current;
-    // eslint-disable-next-line no-console
-    console.log("[AttractScene] mount, isActive:", isActive, "video present:", !!video);
-    if (!video) return;
-    video.currentTime = 0;
-    video.play().catch((err) => {
-      // eslint-disable-next-line no-console
-      console.log("[AttractScene] initial play() error", err);
-    });
-  }, []);
+    const master = videoRef.current;
+    const slave = mirrorRef.current;
+    if (!master || !slave) return;
 
-  // Only play when this scene is active; pause and reset when leaving
+    const syncSlaveTime = () => {
+      if (Math.abs(slave.currentTime - master.currentTime) > 0.25) {
+        slave.currentTime = master.currentTime;
+      }
+    };
+
+    const onPlay = () => {
+      slave.currentTime = master.currentTime;
+      if (speakerSinkId) {
+        slave.play().catch(() => {});
+      }
+    };
+    const onPause = () => {
+      slave.pause();
+    };
+    const onSeeked = () => {
+      slave.currentTime = master.currentTime;
+    };
+
+    master.addEventListener("play", onPlay);
+    master.addEventListener("pause", onPause);
+    master.addEventListener("seeked", onSeeked);
+    master.addEventListener("timeupdate", syncSlaveTime);
+
+    return () => {
+      master.removeEventListener("play", onPlay);
+      master.removeEventListener("pause", onPause);
+      master.removeEventListener("seeked", onSeeked);
+      master.removeEventListener("timeupdate", syncSlaveTime);
+    };
+  }, [speakerSinkId]);
+
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (isActive) {
-      video.currentTime = 0;
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-      video.currentTime = 0;
-    }
-  }, [isActive]);
+    const master = videoRef.current;
+    const slave = mirrorRef.current;
+    if (!master || !slave || !ready) return;
+
+    let cancelled = false;
+
+    (async () => {
+      await applyHeadphoneSink(master);
+      if (speakerSinkId) {
+        await setMediaSink(slave, speakerSinkId);
+        slave.muted = false;
+      } else {
+        slave.muted = true;
+        slave.pause();
+      }
+
+      if (cancelled) return;
+
+      if (isActive) {
+        master.currentTime = 0;
+        slave.currentTime = 0;
+        master.play().catch((err) => {
+          // eslint-disable-next-line no-console
+          console.log("[AttractScene] play() error", err);
+        });
+      } else {
+        master.pause();
+        slave.pause();
+        master.currentTime = 0;
+        slave.currentTime = 0;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isActive, ready, applyHeadphoneSink, speakerSinkId]);
 
   // Allow activation each time we (re)enter the attract scene
   useEffect(() => {
@@ -72,7 +129,16 @@ export default function AttractScene({ isActive }) {
       <video
         ref={videoRef}
         className="attract-video"
-        src="3HK7_Attract_v02-260227_small.mp4"
+        src={ATTRACT_SRC}
+        loop
+        playsInline
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <video
+        ref={mirrorRef}
+        className="attract-video attract-video-audio-mirror"
+        src={ATTRACT_SRC}
         loop
         playsInline
         tabIndex={-1}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme } from "../../data/artifacts";
 
@@ -7,6 +8,8 @@ export default function QuoteScene() {
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
   const timeoutRef = useRef(null);
+
+  useHeadphoneSinkEffect(audioRef, scene);
 
   useEffect(() => {
     const audioEl = audioRef.current;
