@@ -65,6 +65,7 @@ export default function AttractScene({ isActive }) {
       onClick={handleClick}
       role="button"
       tabIndex={0}
+      data-autofocus={true}
       aria-label="Press any key to continue"
       ariaBrailleLabel={ATTRACT_BRAILLE_LABEL_TEST}
     >
@@ -74,6 +75,7 @@ export default function AttractScene({ isActive }) {
         src="3HK7_Attract_v02-260227_small.mp4"
         loop
         playsInline
+        tabIndex={-1}
         aria-hidden="true"
       />
     </div>
