@@ -1,6 +1,10 @@
 import React, { useRef, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 
+// Test: aria-braillelabel (React: ariaBrailleLabel) — braille-specific string vs aria-label for speech.
+const ATTRACT_BRAILLE_LABEL_TEST =
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
+
 export default function AttractScene({ isActive }) {
   const { goToScene } = useAppState();
   const advancingRef = useRef(false);
@@ -62,6 +66,7 @@ export default function AttractScene({ isActive }) {
       role="button"
       tabIndex={0}
       aria-label="Press any key to continue"
+      ariaBrailleLabel={ATTRACT_BRAILLE_LABEL_TEST}
     >
       <video
         ref={videoRef}
