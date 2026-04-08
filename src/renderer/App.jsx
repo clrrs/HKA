@@ -10,7 +10,10 @@ const DESIGN_H = 1080;
 
 const DEFAULT_IDLE_SEC = 60;
 const PARAGRAPH_SPEECH_IDLE_SEC = 300;
-const WARNING_SEC = 10;
+const PRE_COUNTDOWN_SEC = 10;
+const COUNTDOWN_FROM = 10;
+const COUNTDOWN_TICK_SEC = 2;
+const TOTAL_WARNING_SEC = PRE_COUNTDOWN_SEC + COUNTDOWN_FROM * COUNTDOWN_TICK_SEC;
 
 function isParagraphFocus() {
   return document.activeElement?.tagName === "P";
@@ -98,7 +101,7 @@ export default function App() {
     const intervalId = setInterval(() => {
       const elapsedSeconds = Math.floor((Date.now() - lastActivityRef.current) / 1000);
       const limitSec = speechMode && isParagraphFocus() ? PARAGRAPH_SPEECH_IDLE_SEC : DEFAULT_IDLE_SEC;
-      const warningStart = limitSec - WARNING_SEC;
+      const warningStart = limitSec - TOTAL_WARNING_SEC;
 
       if (elapsedSeconds >= limitSec) {
         resetToStart();
@@ -109,10 +112,14 @@ export default function App() {
       }
 
       if (elapsedSeconds >= warningStart) {
-        const remaining = limitSec - elapsedSeconds;
-        const show = remaining >= 1 && remaining <= WARNING_SEC;
-        setIdleCountdown(show ? remaining : null);
-        warningVisibleRef.current = show;
+        const warningElapsed = elapsedSeconds - warningStart;
+        if (warningElapsed < PRE_COUNTDOWN_SEC) {
+          setIdleCountdown("pre");
+        } else {
+          const countdownElapsed = warningElapsed - PRE_COUNTDOWN_SEC;
+          setIdleCountdown(COUNTDOWN_FROM - Math.floor(countdownElapsed / COUNTDOWN_TICK_SEC));
+        }
+        warningVisibleRef.current = true;
       } else {
         setIdleCountdown(null);
         warningVisibleRef.current = false;
@@ -219,10 +226,14 @@ export default function App() {
           <div className="idle-overlay" aria-hidden="false">
             <div className="idle-overlay-content">
               <p className="idle-overlay-line">Still there?</p>
-              <p className="idle-overlay-line">Inactivity timer, returning to start in…</p>
-              <div className="idle-countdown" aria-live="assertive">
-                {idleCountdown}
-              </div>
+              {typeof idleCountdown === "number" && (
+                <>
+                  <p className="idle-overlay-line">Returning to start in…</p>
+                  <div className="idle-countdown" aria-live="assertive">
+                    {idleCountdown}
+                  </div>
+                </>
+              )}
               <p className="idle-overlay-line">Press any key to stay</p>
             </div>
           </div>
