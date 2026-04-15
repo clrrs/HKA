@@ -123,7 +123,7 @@ export default function AttractScene({ isActive }) {
       role="button"
       tabIndex={0}
       data-autofocus={true}
-      aria-label="Press any key to continue"
+      aria-label="The Helen Keller Archives. Press any key to continue. Headphones are located to the right."
       ariaBrailleLabel={ATTRACT_BRAILLE_LABEL_TEST}
     >
       <video

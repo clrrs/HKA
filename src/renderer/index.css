@@ -1986,10 +1986,7 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   opacity: 0;
 }
 
-.travel-heading-inner:focus,
-.travel-heading-inner:focus-visible {
-  outline: none;
-}
+
 
 .travel-title {
   display: block;

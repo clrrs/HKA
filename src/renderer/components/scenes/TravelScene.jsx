@@ -76,7 +76,7 @@ export default function TravelScene() {
       const onTitle =
         active &&
         active.classList &&
-        active.classList.contains("travel-title");
+        active.classList.contains("travel-heading-inner");
 
       if (isBack && idx < 0 && onTitle) {
         e.preventDefault();
@@ -139,26 +139,29 @@ export default function TravelScene() {
         <div
           className="travel-heading-inner"
           ref={headingRef}
-          tabIndex={-1}
-          data-autofocus={speechMode ? undefined : true}
+          tabIndex={0}
+          data-autofocus={true}
           onFocus={handleHeadingFocus}
+          aria-label={speechMode ? `${theme.label}. ${theme.description}. Select an artifact to begin` : undefined}
         >
           <p
             className="travel-title"
-            tabIndex={speechMode ? 0 : -1}
-            data-autofocus={speechMode ? true : undefined}
+            tabIndex={-1}
+            aria-hidden={speechMode ? true : undefined}
           >
             {theme.label}
           </p>
           <p
             className="travel-description"
-            tabIndex={speechMode ? 0 : -1}
+            tabIndex={-1}
+            aria-hidden={speechMode ? true : undefined}
           >
             {theme.description}
           </p>
           <h4
             className="travel-cta"
-            tabIndex={speechMode ? 0 : -1}
+            tabIndex={-1}
+            aria-hidden={speechMode ? true : undefined}
           >
             Select an artifact to begin
           </h4>

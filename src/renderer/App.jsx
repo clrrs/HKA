@@ -8,7 +8,7 @@ import { useAnnounce } from "./state/AnnouncerProvider";
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
-const DEFAULT_IDLE_SEC = 60;
+const DEFAULT_IDLE_SEC = 100;
 const PARAGRAPH_SPEECH_IDLE_SEC = 300;
 const PRE_COUNTDOWN_SEC = 10;
 const COUNTDOWN_FROM = 10;
