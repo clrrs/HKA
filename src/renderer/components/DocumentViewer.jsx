@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useAppState } from "../state/StateProvider";
 import { useStepScroll } from "./useStepScroll";
 
 function useFocusTrap(containerRef, isActive) {
@@ -9,6 +8,15 @@ function useFocusTrap(containerRef, isActive) {
     const container = containerRef.current;
     const focusableSelector =
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    const isAutofocusable = (el) => {
+      if (el instanceof HTMLButtonElement && el.disabled) return false;
+      if (el instanceof HTMLInputElement && el.disabled) return false;
+      if (el instanceof HTMLTextAreaElement && el.disabled) return false;
+      if (el instanceof HTMLSelectElement && el.disabled) return false;
+      if (el instanceof HTMLElement && el.tabIndex === -1) return false;
+      return true;
+    };
 
     const handleKeyDown = (event) => {
       if (event.repeat) return;
@@ -31,7 +39,13 @@ function useFocusTrap(containerRef, isActive) {
 
     container.addEventListener("keydown", handleKeyDown);
 
-    const autofocusTarget = container.querySelector("[data-autofocus]");
+    let autofocusTarget;
+    for (const el of container.querySelectorAll("[data-autofocus]")) {
+      if (isAutofocusable(el)) {
+        autofocusTarget = el;
+        break;
+      }
+    }
     if (autofocusTarget) {
       autofocusTarget.focus();
     } else {
@@ -48,13 +62,14 @@ function useFocusTrap(containerRef, isActive) {
 }
 
 export default function DocumentViewer({ artifact }) {
-  const { speechMode } = useAppState();
   const [isOpen, setIsOpen] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
   const surfaceRef = useRef(null);
   const overlayRef = useRef(null);
   const toolbarFirstButtonRef = useRef(null);
+  const documentScrollUpRef = useRef(null);
+  const documentScrollDownRef = useRef(null);
   const transcriptOverlayRef = useRef(null);
   const guidedOverlayRef = useRef(null);
   const {
@@ -96,14 +111,32 @@ export default function DocumentViewer({ artifact }) {
   const atTop = position === "top";
   const atBottom = position === "bottom";
 
+  const focusOppositeAfterSnap = (which) => {
+    setTimeout(() => {
+      if (which === "up") {
+        const down = documentScrollDownRef.current;
+        if (down && !down.disabled) {
+          down.focus();
+        }
+      } else {
+        const up = documentScrollUpRef.current;
+        if (up && !up.disabled) {
+          up.focus();
+        }
+      }
+    }, 0);
+  };
+
   const snapToTop = () => {
     if (atTop) return;
     setPosition("top");
+    focusOppositeAfterSnap("up");
   };
 
   const snapToBottom = () => {
     if (atBottom) return;
     setPosition("bottom");
+    focusOppositeAfterSnap("down");
   };
 
   const openTranscript = () => {
@@ -136,13 +169,15 @@ export default function DocumentViewer({ artifact }) {
 
   const closeTranscript = () => {
     setShowTranscript(false);
-    if (toolbarFirstButtonRef.current) {
-      setTimeout(() => {
-        if (toolbarFirstButtonRef.current) {
-          toolbarFirstButtonRef.current.focus();
-        }
-      }, 0);
-    }
+    setTimeout(() => {
+      if (documentScrollDownRef.current && !documentScrollDownRef.current.disabled) {
+        documentScrollDownRef.current.focus();
+      } else if (documentScrollUpRef.current && !documentScrollUpRef.current.disabled) {
+        documentScrollUpRef.current.focus();
+      } else if (toolbarFirstButtonRef.current) {
+        toolbarFirstButtonRef.current.focus();
+      }
+    }, 0);
   };
 
   useEffect(() => {
@@ -221,71 +256,72 @@ export default function DocumentViewer({ artifact }) {
                       src={image.src}
                       alt={image.alt}
                       className={`document-image document-image--${position}`}
-                      tabIndex={speechMode ? 0 : -1}
-                      data-autofocus={speechMode ? "" : undefined}
+                      tabIndex={-1}
                     />
                   ) : (
                     <div className="document-empty">No document available</div>
                   )}
                 </div>
-                <div
-                  className="document-toolbar-center"
-                  role="toolbar"
-                  aria-label="Document transcript control"
-                >
-                  <button
-                    type="button"
-                    onClick={closeViewer}
-                    className="carousel-btn"
-                    aria-label="Close document viewer"
+                <div className="document-bottom-bar">
+                  <div
+                    className="document-toolbar-arrows"
+                    role="toolbar"
+                    aria-label="Document scroll controls"
                   >
-                    Exit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openTranscript}
-                    className="carousel-btn"
-                    aria-label="Open document transcript"
-                    ref={toolbarFirstButtonRef}
+                    <button
+                      type="button"
+                      ref={documentScrollUpRef}
+                      onClick={snapToTop}
+                      className="carousel-btn carousel-btn-icon document-arrow-up"
+                      disabled={atTop}
+                      aria-label="Scroll to top of document"
+                    >
+                      <img src="./Back.svg" alt="" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      ref={documentScrollDownRef}
+                      onClick={snapToBottom}
+                      className="carousel-btn carousel-btn-icon document-arrow-down"
+                      disabled={atBottom}
+                      aria-label="Scroll to bottom of document"
+                      data-autofocus=""
+                    >
+                      <img src="./Back.svg" alt="" aria-hidden="true" />
+                    </button>
+                  </div>
+                  <div
+                    className="document-toolbar-center"
+                    role="toolbar"
+                    aria-label="Document transcript control"
                   >
-                    Transcript
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openGuided}
-                    className="carousel-btn"
-                    aria-label="Open document guided description"
-                    ref={guidedButtonRef}
-                  >
-                    Guided Description
-                  </button>
-                </div>
-                <div
-                  className="document-toolbar-arrows"
-                  role="toolbar"
-                  aria-label="Document scroll controls"
-                >
-                  <button
-                    type="button"
-                    onClick={snapToTop}
-                    className={`carousel-btn carousel-btn-icon document-arrow-up${
-                      atTop ? " document-arrow-disabled" : ""
-                    }`}
-                    aria-label="Scroll to top of document"
-                  >
-                    <img src="./Back.svg" alt="" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={snapToBottom}
-                    className={`carousel-btn carousel-btn-icon document-arrow-down${
-                      atBottom ? " document-arrow-disabled" : ""
-                    }`}
-                    aria-label="Scroll to bottom of document"
-                    data-autofocus={!speechMode ? "" : undefined}
-                  >
-                    <img src="./Back.svg" alt="" aria-hidden="true" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={openTranscript}
+                      className="carousel-btn"
+                      aria-label="Open document transcript"
+                      ref={toolbarFirstButtonRef}
+                    >
+                      Transcript
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openGuided}
+                      className="carousel-btn"
+                      aria-label="Open document guided description"
+                      ref={guidedButtonRef}
+                    >
+                      Guided Description
+                    </button>
+                    <button
+                      type="button"
+                      onClick={closeViewer}
+                      className="carousel-btn"
+                      aria-label="Close document viewer"
+                    >
+                      Exit
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

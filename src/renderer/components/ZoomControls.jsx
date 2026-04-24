@@ -201,15 +201,6 @@ export default function ZoomControls({ image, onExit }) {
       </div>
       
       <div className="zoom-controls-menu" role="toolbar" aria-label="Zoom and pan controls">
-        <button 
-          type="button" 
-          onClick={onExit}
-          aria-label="Exit Zoom Mode"
-          className="zoom-btn"
-        >
-          Exit
-        </button>
-        
         <div className="zoom-btn-group">
           <button 
             type="button" 
@@ -218,7 +209,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(zoomIn)}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            aria-disabled={!canZoomIn}
+            disabled={!canZoomIn}
             aria-label="Zoom in"
             className="zoom-btn"
           >
@@ -230,7 +221,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(zoomOut)}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            aria-disabled={!canZoomOut}
+            disabled={!canZoomOut}
             aria-label="Zoom out"
             className="zoom-btn"
           >
@@ -245,7 +236,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(() => pan("left"))}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            aria-disabled={!canPanLeft}
+            disabled={!canPanLeft}
             aria-label="Pan left"
             className="zoom-btn"
           >
@@ -258,7 +249,7 @@ export default function ZoomControls({ image, onExit }) {
               onMouseDown={() => startHoldToRepeat(() => pan("up"))}
               onMouseUp={stopHoldToRepeat}
               onMouseLeave={stopHoldToRepeat}
-              aria-disabled={!canPanUp}
+              disabled={!canPanUp}
               aria-label="Pan up"
               className="zoom-btn"
             >
@@ -270,7 +261,7 @@ export default function ZoomControls({ image, onExit }) {
               onMouseDown={() => startHoldToRepeat(() => pan("down"))}
               onMouseUp={stopHoldToRepeat}
               onMouseLeave={stopHoldToRepeat}
-              aria-disabled={!canPanDown}
+              disabled={!canPanDown}
               aria-label="Pan down"
               className="zoom-btn"
             >
@@ -283,7 +274,7 @@ export default function ZoomControls({ image, onExit }) {
             onMouseDown={() => startHoldToRepeat(() => pan("right"))}
             onMouseUp={stopHoldToRepeat}
             onMouseLeave={stopHoldToRepeat}
-            aria-disabled={!canPanRight}
+            disabled={!canPanRight}
             aria-label="Pan right"
             className="zoom-btn"
           >
@@ -298,6 +289,14 @@ export default function ZoomControls({ image, onExit }) {
           className="zoom-btn"
         >
           Reset
+        </button>
+        <button 
+          type="button" 
+          onClick={onExit}
+          aria-label="Exit Zoom Mode"
+          className="zoom-btn"
+        >
+          Exit
         </button>
       </div>
       

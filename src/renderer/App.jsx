@@ -208,15 +208,6 @@ export default function App() {
               role="document"
               onKeyDown={handleSettingsKeyDown}
             >
-              <button
-                type="button"
-                className="settings-close-btn"
-                onClick={toggleSettings}
-                aria-label="Close accessibility settings"
-                data-autofocus
-              >
-                ×
-              </button>
               <h2 id="accessibility-settings-title">Accessibility Settings</h2>
               <AccessibilityMenu />
             </div>

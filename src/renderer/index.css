@@ -427,31 +427,51 @@ body {
   top: auto;
 }
 
-.document-toolbar-center {
+.document-bottom-bar {
   position: fixed;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 60px;
-  transform: translateX(-50%);
+  z-index: 3; /* always above document content */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
+  padding: 0 80px 0;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.document-bottom-bar > * {
+  pointer-events: auto;
+}
+
+.document-toolbar-center {
+  position: static;
+  transform: none;
+  left: auto;
+  bottom: auto;
   display: flex;
   justify-content: center;
   gap: 10px;
   padding: 16px 0 0;
   flex-wrap: wrap;
-  z-index: 3; /* always above document content */
+  flex: 0 0 auto;
 }
 
 .document-toolbar-arrows {
-  position: fixed;
-  right: 300px;
-  bottom: 60px;
+  position: absolute;
+  left: 164px;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  z-index: 3;
 }
 
-.document-arrow-disabled {
+.document-arrow-disabled,
+.document-arrow-up:disabled,
+.document-arrow-down:disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -1449,6 +1469,16 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .settings-footer {
   margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.settings-footer .setting-btn {
+  width: 50%;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .settings-reset-btn {
@@ -1461,6 +1491,7 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 .settings-reset-btn:focus-visible {
   opacity: 1;
 }
+
 
 /* ============================================
    Settings Overlay (floating popup)
@@ -1494,7 +1525,6 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 
 .settings-panel h2 {
   margin: 0 0 32px 0;
-  padding-top: 32px;
   font-size: 36px;
   font-weight: 500;
   text-align: left;
@@ -1504,31 +1534,6 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   font-weight: 400;
   letter-spacing: 1px;
   font-size: 40px;
-}
-
-.settings-close-btn {
-  position: absolute;
-  top: -14px;
-  left: -21px;
-  width: 60px;
-  height: 60px;
-  border-radius: 999px;
-  border: 2px solid var(--btn-border);
-  background-color: var(--btn-bg);
-  color: var(--btn-text);
-  font-size: 32px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.settings-close-btn:focus-visible {
-  outline: none;
-  background-color: var(--btn-focus-bg);
-  border-color: var(--btn-focus-border);
-  color: var(--btn-focus-text);
 }
 
 /* ============================================

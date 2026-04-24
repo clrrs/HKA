@@ -20,7 +20,7 @@ const brightnessOptions = [
 ];
 
 export default function AccessibilityMenu() {
-  const { prefs, setPref, resetPrefs } = useAppState();
+  const { prefs, setPref, resetPrefs, toggleSettings } = useAppState();
   const [expandedSection, setExpandedSection] = useState(null);
   const textSizeFirstRef = useRef(null);
   const themeFirstRef = useRef(null);
@@ -62,6 +62,7 @@ export default function AccessibilityMenu() {
           aria-expanded={expandedSection === "textSize"}
           aria-controls="access-text-size-options"
           id="access-text-size-trigger"
+          data-autofocus
         >
           <span className="setting-section-label">Text Size</span>
           <span className="setting-section-value" aria-hidden="true">{currentTextSizeLabel}</span>
@@ -166,6 +167,14 @@ export default function AccessibilityMenu() {
           onClick={resetPrefs}
         >
           Reset All Settings
+        </button>
+        <button
+          type="button"
+          className="setting-btn"
+          onClick={toggleSettings}
+          aria-label="Close accessibility settings"
+        >
+          Exit
         </button>
       </div>
     </div>
