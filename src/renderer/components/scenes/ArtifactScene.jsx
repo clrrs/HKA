@@ -35,8 +35,8 @@ export default function ArtifactScene() {
   })();
 
   // When switching artifacts (artifactId changes) while staying on the
-  // "artifact" scene, keep screen reader focus on the title only in
-  // speech mode. In speech-off mode, preserve focus on the nav button.
+  // "artifact" scene, keep screen reader focus on the title/description
+  // group in speech mode. In speech-off mode, preserve focus on the nav button.
   useEffect(() => {
     if (!speechMode) return;
     if (showVideoOverlay) return;
@@ -69,15 +69,26 @@ export default function ArtifactScene() {
           <h2 className="artifact-header">
             <span className="artifact-header-accent">{theme.label}</span>
           </h2>
-          <p
-            className="artifact-title"
+          <div
+            className="artifact-heading-inner"
+            ref={titleRef}
             tabIndex={speechMode ? 0 : -1}
             data-autofocus={speechMode ? true : undefined}
-            ref={titleRef}
+            aria-label={
+              speechMode ? `${artifact.title}. ${artifact.description}` : undefined
+            }
           >
-            {artifact.title}
-          </p>
-          <p tabIndex={speechMode ? 0 : -1}>{artifact.description}</p>
+            <p
+              className="artifact-title"
+              tabIndex={-1}
+              aria-hidden={speechMode ? true : undefined}
+            >
+              {artifact.title}
+            </p>
+            <p tabIndex={-1} aria-hidden={speechMode ? true : undefined}>
+              {artifact.description}
+            </p>
+          </div>
         </div>
         <div className="artifact-media">
           {artifact.type === "video" && (
