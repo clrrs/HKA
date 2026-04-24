@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import { useAppState } from "../state/StateProvider";
+import { textOrMissing } from "../data/contentPlaceholder";
 import { useStepScroll } from "./useStepScroll";
 
 function useFocusTrap(containerRef, isActive) {
@@ -174,8 +175,8 @@ export default function ArtifactVideoOverlay({
     };
   }, [showTranscript, showGuided]);
 
-  const transcriptText = transcript || "Transcript coming soon.";
-  const guidedText = guidedDescription || "Guided description coming soon.";
+  const transcriptText = textOrMissing(transcript);
+  const guidedText = textOrMissing(guidedDescription);
 
   return (
     <div

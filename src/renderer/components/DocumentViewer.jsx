@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { textOrMissing } from "../data/contentPlaceholder";
 import { useStepScroll } from "./useStepScroll";
 
 function useFocusTrap(containerRef, isActive) {
@@ -205,8 +206,8 @@ export default function DocumentViewer({ artifact }) {
 
   const image = artifact.images && artifact.images.length > 0 ? artifact.images[0] : null;
   const transcriptTitle = artifact.transcriptTitle || "Transcript";
-  const transcriptText = artifact.transcriptText || "Transcript coming soon.";
-  const guidedDescription = artifact.guidedDescription || "Guided description coming soon.";
+  const transcriptText = textOrMissing(artifact.transcriptText);
+  const guidedDescriptionText = textOrMissing(artifact.guidedDescription);
 
   return (
     <>
@@ -386,7 +387,7 @@ export default function DocumentViewer({ artifact }) {
                       ref={guidedBodyRef}
                       tabIndex={0}
                     >
-                      <p>{guidedDescription}</p>
+                      <p>{guidedDescriptionText}</p>
                     </div>
                   </div>
                 </div>

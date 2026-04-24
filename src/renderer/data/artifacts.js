@@ -530,7 +530,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         type: "images",
         images: [
           { src: "4A6Perkins.jpeg", alt: "Letter from Perkins School Director to Annie Sullivan about Helen Keller, 1886" }
-        ]
+        ],
+        guidedDescription:
+          "A handwritten letter to Anne Sullivan asking her to be Helen's assistant is printed on Perkins Institution for the Blind stationary. Institutional and date information is printed in red, calligraphy-style script on the top of the page. Lines to write along are printed in light blue. Anagnos' ornate, cursive handwriting is in black ink, and his message fills the entire page."
       }
     ]
   }

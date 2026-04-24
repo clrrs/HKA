@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
+import { textOrMissing } from "../data/contentPlaceholder";
 import { useStepScroll } from "./useStepScroll";
 
 export default function VideoPlayer({ src, poster, transcriptText, guidedDescription }) {
@@ -134,7 +135,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
               ref={transcriptBodyRef}
               tabIndex={0}
             >
-              <p>{transcriptText || "Transcript coming soon."}</p>
+              <p>{textOrMissing(transcriptText)}</p>
             </div>
           </div>
         </div>
@@ -167,7 +168,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
               ref={guidedBodyRef}
               tabIndex={0}
             >
-              <p>{guidedDescription || "Guided description coming soon."}</p>
+              <p>{textOrMissing(guidedDescription)}</p>
             </div>
           </div>
         </div>

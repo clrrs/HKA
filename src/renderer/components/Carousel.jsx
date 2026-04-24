@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { getElementSummary, logInputEvent } from "../state/interactionLog";
+import { textOrMissing } from "../data/contentPlaceholder";
 import ZoomControls from "./ZoomControls";
 import { useStepScroll } from "./useStepScroll";
 
@@ -244,7 +245,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   }, [subscene, showGuided, showTranscript, announce, exitZoom]);
 
   const currentImage = images.length > 0 ? images[currentIndex] : null;
-  const hasTranscript = Boolean(transcriptText);
 
   const openGuided = () => {
     if (!currentImage) return;
@@ -377,7 +377,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
               >
                 <img src="./Zoom.svg" alt="" aria-hidden="true" />
               </button>
-              {hasTranscript && (
+              {currentImage && (
                 <button
                   type="button"
                   onClick={() => {
@@ -443,7 +443,9 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                       tabIndex={0}
                     >
                       <p>
-                        {currentImage.description || currentImage.alt}
+                        {textOrMissing(
+                          guidedDescription || currentImage.description
+                        )}
                       </p>
                     </div>
                   </div>
@@ -489,7 +491,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                         resetTranscriptAnchors();
                       }}
                     >
-                      <p>{transcriptText || "Transcript coming soon."}</p>
+                      <p>{textOrMissing(transcriptText)}</p>
                     </div>
                   </div>
                 </div>
