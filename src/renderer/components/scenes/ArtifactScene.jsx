@@ -21,6 +21,8 @@ export default function ArtifactScene() {
   const videoPreviewRef = useRef(null);
 
   const theme = getTheme(currentTheme);
+  const backToListLabel = theme?.label ?? "Theme";
+  const backToListAria = `Back to ${backToListLabel}, return to artifact list`;
   const artifact = getArtifact(currentTheme, artifactId);
   const prevArtifact = getPrevArtifact(currentTheme, artifactId);
   const nextArtifact = getNextArtifact(currentTheme, artifactId);
@@ -52,10 +54,10 @@ export default function ArtifactScene() {
           <button
             className="nav-btn nav-btn-icon-white"
             onClick={() => goToScene("travel")}
-            aria-label="Back to theme, return to artifact list"
+            aria-label={backToListAria}
           >
             <img src="./Menu.svg" alt="" aria-hidden="true" />
-            Back to Theme
+            {backToListLabel}
           </button>
         </div>
       </div>
@@ -140,13 +142,13 @@ export default function ArtifactScene() {
           <button
             className="nav-btn nav-btn-icon-white"
             onClick={() => goToScene("travel")}
-            aria-label="Back to theme, return to artifact list"
+            aria-label={backToListAria}
             data-autofocus={
               speechMode ? undefined : !nextArtifact && !prevArtifact ? true : undefined
             }
           >
             <img src="./Menu.svg" alt="" aria-hidden="true" />
-            Back to Theme
+            {backToListLabel}
           </button>
         </div>
       </div>

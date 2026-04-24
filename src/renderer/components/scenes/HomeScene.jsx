@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useAppState } from "../../state/StateProvider";
 
-const TESTING_ADVENTURE_ONLY = true;
+const TESTING_ADVENTURE_ONLY = false;
 
 const ALL_THEMES = [
   { id: "change",    label: "Change",    scene: "quote", image: "./Change.png" },
