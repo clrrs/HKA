@@ -1,0 +1,68 @@
+﻿# HKA kiosk: suppress NVDA role/state chatter (default speech dictionary).
+# Kiosk-only: applies to all apps under this NVDA user profile. Do not use on a general PC.
+# pattern<TAB>replacement<TAB>case(0=ignore case)<TAB>type(1=regex = NVDA EntryType.REGEXP)
+
+# --- container / structural roles ---
+\b(grouping|group)\b		0	1
+\b(region|banner|complementary|content info|main landmark|navigation landmark|landmark)\b		0	1
+\bapplication\b		0	1
+\bframe\b		0	1
+\bsection\b		0	1
+\btoolbar\b		0	1
+\bseparator\b		0	1
+
+# --- text-block roles ---
+\bparagraph\b		0	1
+\bblock quote\b		0	1
+\bheading( level( [1-6])?)?\b		0	1
+\bheading [1-6]\b		0	1
+
+# --- interactive control roles ---
+\bbutton\b		0	1
+\blink\b		0	1
+\bedit(able)?( text)?\b		0	1
+\bcombo box\b		0	1
+\blist box\b		0	1
+\bcheck box\b		0	1
+\bradio button\b		0	1
+\bslider\b		0	1
+\bspin button\b		0	1
+\b(menu|menu bar|menu item|menu button)\b		0	1
+\b(tab|tab list|tab panel)\b		0	1
+
+# --- list roles (no generic N items — can false-positive exhibit text) ---
+\blist( with [0-9]+ items)?\b		0	1
+\blist end\b		0	1
+\bout of list\b		0	1
+\blist item\b		0	1
+
+# --- table roles ---
+\b(table|row|column|cell|column header|row header)\b		0	1
+
+# --- modal / live region role words ---
+\bdialog\b		0	1
+\balert\b		0	1
+\bstatus\b		0	1
+
+# --- state words — trim file if any line eats exhibit copy ---
+\bclickable\b		0	1
+\bfocused\b		0	1
+\bfocusable\b		0	1
+\bselected\b		0	1
+\bnot selected\b		0	1
+\bpressed\b		0	1
+\bnot pressed\b		0	1
+\bexpanded\b		0	1
+\bcollapsed\b		0	1
+\bdisabled\b		0	1
+\bunavailable\b		0	1
+\brequired\b		0	1
+\binvalid entry\b		0	1
+\bbusy\b		0	1
+\bread only\b		0	1
+\b(has popup|has auto complete)\b		0	1
+
+# --- post-process after stripping ---
+[ \t]{2,}	 	0	1
+^[ ,.;:]+		0	1
+

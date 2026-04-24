@@ -25,6 +25,20 @@ Once NVDA is running in the Electron app, you can toggle speech mode. TTS button
 4. Make sure NVDA is not running.
 5. Replace the nvda.ini with the downloaded one.
 6. Open NVDA
+7. Download the **default speech dictionary** (reduces role chatter: “group”, “button”, “paragraph”, etc.): [nvda-default.dic](nvda-default.dic)
+8. Copy this onto your clipboard: `%APPDATA%\nvda\speechDicts` (create the `speechDicts` folder if it does not exist)
+9. Paste into File Explorer or the search bar.
+10. Make sure NVDA is not running.
+11. Place the downloaded file in that folder and **rename it to** `default.dic` (NVDA only loads the fixed filename).
+12. Open NVDA
+
+**Kiosk-only warning:** this dictionary is NVDA’s *default* dictionary for the user profile. It applies to **all** Windows apps when NVDA is running, not just HKA. Use it on dedicated kiosk machines, not on a personal workstation.
+
+**Regenerate the file (developers):** from the repo root, `python3 scripts/build_nvda_default_dic.py` writes `nvda-default.dic` (UTF-8 with BOM, tab-separated).
+
+**After install, quick check:** with NVDA on, walk Start → Home → Quote → Travel → Artifact and tab through a few controls. You should hear labels without trailing role names (e.g. no “… button” after a button’s name). If a word in exhibit copy is eaten or something still leaks through, edit `default.dic` in NVDA (NVDA+Ctrl+D → Default dictionary) or adjust patterns in [scripts/build_nvda_default_dic.py](scripts/build_nvda_default_dic.py) and redeploy.
+
+**Planned follow-up (not in this file):** optional DOM/ARIA cleanup in the app (e.g. `ArtifactScene`, `HomeScene`, `TravelScene`) to reduce reliance on the dictionary; track as a separate change.
 
 ---
 
