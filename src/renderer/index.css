@@ -2011,7 +2011,7 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 }
 
 .travel-cta {
-  color: var(--text-heading);
+  color: var(--text-primary);
   font-size: calc(30px * var(--text-scale));
   font-weight: 700;
   margin: 0;
