@@ -835,6 +835,18 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
   outline: none;
 }
 
+/* Tabindex text groups (NVDA/speech): keep programmatic focus, no visible ring — overrides global + browser default */
+.travel-heading-inner:focus,
+.travel-heading-inner:focus-visible,
+.artifact-heading-inner:focus,
+.artifact-heading-inner:focus-visible,
+.artifact-document-transcript-text:focus,
+.artifact-document-transcript-text:focus-visible,
+h1[tabindex]:focus,
+h1[tabindex]:focus-visible {
+  outline: none;
+}
+
 /* ============================================
    Carousel
    ============================================ */
