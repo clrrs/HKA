@@ -266,7 +266,7 @@ export default function HomeScene() {
             <div className="start-video-body">
               <video
                 ref={videoRef}
-                src="3HK7_Instructional-VO_v03-260312_SMALL.mp4"
+                src="3HK7_Instructional_v02-260430-ColorSpaceTest.mp4"
                 onEnded={closeVideo}
                 autoPlay
                 tabIndex={0}

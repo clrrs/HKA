@@ -85,7 +85,6 @@ export default function DocumentViewer({ artifact }) {
     handleKeyDown: handleGuidedKeyDown,
     resetAnchors: resetGuidedAnchors,
   } = useStepScroll();
-  const guidedButtonRef = useRef(null);
 
   const [position, setPosition] = useState("top");
 
@@ -159,10 +158,10 @@ export default function DocumentViewer({ artifact }) {
 
   const closeGuided = () => {
     setShowGuided(false);
-    if (guidedButtonRef.current) {
+    if (toolbarFirstButtonRef.current) {
       setTimeout(() => {
-        if (guidedButtonRef.current) {
-          guidedButtonRef.current.focus();
+        if (toolbarFirstButtonRef.current) {
+          toolbarFirstButtonRef.current.focus();
         }
       }, 0);
     }
@@ -298,21 +297,20 @@ export default function DocumentViewer({ artifact }) {
                   >
                     <button
                       type="button"
-                      onClick={openTranscript}
-                      className="carousel-btn"
-                      aria-label="Open document transcript"
-                      ref={toolbarFirstButtonRef}
-                    >
-                      Transcript
-                    </button>
-                    <button
-                      type="button"
                       onClick={openGuided}
                       className="carousel-btn"
                       aria-label="Open document guided description"
-                      ref={guidedButtonRef}
+                      ref={toolbarFirstButtonRef}
                     >
                       Guided Description
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openTranscript}
+                      className="carousel-btn"
+                      aria-label="Open document transcript"
+                    >
+                      Transcript
                     </button>
                     <button
                       type="button"

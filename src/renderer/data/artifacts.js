@@ -232,14 +232,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
             alt: "Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface"
           }
         ],
-        transcriptTitle: "Transcript",
-        transcriptText: `Red and black lacquer New Year's luncheon set; black lacquer with gold symbols and carved abalone inlays, all set in carrying stand with brass top handle; six drawers (boxes), one with cover, one medium size tray, five small ones, removable flask holder, pair of pewter cylinder flasks with top handles inlaid with red glass; interior of drawers in red lacquer.
-
-Gift from Kazuo Honma, Founder of Japanese Braille Library.  The Japan Braille Library was founded on November 10, 1940, by Honma,  a 25-year-old man who had been blind since childhood.  The library building was destroyed during WWII and rebuilt in Tokyo in 1948.
-
-The lacquer luncheon set is shown fully assembled in its carrying stand. The exterior is dark lacquer with gold decorative patterns and areas of abalone inlay. A brass handle is attached at the top of the stand. Several stacked drawers and trays are fitted into the left side, and a pewter flask is positioned in an open compartment on the right. Additional gold patterns appear along the sides and base of the stand.
-
-The lacquer luncheon set is shown fully assembled in its carrying stand, viewed from the front. The dark lacquer exterior features gold decorative patterns and abalone inlays across the drawers and side panels. A brass handle is visible at the top. A pewter flask is positioned in an open compartment on the right side of the stand. The stacked drawers and trays are visible on the left.`,
+        
         guidedDescription:
           "A black lacquer luncheon set features gold decorations showing plants, symbols, and designs. Golden and carved abalone inlays show birds facing each other in a triangular pattern. An outer carrying stand with brass top handle holds six drawers, each with a red interior. One medium sized tray, five smaller trays, a removable bottle holder, and a pair of pewter cylinder bottles all fit into the carrying stand."
       },
@@ -254,9 +247,9 @@ The lacquer luncheon set is shown fully assembled in its carrying stand, viewed 
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
           { src: "3A3Bantu2.jpeg", alt: "Another view of Helen Keller's meeting with the Bantu Chief" }
-        ],
-        transcriptTitle: "Transcript",
-        transcriptText: `Taken outdoors in the sunshine during Helen Keller's visit to South Africa. Photographed standing left to right are a Bantu Chieftan, Keller, the Bantu Chieftan's wife and Polly Thomson. Keller was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. They are standing in front of a wall. Keller has her hand on the tip of the sword the chieftan is holding. The Bantu couple are wearing traditional beaded garments and head pieces. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes. [Typed caption: Helen Keller opened the Duncan Village Community Center for the Bantu people, East London, Cape Province. Her picture was taken with a tribal chief and his wife.]
+          ],
+          transcriptTitle: "Transcript",
+          transcriptText: `Taken outdoors in the sunshine during Helen Keller's visit to South Africa. Photographed standing left to right are a Bantu Chieftan, Keller, the Bantu Chieftan's wife and Polly Thomson. Keller was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. They are standing in front of a wall. Keller has her hand on the tip of the sword the chieftan is holding. The Bantu couple are wearing traditional beaded garments and head pieces. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes. [Typed caption: Helen Keller opened the Duncan Village Community Center for the Bantu people, East London, Cape Province. Her picture was taken with a tribal chief and his wife.]
 
 [Stamped: "WYNDON PHOTOS" S.A.N.L.A.M. BLDGS., FOR REPRINT QUOTE (followed by a blank line) EAST LONDON. PHONE 2633]
 

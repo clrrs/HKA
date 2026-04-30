@@ -218,21 +218,21 @@ export default function ArtifactVideoOverlay({
           </button>
           <button
             type="button"
-            onClick={openTranscript}
-            ref={transcriptButtonRef}
-            className="artifact-video-control-btn"
-            aria-label="Open transcript"
-          >
-            Transcript
-          </button>
-          <button
-            type="button"
             onClick={openGuided}
             ref={guidedButtonRef}
             className="artifact-video-control-btn"
             aria-label="Open guided description"
           >
             Guided Description
+          </button>
+          <button
+            type="button"
+            onClick={openTranscript}
+            ref={transcriptButtonRef}
+            className="artifact-video-control-btn"
+            aria-label="Open transcript"
+          >
+            Transcript
           </button>
           <button
             type="button"

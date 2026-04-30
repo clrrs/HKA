@@ -245,6 +245,13 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   }, [subscene, showGuided, showTranscript, announce]);
 
   const currentImage = images.length > 0 ? images[currentIndex] : null;
+  const hasTranscript = typeof transcriptText === "string" && transcriptText.trim().length > 0;
+
+  useEffect(() => {
+    if (!hasTranscript && showTranscript) {
+      setShowTranscript(false);
+    }
+  }, [hasTranscript, showTranscript]);
 
   const openGuided = () => {
     if (!currentImage) return;
@@ -380,6 +387,20 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
               {currentImage && (
                 <button
                   type="button"
+                  onClick={openGuided}
+                  className="carousel-btn carousel-guided-btn"
+                  aria-label="Open guided description for current image"
+                  ref={guidedButtonRef}
+                  data-autofocus={
+                    !speechMode && images.length <= 1 && !hasTranscript ? "" : undefined
+                  }
+                >
+                  Guided Description
+                </button>
+              )}
+              {currentImage && hasTranscript && (
+                <button
+                  type="button"
                   onClick={() => {
                     setShowTranscript(true);
                     setShowGuided(false);
@@ -391,17 +412,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
                 >
                   Transcript
-                </button>
-              )}
-              {currentImage && (
-                <button
-                  type="button"
-                  onClick={openGuided}
-                  className="carousel-btn carousel-guided-btn"
-                  aria-label="Open guided description for current image"
-                  ref={guidedButtonRef}
-                >
-                  Guided Description
                 </button>
               )}
               {currentImage && (
@@ -453,7 +463,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                 </div>
               </div>
             )}
-            {showTranscript && (
+            {showTranscript && hasTranscript && (
               <div className="carousel-guided-overlay">
                 <div
                   className="carousel-guided-modal"
@@ -492,7 +502,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                         resetTranscriptAnchors();
                       }}
                     >
-                      <p>{textOrMissing(transcriptText)}</p>
+                      <p>{transcriptText}</p>
                     </div>
                   </div>
                 </div>
