@@ -21,12 +21,13 @@ function getThumbnailSrc(artifact) {
 }
 
 export default function TravelScene() {
-  const { goToScene, goBack, currentTheme, speechMode } = useAppState();
+  const { goToScene, currentTheme, speechMode } = useAppState();
   const theme = getTheme(currentTheme);
 
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const circleRefs = useRef([]);
   const headingRef = useRef(null);
+  const themesButtonRef = useRef(null);
   const carouselRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
   focusedIndexRef.current = focusedIndex;
@@ -77,11 +78,16 @@ export default function TravelScene() {
         active &&
         active.classList &&
         active.classList.contains("travel-heading-inner");
+      const onThemesButton = active === themesButtonRef.current;
 
       if (isBack && idx < 0 && onTitle) {
         e.preventDefault();
         e.stopPropagation();
-        goToScene("home");
+        themesButtonRef.current?.focus();
+      } else if (isBack && onThemesButton) {
+        e.preventDefault();
+        e.stopPropagation();
+        headingRef.current?.focus();
       }
       return;
     }
@@ -110,16 +116,29 @@ export default function TravelScene() {
       }
     } else {
       if (idx < 0) {
-        // From the idle/heading state, Back should return to the
-        // theme selector (home) rather than the quote scene.
-        goToScene("home");
+        const active = document.activeElement;
+        const onTitle =
+          active &&
+          active.classList &&
+          active.classList.contains("travel-heading-inner");
+        const onThemesButton = active === themesButtonRef.current;
+
+        if (onTitle) {
+          themesButtonRef.current?.focus();
+        } else if (onThemesButton) {
+          // Loop within page: back from Themes returns to title.
+          headingRef.current?.focus();
+        } else {
+          // Fallback: keep prior behavior if focus is elsewhere.
+          goToScene("home");
+        }
       } else if (idx === 0) {
         headingRef.current?.focus();
       } else {
         circleRefs.current[idx - 1]?.focus();
       }
     }
-  }, [goToScene, goBack, showCarousel, artifacts, speechMode]);
+  }, [goToScene, showCarousel, artifacts, speechMode]);
 
   if (!theme) {
     return (
@@ -215,6 +234,21 @@ export default function TravelScene() {
           ))}
         </div>
       )}
+
+      <div className="artifact-nav">
+        <div className="artifact-nav-left">
+          <button
+            ref={themesButtonRef}
+            className="nav-btn nav-btn-icon-white"
+            onClick={() => goToScene("home")}
+            aria-label="Back to themes"
+            data-autofocus={speechMode ? undefined : true}
+          >
+            <img src="./Menu.svg" alt="" aria-hidden="true" />
+            Themes
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

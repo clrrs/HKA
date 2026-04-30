@@ -2041,6 +2041,14 @@ h1[tabindex]:focus-visible {
   overflow: hidden;
 }
 
+.travel-scene .artifact-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+}
+
 /* --- Left info panel --- */
 .travel-heading {
   position: absolute;
