@@ -1,4 +1,28 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+
+const TEST_EASTER_EGG_MESSAGES = [
+  "thank you for trying to break something!",
+  "nice try, carry on",
+  "thank you for bug hunting.",
+];
+
+const TEST_EASTER_EGG_IMAGES = [
+  "/zz_testingMaterials/catOfTechnology.jpeg",
+  "/zz_testingMaterials/catOfSadness.jpg",
+  "/zz_testingMaterials/catOfBug.jpeg",
+];
+
+const TEST_EASTER_EGG_SFX = [
+  "/zz_testingMaterials/testsfx1.mp3",
+  "/zz_testingMaterials/testsfx2.mp3",
+  "/zz_testingMaterials/testsfx3.mp3",
+];
 
 const DEFAULT_PREFS = {
   textSize: "medium",
@@ -60,6 +84,33 @@ export default function StateProvider({ children }) {
 
   const [previousScene, setPreviousScene] = useState("start");
 
+  const [idleTimeoutDisabled, setIdleTimeoutDisabled] = useState(false);
+  const toggleIdleTimeoutDisabled = () =>
+    setIdleTimeoutDisabled((prev) => !prev);
+
+  const [testEasterEgg, setTestEasterEgg] = useState(null);
+
+  const triggerTestEasterEgg = useCallback(() => {
+    setTestEasterEgg({
+      message:
+        TEST_EASTER_EGG_MESSAGES[
+          Math.floor(Math.random() * TEST_EASTER_EGG_MESSAGES.length)
+        ],
+      imageSrc:
+        TEST_EASTER_EGG_IMAGES[
+          Math.floor(Math.random() * TEST_EASTER_EGG_IMAGES.length)
+        ],
+      audioSrc:
+        TEST_EASTER_EGG_SFX[
+          Math.floor(Math.random() * TEST_EASTER_EGG_SFX.length)
+        ],
+    });
+  }, []);
+
+  const dismissTestEasterEgg = useCallback(() => {
+    setTestEasterEgg(null);
+  }, []);
+
   useEffect(() => {
     document.documentElement.dataset.speechMode = speechMode ? "on" : "off";
   }, [speechMode]);
@@ -72,6 +123,7 @@ export default function StateProvider({ children }) {
     setPrefs(DEFAULT_PREFS);
     setShowSettings(false);
     setPreviousScene("attract");
+    setTestEasterEgg(null);
     try {
       localStorage.removeItem("prefs");
     } catch {
@@ -80,9 +132,10 @@ export default function StateProvider({ children }) {
   };
 
   const goBack = () => {
-    if (subscene === "zoom") {
-      setSubscene("expanded");
-    } else if (subscene === "expanded") {
+    // if (subscene === "zoom") {
+    //   setSubscene("expanded");
+    // } else
+    if (subscene === "expanded") {
       setSubscene(null);
     } else if (scene === "artifact") {
       setScene("travel");
@@ -125,7 +178,12 @@ export default function StateProvider({ children }) {
       setVideoOverlayOpen,
       speechMode,
       toggleSpeechMode,
-      resetToStart
+      resetToStart,
+      idleTimeoutDisabled,
+      toggleIdleTimeoutDisabled,
+      testEasterEgg,
+      triggerTestEasterEgg,
+      dismissTestEasterEgg
     }}>
       {children}
     </AppState.Provider>

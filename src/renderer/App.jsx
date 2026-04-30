@@ -33,12 +33,47 @@ function getIdleDismissAnnouncement(el) {
 
 export default function App() {
   useKeyboardNav();
-  const { scene, showSettings, toggleSettings, resetToStart, videoOverlayOpen, speechMode } = useAppState();
+  const {
+    scene,
+    showSettings,
+    toggleSettings,
+    resetToStart,
+    videoOverlayOpen,
+    speechMode,
+    idleTimeoutDisabled,
+    testEasterEgg,
+    dismissTestEasterEgg,
+  } = useAppState();
   const announce = useAnnounce();
   const [idleCountdown, setIdleCountdown] = useState(null);
   const lastActivityRef = useRef(Date.now());
   const warningVisibleRef = useRef(false);
   const settingsPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (!testEasterEgg) return;
+    const openedAt = Date.now();
+    const audio = new Audio(testEasterEgg.audioSrc);
+    audio.play().catch(() => {});
+    const timeoutId = window.setTimeout(() => {
+      dismissTestEasterEgg();
+    }, 5000);
+
+    const handleEarlyDismiss = (e) => {
+      if (Date.now() - openedAt < 200) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dismissTestEasterEgg();
+    };
+
+    window.addEventListener("keydown", handleEarlyDismiss, true);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      audio.pause();
+      window.removeEventListener("keydown", handleEarlyDismiss, true);
+    };
+  }, [testEasterEgg, dismissTestEasterEgg]);
 
   const rescale = useCallback(() => {
     const el = document.getElementById("app-scaler");
@@ -62,6 +97,13 @@ export default function App() {
       setIdleCountdown(null);
       warningVisibleRef.current = false;
       lastActivityRef.current = Date.now();
+      return;
+    }
+
+    // Test shortcut 0: pause idle timeout until 0 is pressed again (in-memory; resets on refresh)
+    if (idleTimeoutDisabled) {
+      setIdleCountdown(null);
+      warningVisibleRef.current = false;
       return;
     }
 
@@ -133,7 +175,7 @@ export default function App() {
       window.removeEventListener("keydown", handleKeydownCapture, true);
       clearInterval(intervalId);
     };
-  }, [resetToStart, scene, videoOverlayOpen, speechMode, announce]);
+  }, [resetToStart, scene, videoOverlayOpen, speechMode, announce, idleTimeoutDisabled]);
 
   const handleSettingsKeyDown = (e) => {
     if (e.repeat) return;
@@ -210,6 +252,26 @@ export default function App() {
             >
               <h2 id="accessibility-settings-title">Accessibility Settings</h2>
               <AccessibilityMenu />
+            </div>
+          </div>
+        )}
+        {testEasterEgg && (
+          <div
+            className="test-easter-egg-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="test-easter-egg-message"
+            aria-live="assertive"
+          >
+            <div className="test-easter-egg-card">
+              <img
+                className="test-easter-egg-image"
+                src={testEasterEgg.imageSrc}
+                alt=""
+              />
+              <p id="test-easter-egg-message" className="test-easter-egg-message">
+                {testEasterEgg.message}
+              </p>
             </div>
           </div>
         )}

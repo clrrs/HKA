@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { useAppState } from "../../state/StateProvider";
 
 const TESTING_ADVENTURE_ONLY = false;
@@ -31,13 +32,69 @@ function getTrackTranslateX(focusedIndex) {
 }
 
 export default function HomeScene() {
-  const { goToScene } = useAppState();
+  const { goToScene, setVideoOverlayOpen } = useAppState();
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [showVideo, setShowVideo] = useState(false);
   const circleRefs = useRef([]);
   const headingRef = useRef(null);
   const carouselRef = useRef(null);
+  const helpButtonRef = useRef(null);
+  const modalRef = useRef(null);
+  const videoRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
   focusedIndexRef.current = focusedIndex;
+  useHeadphoneSinkEffect(videoRef, showVideo);
+
+  useEffect(() => {
+    if (!showVideo || !modalRef.current) return;
+
+    const container = modalRef.current;
+    const focusableSelector =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    const handleKeyDown = (e) => {
+      if (e.repeat) return;
+      if (e.key !== "Tab") return;
+
+      const focusables = container.querySelectorAll(focusableSelector);
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+
+    const focusables = container.querySelectorAll(focusableSelector);
+    if (focusables.length > 0) {
+      focusables[0].focus();
+    }
+
+    return () => {
+      container.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showVideo]);
+
+  const openVideo = () => {
+    setShowVideo(true);
+    setVideoOverlayOpen(true);
+  };
+
+  const closeVideo = () => {
+    setShowVideo(false);
+    setVideoOverlayOpen(false);
+    if (helpButtonRef.current) {
+      helpButtonRef.current.focus();
+    }
+  };
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");
@@ -68,6 +125,7 @@ export default function HomeScene() {
 
   const handleSceneKeyDown = useCallback((e) => {
     if (e.repeat) return;
+    if (showVideo) return;
     const isNext = (e.key === "Tab" && !e.shiftKey) || e.key === "l";
     const isBack = (e.key === "Tab" && e.shiftKey) || e.key === "k";
     const isSelect = e.key === "Enter" || e.key === "j";
@@ -89,8 +147,15 @@ export default function HomeScene() {
 
     if (isNext) {
       if (idx < 0) {
-        showCarousel();
-        circleRefs.current[0]?.focus();
+        const active = document.activeElement;
+        const isOnHelpButton =
+          active && active.classList && active.classList.contains("home-help-btn");
+        if (isOnHelpButton) {
+          headingRef.current?.focus();
+        } else {
+          showCarousel();
+          circleRefs.current[0]?.focus();
+        }
       } else if (idx < themes.length - 1) {
         circleRefs.current[idx + 1]?.focus();
       } else {
@@ -98,20 +163,34 @@ export default function HomeScene() {
       }
     } else {
       if (idx < 0) {
-        goToScene("start");
+        const active = document.activeElement;
+        const isOnHelpButton =
+          active && active.classList && active.classList.contains("home-help-btn");
+        if (!isOnHelpButton) {
+          helpButtonRef.current?.focus();
+        }
       } else if (idx === 0) {
         headingRef.current?.focus();
       } else {
         circleRefs.current[idx - 1]?.focus();
       }
     }
-  }, [goToScene, showCarousel]);
+  }, [goToScene, showCarousel, showVideo]);
 
   const hasFocus = focusedIndex >= 0;
 
   return (
     <div className="home-scene" onKeyDown={handleSceneKeyDown}>
       <div className="home-bg" aria-hidden="true" />
+      <button
+        ref={helpButtonRef}
+        type="button"
+        className="nav-btn icon-btn home-help-btn"
+        aria-label="Watch instructional video"
+        onClick={openVideo}
+      >
+        <img src="./InformationIcon.svg" alt="" aria-hidden="true" />
+      </button>
 
       <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
         <div
@@ -164,6 +243,36 @@ export default function HomeScene() {
               className={`theme-indicator ${focusedIndex === i ? "active" : ""}`}
             />
           ))}
+        </div>
+      )}
+
+      {showVideo && (
+        <div
+          className="start-video-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Instructional video"
+        >
+          <div className="start-video-backdrop" />
+          <div className="start-video-modal" ref={modalRef}>
+            <button
+              type="button"
+              className="exit-pill-btn start-video-exit-btn"
+              onClick={closeVideo}
+              aria-label="Close instructional video"
+            >
+              Exit
+            </button>
+            <div className="start-video-body">
+              <video
+                ref={videoRef}
+                src="3HK7_Instructional-VO_v03-260312_SMALL.mp4"
+                onEnded={closeVideo}
+                autoPlay
+                tabIndex={0}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

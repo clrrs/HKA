@@ -11,7 +11,7 @@ Helen Keller Archive
 3. Run the installer. It will install and launch the app
 4. (Optional, since you will have to repeat this step for every release) To pin the Electron app to the taskbar, hit Windows+Tab to minimize, then right click on the Electron icon in the taskbar. Click "Pin to Taskbar"
 
-*BTW I added keyboard shortcuts for testing. Use 1,2,3 to skip to different pages quickly.*
+*BTW I added keyboard shortcuts for testing. Use **1**, **2**, **3** to skip to different pages quickly. **0** toggles the idle-timeout timer off and on (again with **0**); that state is only in memory and resets when you reload the app or refresh the page.*
 
 ### NVDA (Screen Reader)
 

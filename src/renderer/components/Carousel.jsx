@@ -3,7 +3,7 @@ import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { getElementSummary, logInputEvent } from "../state/interactionLog";
 import { textOrMissing } from "../data/contentPlaceholder";
-import ZoomControls from "./ZoomControls";
+// import ZoomControls from "./ZoomControls";
 import { useStepScroll } from "./useStepScroll";
 
 // Focus trap hook - keeps tab cycling within a container
@@ -63,7 +63,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   const carouselRef = useRef(null);
   const surfaceRef = useRef(null);
   const expandedRef = useRef(null);
-  const zoomRef = useRef(null);
+  // const zoomRef = useRef(null);
   const guidedRef = useRef(null);
   const guidedButtonRef = useRef(null);
   const {
@@ -82,7 +82,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   } = useStepScroll();
 
   useFocusTrap(expandedRef, subscene === "expanded" && !showGuided && !showTranscript);
-  useFocusTrap(zoomRef, subscene === "zoom");
+  // useFocusTrap(zoomRef, subscene === "zoom");
   useFocusTrap(guidedRef, showGuided);
   useFocusTrap(transcriptRef, showTranscript);
 
@@ -141,15 +141,15 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     setCurrentIndex(0);
   };
 
-  const enterZoom = () => {
-    setSubscene("zoom");
-    announce("Zoom mode. Use controls to zoom and pan.", { politeness: "assertive" });
-  };
+  // const enterZoom = () => {
+  //   setSubscene("zoom");
+  //   announce("Zoom mode. Use controls to zoom and pan.", { politeness: "assertive" });
+  // };
 
-  const exitZoom = () => {
-    setSubscene("expanded");
-    announce("Exited zoom mode.");
-  };
+  // const exitZoom = () => {
+  //   setSubscene("expanded");
+  //   announce("Exited zoom mode.");
+  // };
 
   const handleKeyDown = (e) => {
     if (e.repeat) return;
@@ -210,18 +210,18 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
               transcriptButtonRef.current && transcriptButtonRef.current.focus();
             }, 0);
           }
-        } else if (subscene === "zoom") {
-          if (scene === "artifact") {
-            logInputEvent({
-              source: "Carousel",
-              scene,
-              subscene,
-              key: "escape",
-              action: "exit-zoom",
-              target: getElementSummary(document.activeElement),
-            });
-          }
-          exitZoom();
+        // } else if (subscene === "zoom") {
+        //   if (scene === "artifact") {
+        //     logInputEvent({
+        //       source: "Carousel",
+        //       scene,
+        //       subscene,
+        //       key: "escape",
+        //       action: "exit-zoom",
+        //       target: getElementSummary(document.activeElement),
+        //     });
+        //   }
+        //   exitZoom();
         } else if (subscene === "expanded") {
           if (scene === "artifact") {
             logInputEvent({
@@ -242,7 +242,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [subscene, showGuided, showTranscript, announce, exitZoom]);
+  }, [subscene, showGuided, showTranscript, announce]);
 
   const currentImage = images.length > 0 ? images[currentIndex] : null;
 
@@ -368,15 +368,15 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   </button>
                 </>
               )}
-              <button 
-                type="button" 
+              {/* <button
+                type="button"
                 onClick={enterZoom}
                 aria-label="Zoom"
                 className="carousel-btn carousel-btn-icon"
                 data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
               >
                 <img src="./Zoom.svg" alt="" aria-hidden="true" />
-              </button>
+              </button> */}
               {currentImage && (
                 <button
                   type="button"
@@ -388,6 +388,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   className="carousel-btn"
                   aria-label="Open transcript for current image"
                   ref={transcriptButtonRef}
+                  data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
                 >
                   Transcript
                 </button>
@@ -501,15 +502,16 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
         </div>
       )}
 
-      {/* Layer 3: Zoom Mode */}
+      {/* Layer 3: Zoom Mode (disabled — restore with ZoomControls + zoom button above)
       {subscene === "zoom" && (
         <div className="carousel-layer carousel-zoom" ref={zoomRef}>
-          <ZoomControls 
+          <ZoomControls
             image={currentImage}
             onExit={exitZoom}
           />
         </div>
       )}
+      */}
 
     </div>
   );

@@ -4,7 +4,7 @@ export const themes = {
     number: 1,
     label: "Change",
     quote: "\u201CThe power of effecting changes for the better is within ourselves\u2026\u201D",
-    description: "Helen Keller was a life-long advocate for change across society. Beginning with her fundraising campaign as a 10-year-old student, Helen was an advocate for voting, labor, and economic rights, in addition to working for several decades to advocate for people who were blind and deafblind. \u201CThe power of effecting changes for the better is within ourselves\u2026\u201D",
+    description: "Helen Keller was a life-long advocate for change across society. Beginning with her fundraising campaign as a 10-year-old student, Helen was an advocate for voting, labor, and economic rights, in addition to working for several decades to advocate for people who were blind and deafblind.",
     artifacts: [
       {
         id: "1A1",
@@ -95,7 +95,7 @@ export const themes = {
     number: 2,
     label: "Together",
     quote: "\u201CTogether we can do so much.\u201D",
-    description: "Relationships were an essential part of Helen Keller\u2019s growth, education, and her accomplishments. Through friends across both society and the globe, known and unknown, Helen knew that collaboration was the key to success. \u201CTogether we can do so much.\u201D",
+    description: "Relationships were an essential part of Helen Keller\u2019s growth, education, and her accomplishments. Through friends across both society and the globe, known and unknown, Helen knew that collaboration was the key to success.",
     artifacts: [
       {
         id: "2A1",
