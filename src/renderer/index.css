@@ -178,10 +178,16 @@ body {
   position: relative;
   transform-origin: center center;
   overflow: hidden;
-  background-color: var(--bg-primary);
-  background-image: url('/BG_Vignette.png');
-  background-size: cover;
-  background-position: center;
+  background-color: #050505;
+  background-image:
+    radial-gradient(
+      ellipse 140% 105% at 50% 48%,
+      rgba(92, 92, 92, 0.45) 0%,
+      rgba(58, 58, 58, 0.28) 34%,
+      rgba(22, 22, 22, 0.82) 68%,
+      rgba(0, 0, 0, 1) 100%
+    ),
+    linear-gradient(180deg, #111215 0%, #060606 100%);
   outline: 2px solid white;
 }
 
@@ -436,6 +442,7 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  gap: 12px;
   min-height: 0;
   padding: 0 80px 0;
   box-sizing: border-box;
@@ -460,13 +467,12 @@ body {
 }
 
 .document-toolbar-arrows {
-  position: absolute;
-  left: 164px;
-  bottom: 0;
+  position: static;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .document-arrow-disabled,
@@ -596,6 +602,7 @@ body {
 }
 
 .artifact-text p {
+  font-weight: 300;
   font-size: calc(30px * var(--text-scale));
   line-height: 1.55;
 }
@@ -2054,7 +2061,7 @@ h1[tabindex]:focus-visible {
   position: absolute;
   z-index: 1;
   left: 84px;
-  top: 200px;
+  top: 260px;
   transform: none;
   max-width: 756px;
   transition: transform 0.55s ease-in-out, opacity 0.45s ease-in-out;
@@ -2071,13 +2078,14 @@ h1[tabindex]:focus-visible {
   display: block;
   color: var(--text-heading);
   font-weight: 400;
-  font-size: calc(58px * var(--text-scale));
-  letter-spacing: -0.02em;
+  font-size: calc(74px * var(--text-scale));
+ /* letter-spacing: -0.02em; */
   line-height: 1.1;
   margin-bottom: 24px;
 }
 
 .travel-description {
+  font-weight: 300;
   font-size: calc(30px * var(--text-scale));
   line-height: 1.55;
   color: var(--text-primary);
@@ -2119,7 +2127,10 @@ h1[tabindex]:focus-visible {
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.4s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .artifact-circle:focus-visible {
@@ -2131,24 +2142,59 @@ h1[tabindex]:focus-visible {
   inset: 0;
   border-radius: 50%;
   background: var(--color-black);
-  border: 3px solid var(--text-primary);
-  transition: background-color 0.4s ease, border-color 0.4s ease;
+  border: 2px solid var(--text-primary);
+  transition:
+    background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Artifact image — same placement as theme circles, fit within a fixed zone so all thumbnails align */
 .artifact-circle-img {
   position: absolute;
-  width: 110%;
-  max-width: 660px;
+  width: 100%;
+  max-width: 560px;
   max-height: 320px;
   height: auto;
-  top: 35%;
+  top: 40%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   object-fit: contain;
   object-position: center;
   pointer-events: none;
   z-index: 1;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.artifact-circle-img--full-visible {
+  width: 92%;
+  max-width: 500px;
+  max-height: 260px;
+  object-fit: contain;
+}
+
+/* Layered carousel effect while navigating artifacts */
+.artifact-circles--active .artifact-circle {
+  transform: scale(0.96);
+  opacity: 0.76;
+  filter: brightness(0.72);
+}
+
+.artifact-circles--active .artifact-circle--focused {
+  transform: scale(1.14);
+  opacity: 1;
+  filter: none;
+  z-index: 2;
+}
+
+/* Focused artifact thumbnail can grow and slightly overflow the bubble */
+.artifact-circle--focused .artifact-circle-img {
+  transform: translate(-50%, -46%) scale(1.2);
+}
+
+/* Keep Global Travel Schedule fully visible even when focused */
+.artifact-circle--focused .artifact-circle-img--full-visible {
+  transform: translate(-50%, -47%) scale(1.08);
 }
 
 /* Labels positioned at bottom of circle */
@@ -2171,7 +2217,7 @@ h1[tabindex]:focus-visible {
   font-size: 26px;
   color: var(--text-primary);
   letter-spacing: 0.02em;
-  transition: color 0.4s ease;
+  transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .artifact-label-title {
@@ -2180,7 +2226,7 @@ h1[tabindex]:focus-visible {
   font-size: clamp(24px, 32px, 32px);
   line-height: 1.2;
   color: var(--text-primary);
-  transition: color 0.4s ease;
+  transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   max-width: 420px;
   overflow-wrap: break-word;
 }
@@ -2190,7 +2236,7 @@ h1[tabindex]:focus-visible {
   font-weight: 400;
   font-size: 26px;
   color: var(--text-primary);
-  transition: color 0.4s ease;
+  transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* --- Focused state --- */

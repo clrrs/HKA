@@ -4,6 +4,7 @@ import AccessibilityMenu from "./components/AccessibilityMenu";
 import { useKeyboardNav } from "./state/useSceneManager";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
+import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -54,6 +55,7 @@ export default function App() {
     if (!testEasterEgg) return;
     const openedAt = Date.now();
     const audio = new Audio(testEasterEgg.audioSrc);
+    stopNvdaSpeechForMediaStart();
     audio.play().catch(() => {});
     const timeoutId = window.setTimeout(() => {
       dismissTestEasterEgg();

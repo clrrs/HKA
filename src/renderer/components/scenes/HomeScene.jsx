@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
+import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 
 const TESTING_ADVENTURE_ONLY = false;
@@ -267,6 +268,7 @@ export default function HomeScene() {
               <video
                 ref={videoRef}
                 src="3HK7_Instructional_v02-260430-ColorSpaceTest.mp4"
+                onPlay={stopNvdaSpeechForMediaStart}
                 onEnded={closeVideo}
                 autoPlay
                 tabIndex={0}

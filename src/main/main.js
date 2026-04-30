@@ -85,6 +85,14 @@ ipcMain.on("volume-down", () => {
   );
 });
 
+// Stop current NVDA speech immediately (Ctrl)
+ipcMain.on("stop-speech", () => {
+  sendKeys(
+    "[KbdEvent]::keybd_event(0x11,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0x11,0,2,[UIntPtr]::Zero)"
+  );
+});
+
 app.whenReady().then(() => {
   ensurePowerShell();
   createWindow();

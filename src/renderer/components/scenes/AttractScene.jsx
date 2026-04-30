@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { useAudioRouting } from "../../audio/AudioRoutingProvider";
 import { setMediaSink } from "../../audio/audioRoutingCore";
+import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 
 // Test: aria-braillelabel (React: ariaBrailleLabel) — braille-specific string vs aria-label for speech.
 const ATTRACT_BRAILLE_LABEL_TEST =
@@ -31,6 +32,7 @@ export default function AttractScene({ isActive }) {
     const onPlay = () => {
       slave.currentTime = master.currentTime;
       if (speakerSinkId) {
+        stopNvdaSpeechForMediaStart();
         slave.play().catch(() => {});
       }
     };
@@ -76,6 +78,7 @@ export default function AttractScene({ isActive }) {
       if (isActive) {
         master.currentTime = 0;
         slave.currentTime = 0;
+        stopNvdaSpeechForMediaStart();
         master.play().catch((err) => {
           // eslint-disable-next-line no-console
           console.log("[AttractScene] play() error", err);
@@ -130,6 +133,7 @@ export default function AttractScene({ isActive }) {
         ref={videoRef}
         className="attract-video"
         src={ATTRACT_SRC}
+        onPlay={stopNvdaSpeechForMediaStart}
         loop
         playsInline
         tabIndex={-1}
@@ -139,6 +143,7 @@ export default function AttractScene({ isActive }) {
         ref={mirrorRef}
         className="attract-video attract-video-audio-mirror"
         src={ATTRACT_SRC}
+        onPlay={stopNvdaSpeechForMediaStart}
         loop
         playsInline
         tabIndex={-1}

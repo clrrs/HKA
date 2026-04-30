@@ -14,10 +14,27 @@ function getTrackTranslateX(focusedIndex) {
   return SCREEN_CENTER - itemCenter;
 }
 
-function getThumbnailSrc(artifact) {
+function getDefaultThumbnailSrc(artifact) {
   if (artifact.type === "video" && artifact.posterSrc) return `./${artifact.posterSrc}`;
   if (artifact.images && artifact.images.length > 0) return `./${artifact.images[0].src}`;
   return null;
+}
+
+function getThumbnailSources(artifact) {
+  const fallbackSrc = getDefaultThumbnailSrc(artifact);
+
+  // Adventure artifacts use designer-provided bubble thumbnails in /public.
+  if (artifact?.id?.startsWith("3A")) {
+    return {
+      src: `./${artifact.id}_thumbnail.png`,
+      fallbackSrc
+    };
+  }
+
+  return {
+    src: fallbackSrc,
+    fallbackSrc: null
+  };
 }
 
 export default function TravelScene() {
@@ -191,11 +208,11 @@ export default function TravelScene() {
         <div
           role="list"
           aria-label="Artifact selection"
-          className="artifact-circles"
+          className={`artifact-circles ${hasFocus ? "artifact-circles--active" : ""}`}
           style={{ transform: `translateX(${getTrackTranslateX(focusedIndex)}px)` }}
         >
           {artifacts.map((artifact, i) => {
-            const thumbSrc = getThumbnailSrc(artifact);
+            const { src: thumbSrc, fallbackSrc } = getThumbnailSources(artifact);
             return (
               <div role="listitem" key={artifact.id}>
                 <button
@@ -209,7 +226,18 @@ export default function TravelScene() {
                 >
                   <span className="artifact-circle-inner" aria-hidden="true" />
                   {thumbSrc && (
-                    <img className="artifact-circle-img" src={thumbSrc} alt="" aria-hidden="true" />
+                    <img
+                      className={`artifact-circle-img ${artifact.id === "3A4" ? "artifact-circle-img--full-visible" : ""}`}
+                      src={thumbSrc}
+                      alt=""
+                      aria-hidden="true"
+                      onError={(e) => {
+                        if (!fallbackSrc) return;
+                        if (e.currentTarget.dataset.fallbackApplied === "true") return;
+                        e.currentTarget.dataset.fallbackApplied = "true";
+                        e.currentTarget.src = fallbackSrc;
+                      }}
+                    />
                   )}
                   <span className="artifact-circle-labels" aria-hidden="true">
                     <span className="artifact-label-title">{artifact.displayTitle}</span>

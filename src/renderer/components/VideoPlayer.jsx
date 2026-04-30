@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
+import { stopNvdaSpeechForMediaStart } from "../audio/nvdaSpeechControl";
 import { textOrMissing } from "../data/contentPlaceholder";
 import { useStepScroll } from "./useStepScroll";
 
@@ -26,6 +27,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
   useHeadphoneSinkEffect(videoRef, src);
 
   const play = () => {
+    stopNvdaSpeechForMediaStart();
     videoRef.current?.play();
     setIsPlaying(true);
   };
@@ -65,6 +67,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
         ref={videoRef}
         src={src}
         poster={poster}
+        onPlay={stopNvdaSpeechForMediaStart}
         onEnded={handleEnded}
         tabIndex={0}
         aria-label="Video player"

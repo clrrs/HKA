@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
+import { stopNvdaSpeechForMediaStart } from "../audio/nvdaSpeechControl";
 import { useAppState } from "../state/StateProvider";
 import { textOrMissing } from "../data/contentPlaceholder";
 import { useStepScroll } from "./useStepScroll";
@@ -91,6 +92,7 @@ export default function ArtifactVideoOverlay({
 
   const play = () => {
     if (!videoRef.current) return;
+    stopNvdaSpeechForMediaStart();
     videoRef.current.play();
     setIsPlaying(true);
   };
@@ -192,6 +194,7 @@ export default function ArtifactVideoOverlay({
             ref={videoRef}
             src={src}
             poster={poster}
+            onPlay={stopNvdaSpeechForMediaStart}
             onEnded={handleEnded}
             tabIndex={speechMode ? 0 : -1}
             aria-label={videoAlt || "Video preview"}

@@ -2,7 +2,13 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("kioskApi", {
   send: (channel, data) => {
-    const validChannels = ["toMain", "toggle-tts", "volume-up", "volume-down"];
+    const validChannels = [
+      "toMain",
+      "toggle-tts",
+      "volume-up",
+      "volume-down",
+      "stop-speech",
+    ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }

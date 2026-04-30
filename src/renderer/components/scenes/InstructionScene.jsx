@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
+import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 
 const SKIP_DELAY_SECONDS = 1;
@@ -35,6 +36,7 @@ export default function InstructionScene({ isActive }) {
     const video = videoRef.current;
     if (!video) return;
     if (isActive) {
+      stopNvdaSpeechForMediaStart();
       video.play().catch(() => {});
     } else {
       video.pause();
@@ -65,6 +67,7 @@ export default function InstructionScene({ isActive }) {
           ref={videoRef}
           className="instruction-video"
           src="3HK7_Instructional_v02-260430-ColorSpaceTest.mp4"
+          onPlay={stopNvdaSpeechForMediaStart}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
           tabIndex={-1}

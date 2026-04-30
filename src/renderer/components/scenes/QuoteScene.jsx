@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
+import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme } from "../../data/artifacts";
 
@@ -17,6 +18,7 @@ export default function QuoteScene() {
 
     if (scene === "quote") {
       audioEl.currentTime = 0;
+      stopNvdaSpeechForMediaStart();
       const playPromise = audioEl.play();
       if (playPromise && typeof playPromise.catch === "function") {
         playPromise.catch(() => {});
@@ -72,6 +74,7 @@ export default function QuoteScene() {
       <audio
         ref={audioRef}
         src="AdventureQuoteVO.m4a"
+        onPlay={stopNvdaSpeechForMediaStart}
         preload="auto"
       />
     </div>
