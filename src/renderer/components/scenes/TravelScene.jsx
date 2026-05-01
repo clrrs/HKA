@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme } from "../../data/artifacts";
 
@@ -38,7 +38,13 @@ function getThumbnailSources(artifact) {
 }
 
 export default function TravelScene() {
-  const { goToScene, currentTheme, speechMode } = useAppState();
+  const {
+    goToScene,
+    currentTheme,
+    speechMode,
+    hasVisitedThemeSelection,
+    setHasVisitedThemeSelection
+  } = useAppState();
   const theme = getTheme(currentTheme);
 
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -50,6 +56,12 @@ export default function TravelScene() {
   focusedIndexRef.current = focusedIndex;
 
   const artifacts = theme?.artifacts || [];
+
+  useEffect(() => {
+    if (!hasVisitedThemeSelection) {
+      setHasVisitedThemeSelection(true);
+    }
+  }, [hasVisitedThemeSelection, setHasVisitedThemeSelection]);
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");
@@ -178,7 +190,11 @@ export default function TravelScene() {
           tabIndex={0}
           data-autofocus={true}
           onFocus={handleHeadingFocus}
-          aria-label={speechMode ? `${theme.label}. ${theme.description}. Select an artifact to begin` : undefined}
+          aria-label={speechMode
+            ? (hasVisitedThemeSelection
+              ? `${theme.label}. ${theme.description}. Use arrow keys to choose an artifact.`
+              : `${theme.label}. Use arrow keys to choose an artifact. ${theme.description}`)
+            : undefined}
         >
           <p
             className="travel-title"
@@ -199,7 +215,7 @@ export default function TravelScene() {
             tabIndex={-1}
             aria-hidden={speechMode ? true : undefined}
           >
-            Select an artifact to begin
+            Use arrow keys to select an artifact.
           </h4>
         </div>
       </div>

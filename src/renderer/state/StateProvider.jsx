@@ -81,6 +81,7 @@ export default function StateProvider({ children }) {
 
   const [speechMode, setSpeechMode] = useState(true);
   const toggleSpeechMode = () => setSpeechMode(prev => !prev);
+  const [hasVisitedThemeSelection, setHasVisitedThemeSelection] = useState(false);
 
   const [previousScene, setPreviousScene] = useState("start");
 
@@ -124,6 +125,7 @@ export default function StateProvider({ children }) {
     setShowSettings(false);
     setPreviousScene("attract");
     setTestEasterEgg(null);
+    setHasVisitedThemeSelection(false);
     try {
       localStorage.removeItem("prefs");
     } catch {
@@ -178,6 +180,8 @@ export default function StateProvider({ children }) {
       setVideoOverlayOpen,
       speechMode,
       toggleSpeechMode,
+      hasVisitedThemeSelection,
+      setHasVisitedThemeSelection,
       resetToStart,
       idleTimeoutDisabled,
       toggleIdleTimeoutDisabled,

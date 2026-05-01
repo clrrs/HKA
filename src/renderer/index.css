@@ -2093,9 +2093,9 @@ h1[tabindex]:focus-visible {
 }
 
 .travel-cta {
-  color: var(--text-primary);
+  color: var(--text-heading);
   font-size: calc(30px * var(--text-scale));
-  font-weight: 700;
+  font-weight: 400;
   margin: 0;
 }
 
