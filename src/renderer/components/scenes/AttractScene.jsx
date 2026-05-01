@@ -8,7 +8,7 @@ import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 const ATTRACT_BRAILLE_LABEL_TEST =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
 
-const ATTRACT_SRC = "3HK7_Attract_v02-260227_small.mp4";
+const ATTRACT_SRC = "3HK7_Attract_v03-260501.mp4";
 
 export default function AttractScene({ isActive }) {
   const { goToScene } = useAppState();
