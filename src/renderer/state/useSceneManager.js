@@ -152,12 +152,11 @@ export function useKeyboardNav() {
         return;
       }
 
-      // Home (S) — guard against synthetic S from toggle-tts (Insert+S); disabled on instruction scene
-      if (key === "s") {
-        if (scene === "instruction") return;
+      // Home (S or Home key) — guard against synthetic S from toggle-tts (Insert+S)
+      if (key === "s" || key === "home") {
         if (Date.now() - lastTtsToggleRef.current < 500) return;
         e.preventDefault();
-        goToScene("start");
+        goToScene("home");
         return;
       }
 

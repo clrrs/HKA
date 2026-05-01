@@ -47,6 +47,14 @@ export default function HomeScene() {
   useHeadphoneSinkEffect(videoRef, showVideo);
 
   useEffect(() => {
+    if (!showVideo) return;
+    const video = videoRef.current;
+    if (!video) return;
+    stopNvdaSpeechForMediaStart();
+    video.play().catch(() => {});
+  }, [showVideo]);
+
+  useEffect(() => {
     if (!showVideo || !modalRef.current) return;
 
     const container = modalRef.current;
@@ -268,9 +276,7 @@ export default function HomeScene() {
               <video
                 ref={videoRef}
                 src="3HK7_Instructional_v02-260430-ColorSpaceTest.mp4"
-                onPlay={stopNvdaSpeechForMediaStart}
                 onEnded={closeVideo}
-                autoPlay
                 tabIndex={0}
               />
             </div>
