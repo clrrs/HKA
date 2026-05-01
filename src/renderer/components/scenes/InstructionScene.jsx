@@ -67,7 +67,6 @@ export default function InstructionScene({ isActive }) {
           ref={videoRef}
           className="instruction-video"
           src="3HK7_Instructional_v02-260430-ColorSpaceTest.mp4"
-          onPlay={stopNvdaSpeechForMediaStart}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
           tabIndex={-1}

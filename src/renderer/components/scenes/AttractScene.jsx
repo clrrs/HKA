@@ -32,7 +32,6 @@ export default function AttractScene({ isActive }) {
     const onPlay = () => {
       slave.currentTime = master.currentTime;
       if (speakerSinkId) {
-        stopNvdaSpeechForMediaStart();
         slave.play().catch(() => {});
       }
     };
@@ -105,6 +104,7 @@ export default function AttractScene({ isActive }) {
 
   const handleKeyDown = (e) => {
     if (e.repeat) return;
+    if (e.key === "Control" || e.ctrlKey) return;
     if (advancingRef.current) return;
     advancingRef.current = true;
     e.preventDefault();
@@ -133,7 +133,6 @@ export default function AttractScene({ isActive }) {
         ref={videoRef}
         className="attract-video"
         src={ATTRACT_SRC}
-        onPlay={stopNvdaSpeechForMediaStart}
         loop
         playsInline
         tabIndex={-1}
@@ -143,7 +142,6 @@ export default function AttractScene({ isActive }) {
         ref={mirrorRef}
         className="attract-video attract-video-audio-mirror"
         src={ATTRACT_SRC}
-        onPlay={stopNvdaSpeechForMediaStart}
         loop
         playsInline
         tabIndex={-1}
