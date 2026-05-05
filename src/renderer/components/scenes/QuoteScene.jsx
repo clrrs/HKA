@@ -3,13 +3,32 @@ import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme } from "../../data/artifacts";
 
+const QUOTE_VO_DIR = "Quote VOs";
+
+const QUOTE_VO_FILE_BY_THEME_ID = {
+  change: "APH_Change_Scratch Aud.mp3",
+  together: "APH_Together_Scratch Aud.mp3",
+  adventure: "APH_Adventure_Scratch Aud.mp3",
+  work: "APH_Work_Scratch Aud.mp3"
+};
+
+function quoteVoSrc(themeId) {
+  const file = QUOTE_VO_FILE_BY_THEME_ID[themeId];
+  if (!file) return "";
+  const path = [QUOTE_VO_DIR, file].map(encodeURIComponent).join("/");
+  return `./${path}`;
+}
+
 export default function QuoteScene() {
   const { currentTheme, goToScene, scene } = useAppState();
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
   const timeoutRef = useRef(null);
 
-  useHeadphoneSinkEffect(audioRef, scene);
+  useHeadphoneSinkEffect(
+    audioRef,
+    scene === "quote" ? currentTheme : scene
+  );
 
   const stopSpeechForQuote = () => {
     // Quote scene uses an aggressive stop to reliably cut active NVDA speech.
@@ -34,7 +53,7 @@ export default function QuoteScene() {
       audioEl.pause();
       audioEl.currentTime = 0;
     }
-  }, [scene]);
+  }, [scene, theme?.id]);
 
   useEffect(() => {
     if (scene !== "quote" || !theme) {
@@ -79,8 +98,9 @@ export default function QuoteScene() {
         — Helen Keller
       </p>
       <audio
+        key={theme.id}
         ref={audioRef}
-        src="AdventureQuoteVO.m4a"
+        src={quoteVoSrc(theme.id)}
         onPlay={stopSpeechForQuote}
         preload="auto"
       />

@@ -164,7 +164,7 @@ export const themes = {
         id: "2A5",
         title: "Arcan Ridge Door Knocker",
         displayTitle: "Arcan Ridge Door Knocker",
-        year: null,
+        year: "1947",
         description: "This knocker hung on the door of Helen\u2019s Easton home on Arcan Ridge from 1946 to 1968. What important visitors may have used it over those decades, visiting Helen with important work or exuberant celebrations?",
         type: "images",
         images: [
@@ -267,7 +267,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
           "From March of 1948 to April 1949, Helen embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
         type: "document",
         images: [
-          { src: "3A4_Schedule.png", alt: "Helen Keller's global travel schedule from 1948-49" }
+          { src: "3A4_TentativeShedKeller.jpeg", alt: "Helen Keller's global travel schedule from 1948-49" }
         ],
         transcriptTitle:
           'Transcript',
@@ -455,7 +455,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         id: "4A1",
         title: "Corona Portable Typewriter",
         displayTitle: "Corona Portable Typewriter",
-        year: null,
+        year: "1938",
         description: "Helen took her Corona travel typewriter everywhere with her. People would ask her to type out quotations and sign her name for them. What adventures might Helen have taken this on, and what thoughts might have she communicated with the world through its keys?",
         type: "images",
         images: [
@@ -479,7 +479,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         id: "4A3",
         title: "Helen\u2019s Vaudeville Script",
         displayTitle: "Helen\u2019s Vaudeville Script",
-        year: null,
+        year: "1920\u20131924",
         description: "Between her work as an author and employment at the American Foundation for the Blind, Helen and her companions worked the Vaudeville circuit. While it wasn\u2019t steady work, Helen enjoyed it. This script is from a show she performed with her lifelong instructor and friend, Anne Sullivan.",
         type: "images",
         images: [

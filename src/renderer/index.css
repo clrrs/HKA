@@ -148,14 +148,14 @@ body {
   outline: 2px solid var(--color-black);
 }
 
-/* Light: theme and artifact bubbles — white fill, black border */
+/* Light: theme and artifact bubbles — visible gray, black border (gold on focus unchanged) */
 [data-theme="light"] .theme-circle-inner {
-  background-color: var(--color-white);
+  background-color: #c0c0c0;
   border-color: var(--color-black);
 }
 
 [data-theme="light"] .artifact-circle-inner {
-  background-color: var(--color-white);
+  background-color: #c0c0c0;
   border-color: var(--color-black);
 }
 
@@ -2070,6 +2070,7 @@ h1[tabindex]:focus-visible {
 .travel-heading--hidden {
   transform: translateX(-700px);
   opacity: 0;
+  pointer-events: none;
 }
 
 
@@ -2153,9 +2154,9 @@ h1[tabindex]:focus-visible {
   position: absolute;
   width: 100%;
   max-width: 560px;
-  max-height: 320px;
+  max-height: 270px;
   height: auto;
-  top: 40%;
+  top: 38%;
   left: 50%;
   transform: translate(-50%, -50%) scale(1);
   object-fit: contain;
@@ -2169,7 +2170,7 @@ h1[tabindex]:focus-visible {
 .artifact-circle-img--full-visible {
   width: 92%;
   max-width: 500px;
-  max-height: 260px;
+  max-height: 240px;
   object-fit: contain;
 }
 
@@ -2200,7 +2201,7 @@ h1[tabindex]:focus-visible {
 /* Labels positioned at bottom of circle */
 .artifact-circle-labels {
   position: absolute;
-  bottom: 80px;
+  bottom: 90px;
   left: 40px;
   right: 40px;
   text-align: center;
@@ -2237,6 +2238,42 @@ h1[tabindex]:focus-visible {
   font-size: 26px;
   color: var(--text-primary);
   transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Large text: image moved up and capped smaller; labels raised and scaled */
+[data-text-size="large"] .artifact-circle-img {
+  top: 33%;
+  max-height: 200px;
+}
+
+[data-text-size="large"] .artifact-circle-img--full-visible {
+  max-height: 185px;
+}
+
+[data-text-size="large"] .artifact-circle--focused .artifact-circle-img {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+[data-text-size="large"] .artifact-circle--focused .artifact-circle-img--full-visible {
+  transform: translate(-50%, -51%) scale(1.08);
+}
+
+[data-text-size="large"] .artifact-circle-labels {
+  bottom: 110px;
+  gap: 6px;
+}
+
+[data-text-size="large"] .artifact-label-number {
+  font-size: calc(26px * var(--text-scale));
+}
+
+[data-text-size="large"] .artifact-label-title {
+  font-size: clamp(24px, calc(32px * var(--text-scale)), calc(40px * var(--text-scale)));
+  line-height: 1.25;
+}
+
+[data-text-size="large"] .artifact-label-year {
+  font-size: calc(26px * var(--text-scale));
 }
 
 /* --- Focused state --- */
