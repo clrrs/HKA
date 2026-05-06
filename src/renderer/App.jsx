@@ -9,12 +9,14 @@ import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
-const DEFAULT_IDLE_SEC = 100;
-const PARAGRAPH_SPEECH_IDLE_SEC = 300;
+const DEFAULT_IDLE_SEC = 200;
+const PARAGRAPH_SPEECH_IDLE_SEC = 400;
 const PRE_COUNTDOWN_SEC = 10;
 const COUNTDOWN_FROM = 10;
 const COUNTDOWN_TICK_SEC = 2;
 const TOTAL_WARNING_SEC = PRE_COUNTDOWN_SEC + COUNTDOWN_FROM * COUNTDOWN_TICK_SEC;
+const SPEECH_HUD_VISIBLE_MS = 2000;
+const SPEECH_HUD_FADE_MS = 280;
 
 function isParagraphFocus() {
   return document.activeElement?.tagName === "P";
@@ -52,7 +54,14 @@ export default function App() {
   const settingsPanelRef = useRef(null);
   const idleOverlayRef = useRef(null);
   const idleFocusSessionRef = useRef(false);
-  const prevIdleCountdownRef = useRef(null);
+  const speechHudSeenFirstStateRef = useRef(false);
+  const speechHudFadeTimeoutRef = useRef(null);
+  const speechHudHideTimeoutRef = useRef(null);
+  const [speechHud, setSpeechHud] = useState({
+    visible: false,
+    closing: false,
+    enabled: true,
+  });
 
   // On every app launch (including after a crash), reset NVDA speech rate to
   // normal so a previous user's setting doesn't carry over.
@@ -265,24 +274,45 @@ export default function App() {
   }, [idleCountdown]);
 
   useEffect(() => {
-    if (idleCountdown === null) {
-      prevIdleCountdownRef.current = null;
+    if (!speechHudSeenFirstStateRef.current) {
+      speechHudSeenFirstStateRef.current = true;
       return;
     }
-    const prev = prevIdleCountdownRef.current;
-    if (idleCountdown === "pre" && prev !== "pre") {
-      announce(
-        "Inactivity warning. Still there?",
-        { politeness: "assertive", source: "idle-warning-open", dedupeMs: 0 }
-      );
-    } else if (typeof idleCountdown === "number" && prev === "pre") {
-      announce(
-        "The countdown has started. Unless you press a key, you will return to the start screen.",
-        { politeness: "polite", source: "idle-warning-countdown-start", dedupeMs: 0 }
-      );
+
+    if (speechHudFadeTimeoutRef.current) {
+      window.clearTimeout(speechHudFadeTimeoutRef.current);
+      speechHudFadeTimeoutRef.current = null;
     }
-    prevIdleCountdownRef.current = idleCountdown;
-  }, [idleCountdown, announce]);
+    if (speechHudHideTimeoutRef.current) {
+      window.clearTimeout(speechHudHideTimeoutRef.current);
+      speechHudHideTimeoutRef.current = null;
+    }
+
+    setSpeechHud({
+      visible: true,
+      closing: false,
+      enabled: speechMode,
+    });
+
+    speechHudFadeTimeoutRef.current = window.setTimeout(() => {
+      setSpeechHud((prev) => ({ ...prev, closing: true }));
+    }, SPEECH_HUD_VISIBLE_MS - SPEECH_HUD_FADE_MS);
+
+    speechHudHideTimeoutRef.current = window.setTimeout(() => {
+      setSpeechHud((prev) => ({ ...prev, visible: false, closing: false }));
+    }, SPEECH_HUD_VISIBLE_MS);
+  }, [speechMode]);
+
+  useEffect(() => {
+    return () => {
+      if (speechHudFadeTimeoutRef.current) {
+        window.clearTimeout(speechHudFadeTimeoutRef.current);
+      }
+      if (speechHudHideTimeoutRef.current) {
+        window.clearTimeout(speechHudHideTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="app">
@@ -334,7 +364,7 @@ export default function App() {
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="idle-warning-title"
-            aria-describedby="idle-warning-context idle-warning-stay"
+            aria-describedby="idle-warning-stay"
             tabIndex={-1}
           >
             <div className="idle-overlay-card">
@@ -342,24 +372,12 @@ export default function App() {
                 <h2 id="idle-warning-title" className="idle-overlay-line">
                   Still there?
                 </h2>
-                <p id="idle-warning-context" className="sr-only">
-                  You have been inactive. Unless you press a key, this experience
-                  will return to the start screen.
-                </p>
                 {typeof idleCountdown === "number" && (
                   <>
                     <p className="idle-overlay-line">Returning to start in…</p>
                     <div className="idle-countdown" aria-hidden="true">
                       {idleCountdown}
                     </div>
-                    <p
-                      className="sr-only"
-                      aria-live="polite"
-                      aria-atomic="true"
-                    >
-                      Returning to start in {idleCountdown} seconds. Press any
-                      key to stay on this screen.
-                    </p>
                   </>
                 )}
                 <p id="idle-warning-stay" className="idle-overlay-line">
@@ -367,6 +385,23 @@ export default function App() {
                 </p>
               </div>
             </div>
+            <div
+              className="sr-only"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
+              {typeof idleCountdown === "number" ? idleCountdown : ""}
+            </div>
+          </div>
+        )}
+        {speechHud.visible && (
+          <div
+            className={`speech-mode-hud ${speechHud.closing ? "speech-mode-hud--closing" : ""}`}
+            aria-hidden="true"
+          >
+            <span className="speech-mode-hud-label">
+              Speech {speechHud.enabled ? "On" : "Off"}
+            </span>
           </div>
         )}
       </div>

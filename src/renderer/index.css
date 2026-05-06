@@ -1322,6 +1322,41 @@ h1[tabindex]:focus-visible {
   color: var(--text-primary);
 }
 
+/* Speech mode toggle HUD (visual only) */
+.speech-mode-hud {
+  position: absolute;
+  top: 36px;
+  right: 36px;
+  z-index: 2550;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 152px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: rgba(8, 8, 8, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 280ms ease, transform 280ms ease;
+  pointer-events: none;
+}
+
+.speech-mode-hud--closing {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.speech-mode-hud-label {
+  font-size: calc(24px * var(--text-scale));
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
 /* ============================================
    Accessibility Menu
    ============================================ */
