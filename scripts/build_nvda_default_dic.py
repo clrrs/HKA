@@ -13,6 +13,13 @@ def main() -> None:
 
     blocks: list[tuple[str, list[tuple[str, str]]]] = [
         (
+            "exhibit-specific phrase suppressions — must come before broad role/word rules",
+            [
+                # Match the full phrase only; "helen keller" or "helen" alone are still spoken.
+                (r"\bhelen keller archives document\b", ""),
+            ],
+        ),
+        (
             "container / structural roles",
             [
                 (r"\b(grouping|group)\b", ""),

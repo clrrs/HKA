@@ -86,11 +86,14 @@ ipcMain.on("volume-down", () => {
 });
 
 // Absolute NVDA speech rate reset to "normal" (rate 50 on NVDA's 0-100 scale).
-// Presses NVDA+Ctrl+Left 22 times (guarantees we reach the floor regardless of
-// current rate, since max steps is 20), then NVDA+Ctrl+Right 10 times to land at 50.
+// NVDA synth settings ring: NVDA+Ctrl+Up/Down changes the VALUE of the current
+// setting; Left/Right cycles which setting is selected. Rate is the default/first
+// setting so we only need Up/Down here.
+// Presses NVDA+Ctrl+Down 22 times (floors the rate regardless of current value,
+// since max steps is ~20), then NVDA+Ctrl+Up 10 times to land at rate 50.
 ipcMain.on("reset-speech-rate", () => {
-  const left = "0x25";
-  const right = "0x27";
+  const down = "0x28"; // VK_DOWN
+  const up = "0x26";   // VK_UP
   const press = (vk) =>
     "[KbdEvent]::keybd_event(0x2D,0,0,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x11,0,0,[UIntPtr]::Zero);" +
@@ -99,14 +102,15 @@ ipcMain.on("reset-speech-rate", () => {
     "[KbdEvent]::keybd_event(0x11,0,2,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x2D,0,2,[UIntPtr]::Zero);" +
     "Start-Sleep -Milliseconds 40;";
-  sendKeys(press(left).repeat(22) + press(right).repeat(10));
+  sendKeys(press(down).repeat(22) + press(up).repeat(10));
 });
 
-// Adjust NVDA speech rate (NVDA+Ctrl+Right = faster, NVDA+Ctrl+Left = slower)
-// delta > 0 = speed up, delta < 0 = slow down; magnitude = number of steps
+// Adjust NVDA speech rate via NVDA+Ctrl+Up (faster) / NVDA+Ctrl+Down (slower).
+// NVDA+Ctrl+Left/Right cycles WHICH synth setting is selected — NOT the value.
+// delta > 0 = speed up, delta < 0 = slow down; magnitude = number of steps.
 ipcMain.on("speech-rate-change", (event, delta) => {
   if (!delta || delta === 0) return;
-  const arrowVk = delta > 0 ? "0x27" : "0x25"; // Right or Left arrow
+  const arrowVk = delta > 0 ? "0x26" : "0x28"; // Up or Down arrow
   const count = Math.abs(Math.round(delta));
   const onePress =
     "[KbdEvent]::keybd_event(0x2D,0,0,[UIntPtr]::Zero);" +

@@ -2,12 +2,17 @@
 # Kiosk-only: applies to all apps under this NVDA user profile. Do not use on a general PC.
 # pattern<TAB>replacement<TAB>case(0=ignore case)<TAB>type(1=regex = NVDA EntryType.REGEXP)
 
+# --- exhibit-specific phrase suppressions — must come before broad role/word rules ---
+\bhelen keller archives document\b		0	1
+
 # --- container / structural roles ---
 \b(grouping|group)\b		0	1
 \b(region|banner|complementary|content info|main landmark|navigation landmark|landmark)\b		0	1
+\bdocument\b		0	1
 \bapplication\b		0	1
 \bframe\b		0	1
 \bsection\b		0	1
+\barticle\b		0	1
 \btoolbar\b		0	1
 \bseparator\b		0	1
 
