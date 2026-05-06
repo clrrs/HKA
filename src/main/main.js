@@ -89,6 +89,9 @@ ipcMain.on("volume-down", () => {
 // NVDA synth settings ring: NVDA+Ctrl+Up/Down changes the VALUE of the current
 // setting; Left/Right cycles which setting is selected. Rate is the default/first
 // setting so we only need Up/Down here.
+// Arrow keys MUST use KEYEVENTF_EXTENDEDKEY (flag 0x01 down / 0x03 up); without
+// it, keybd_event sends numpad arrows (scan 0x48) which NVDA's synth-ring
+// gesture (bound to extended arrows, scan 0xE048) does not match.
 // Presses NVDA+Ctrl+Down 22 times (floors the rate regardless of current value,
 // since max steps is ~20), then NVDA+Ctrl+Up 10 times to land at rate 50.
 ipcMain.on("reset-speech-rate", () => {
@@ -97,8 +100,8 @@ ipcMain.on("reset-speech-rate", () => {
   const press = (vk) =>
     "[KbdEvent]::keybd_event(0x2D,0,0,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x11,0,0,[UIntPtr]::Zero);" +
-    `[KbdEvent]::keybd_event(${vk},0,0,[UIntPtr]::Zero);` +
-    `[KbdEvent]::keybd_event(${vk},0,2,[UIntPtr]::Zero);` +
+    `[KbdEvent]::keybd_event(${vk},0,1,[UIntPtr]::Zero);` +
+    `[KbdEvent]::keybd_event(${vk},0,3,[UIntPtr]::Zero);` +
     "[KbdEvent]::keybd_event(0x11,0,2,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x2D,0,2,[UIntPtr]::Zero);" +
     "Start-Sleep -Milliseconds 40;";
@@ -107,6 +110,8 @@ ipcMain.on("reset-speech-rate", () => {
 
 // Adjust NVDA speech rate via NVDA+Ctrl+Up (faster) / NVDA+Ctrl+Down (slower).
 // NVDA+Ctrl+Left/Right cycles WHICH synth setting is selected — NOT the value.
+// Arrow keys must be sent as extended (flag 0x01 down / 0x03 up); see note on
+// reset-speech-rate above.
 // delta > 0 = speed up, delta < 0 = slow down; magnitude = number of steps.
 ipcMain.on("speech-rate-change", (event, delta) => {
   if (!delta || delta === 0) return;
@@ -115,8 +120,8 @@ ipcMain.on("speech-rate-change", (event, delta) => {
   const onePress =
     "[KbdEvent]::keybd_event(0x2D,0,0,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x11,0,0,[UIntPtr]::Zero);" +
-    `[KbdEvent]::keybd_event(${arrowVk},0,0,[UIntPtr]::Zero);` +
-    `[KbdEvent]::keybd_event(${arrowVk},0,2,[UIntPtr]::Zero);` +
+    `[KbdEvent]::keybd_event(${arrowVk},0,1,[UIntPtr]::Zero);` +
+    `[KbdEvent]::keybd_event(${arrowVk},0,3,[UIntPtr]::Zero);` +
     "[KbdEvent]::keybd_event(0x11,0,2,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x2D,0,2,[UIntPtr]::Zero);" +
     "Start-Sleep -Milliseconds 50;";

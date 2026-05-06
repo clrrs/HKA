@@ -272,13 +272,13 @@ export default function App() {
     const prev = prevIdleCountdownRef.current;
     if (idleCountdown === "pre" && prev !== "pre") {
       announce(
-        "Inactivity warning. Still there? A countdown will begin shortly. If you do not press a key, this experience returns to the start screen.",
+        "Inactivity warning. Still there?",
         { politeness: "assertive", source: "idle-warning-open", dedupeMs: 0 }
       );
     } else if (typeof idleCountdown === "number" && prev === "pre") {
       announce(
         "The countdown has started. Unless you press a key, you will return to the start screen.",
-        { politeness: "assertive", source: "idle-warning-countdown-start", dedupeMs: 0 }
+        { politeness: "polite", source: "idle-warning-countdown-start", dedupeMs: 0 }
       );
     }
     prevIdleCountdownRef.current = idleCountdown;
