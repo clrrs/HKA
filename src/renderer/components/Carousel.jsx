@@ -3,7 +3,6 @@ import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { getElementSummary, logInputEvent } from "../state/interactionLog";
 import { textOrMissing } from "../data/contentPlaceholder";
-// import ZoomControls from "./ZoomControls";
 import { useStepScroll } from "./useStepScroll";
 
 // Focus trap hook - keeps tab cycling within a container
@@ -51,7 +50,14 @@ function useFocusTrap(containerRef, isActive) {
   }, [isActive, containerRef]);
 }
 
-export default function Carousel({ images = [], transcriptText, guidedDescription }) {
+export default function Carousel({
+  images = [],
+  transcriptText,
+  transcriptTitle = "Transcript",
+  guidedDescription,
+  surfaceLabel = "Open Image Carousel",
+  dialogLabel = "Image carousel, expanded view",
+}) {
   const { scene, subscene, setSubscene, speechMode } = useAppState();
   const globalAnnounce = useAnnounce();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -63,7 +69,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   const carouselRef = useRef(null);
   const surfaceRef = useRef(null);
   const expandedRef = useRef(null);
-  // const zoomRef = useRef(null);
+  const zoomRef = useRef(null);
   const guidedRef = useRef(null);
   const guidedButtonRef = useRef(null);
   const {
@@ -81,8 +87,20 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     resetAnchors: resetTranscriptAnchors,
   } = useStepScroll();
 
+  const [snapIndex, setSnapIndex] = useState(0);
+  const [totalSteps, setTotalSteps] = useState(2);
+  const [snapPaneHeight, setSnapPaneHeight] = useState(0);
+  const snapWindowRef = useRef(null);
+  const snapImageRef = useRef(null);
+  const snapUpRef = useRef(null);
+  const snapDownRef = useRef(null);
+  const zoomToolbarButtonRef = useRef(null);
+
+  const currentImage = images.length > 0 ? images[currentIndex] : null;
+  const hasTranscript = typeof transcriptText === "string" && transcriptText.trim().length > 0;
+
   useFocusTrap(expandedRef, subscene === "expanded" && !showGuided && !showTranscript);
-  // useFocusTrap(zoomRef, subscene === "zoom");
+  useFocusTrap(zoomRef, subscene === "zoom");
   useFocusTrap(guidedRef, showGuided);
   useFocusTrap(transcriptRef, showTranscript);
 
@@ -100,8 +118,8 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     if (surfaceRef.current) {
       surfaceRef.current.focus();
     }
-    announce("Exited image carousel.");
-  }, [subscene, announce]);
+    announce(`Exited ${surfaceLabel.replace(/^Open\s+/i, "").toLowerCase()}.`);
+  }, [subscene, announce, surfaceLabel]);
 
   const nextSlide = () => {
     if (images.length === 0) return;
@@ -129,7 +147,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
   const enterExpanded = () => {
     setSubscene("expanded");
     setShowTranscript(false);
-    announce("Image carousel opened.", { politeness: "assertive" });
+    announce(`${surfaceLabel.replace(/^Open\s+/i, "")} opened.`, { politeness: "assertive" });
   };
 
   const exitExpanded = () => {
@@ -139,17 +157,130 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
     setSubscene(null);
     currentIndexRef.current = 0;
     setCurrentIndex(0);
+    setSnapIndex(0);
+    setTotalSteps(2);
+    setSnapPaneHeight(0);
   };
 
-  // const enterZoom = () => {
-  //   setSubscene("zoom");
-  //   announce("Zoom mode. Use controls to zoom and pan.", { politeness: "assertive" });
-  // };
+  const enterZoom = () => {
+    setSnapIndex(0);
+    setSubscene("zoom");
+    announce("Zoom mode. Snap up or down to see the image.", { politeness: "assertive" });
+  };
 
-  // const exitZoom = () => {
-  //   setSubscene("expanded");
-  //   announce("Exited zoom mode.");
-  // };
+  const exitZoom = () => {
+    setSubscene("expanded");
+    setSnapIndex(0);
+    announce("Exited zoom mode.");
+    setTimeout(() => {
+      if (zoomToolbarButtonRef.current) {
+        zoomToolbarButtonRef.current.focus();
+      }
+    }, 0);
+  };
+
+  const atSnapTop = snapIndex === 0;
+  const atSnapBottom = snapIndex >= totalSteps - 1;
+
+  const measureSnapPane = useCallback((clampIndex = true) => {
+    const win = snapWindowRef.current;
+    const img = snapImageRef.current;
+    if (!win || !img || !img.naturalWidth) return;
+    const windowH = win.clientHeight;
+    const renderedW = win.clientWidth * 0.95;
+    const renderedH = (img.naturalHeight / img.naturalWidth) * renderedW;
+    const steps = Math.max(2, Math.ceil(renderedH / windowH));
+    setSnapPaneHeight(windowH);
+    setTotalSteps(steps);
+    if (clampIndex) {
+      setSnapIndex((prev) => Math.min(prev, steps - 1));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (subscene !== "zoom" || !currentImage) return;
+
+    const run = () => {
+      measureSnapPane(false);
+      setSnapIndex(0);
+    };
+
+    requestAnimationFrame(run);
+
+    const img = snapImageRef.current;
+    const onLoad = () => {
+      measureSnapPane(false);
+      setSnapIndex(0);
+    };
+    if (img && !img.complete) {
+      img.addEventListener("load", onLoad);
+      return () => img.removeEventListener("load", onLoad);
+    }
+  }, [subscene, currentImage, measureSnapPane]);
+
+  useEffect(() => {
+    if (subscene !== "zoom") return;
+    const el = snapWindowRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => measureSnapPane(true));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [subscene, measureSnapPane]);
+
+  const focusOppositeAfterSnap = useCallback((which) => {
+    setTimeout(() => {
+      if (which === "up") {
+        const down = snapDownRef.current;
+        if (down && !down.disabled) {
+          down.focus();
+        }
+      } else {
+        const up = snapUpRef.current;
+        if (up && !up.disabled) {
+          up.focus();
+        }
+      }
+    }, 0);
+  }, []);
+
+  const snapStepUp = () => {
+    if (atSnapTop) return;
+    const nextIndex = Math.max(0, snapIndex - 1);
+    setSnapIndex(nextIndex);
+    if (nextIndex === 0) {
+      announce("Top of image.", { politeness: "assertive" });
+      focusOppositeAfterSnap("up");
+    } else {
+      announce(`Step ${nextIndex + 1} of ${totalSteps}.`, { politeness: "assertive" });
+    }
+  };
+
+  const snapStepDown = () => {
+    if (atSnapBottom) return;
+    const nextIndex = Math.min(totalSteps - 1, snapIndex + 1);
+    setSnapIndex(nextIndex);
+    if (nextIndex === totalSteps - 1) {
+      announce("Bottom of image.", { politeness: "assertive" });
+      focusOppositeAfterSnap("down");
+    } else {
+      announce(`Step ${nextIndex + 1} of ${totalSteps}.`, { politeness: "assertive" });
+    }
+  };
+
+  const snapImageStyle = (() => {
+    if (snapIndex === 0) {
+      return { top: 0, bottom: "auto", left: "50%", transform: "translateX(-50%)" };
+    }
+    if (snapIndex === totalSteps - 1) {
+      return { bottom: 0, top: "auto", left: "50%", transform: "translateX(-50%)" };
+    }
+    return {
+      top: `${-snapIndex * snapPaneHeight}px`,
+      bottom: "auto",
+      left: "50%",
+      transform: "translateX(-50%)",
+    };
+  })();
 
   const handleKeyDown = (e) => {
     if (e.repeat) return;
@@ -210,18 +341,18 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
               transcriptButtonRef.current && transcriptButtonRef.current.focus();
             }, 0);
           }
-        // } else if (subscene === "zoom") {
-        //   if (scene === "artifact") {
-        //     logInputEvent({
-        //       source: "Carousel",
-        //       scene,
-        //       subscene,
-        //       key: "escape",
-        //       action: "exit-zoom",
-        //       target: getElementSummary(document.activeElement),
-        //     });
-        //   }
-        //   exitZoom();
+        } else if (subscene === "zoom") {
+          if (scene === "artifact") {
+            logInputEvent({
+              source: "Carousel",
+              scene,
+              subscene,
+              key: "escape",
+              action: "exit-zoom",
+              target: getElementSummary(document.activeElement),
+            });
+          }
+          exitZoom();
         } else if (subscene === "expanded") {
           if (scene === "artifact") {
             logInputEvent({
@@ -238,14 +369,11 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
       }
     };
     
-    if (subscene || showGuided) {
+    if (subscene || showGuided || showTranscript) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [subscene, showGuided, showTranscript, announce]);
-
-  const currentImage = images.length > 0 ? images[currentIndex] : null;
-  const hasTranscript = typeof transcriptText === "string" && transcriptText.trim().length > 0;
+  }, [subscene, showGuided, showTranscript, announce, scene]);
 
   useEffect(() => {
     if (!hasTranscript && showTranscript) {
@@ -289,7 +417,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
           ref={surfaceRef}
           tabIndex={0}
           role="button"
-          aria-label={`Image carousel, ${images.length} images, press Enter to open`}
+          aria-label={`${surfaceLabel}, ${images.length} images, press Enter to open`}
           onKeyDown={handleKeyDown}
           onClick={enterExpanded}
           onFocus={() => setIsHovering(true)}
@@ -315,7 +443,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
           )}
           {isHovering && (
             <div className="carousel-prompt" aria-hidden="true">
-              <span>Open Image Carousel</span>
+              <span>{surfaceLabel}</span>
             </div>
           )}
         </div>
@@ -328,7 +456,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
           ref={expandedRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Image carousel, expanded view"
+          aria-label={dialogLabel}
         >
           <div className="carousel-expanded-content">
             <div className="carousel-image-display">
@@ -356,16 +484,16 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
             <div className="carousel-menu" role="toolbar" aria-label="Image navigation">
               {images.length > 1 && (
                 <>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={prevSlide}
                     aria-label="Previous"
                     className="carousel-btn carousel-btn-icon"
                   >
                     <img src="./Back.svg" alt="" aria-hidden="true" />
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={nextSlide}
                     aria-label="Next button"
                     className="carousel-btn carousel-btn-icon"
@@ -375,15 +503,18 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   </button>
                 </>
               )}
-              {/* <button
-                type="button"
-                onClick={enterZoom}
-                aria-label="Zoom"
-                className="carousel-btn carousel-btn-icon"
-                data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
-              >
-                <img src="./Zoom.svg" alt="" aria-hidden="true" />
-              </button> */}
+              {currentImage && (
+                <button
+                  type="button"
+                  onClick={enterZoom}
+                  aria-label="Zoom"
+                  className="carousel-btn carousel-btn-icon"
+                  ref={zoomToolbarButtonRef}
+                  data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
+                >
+                  <img src="./Zoom.svg" alt="" aria-hidden="true" />
+                </button>
+              )}
               {currentImage && (
                 <button
                   type="button"
@@ -391,9 +522,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   className="carousel-btn carousel-guided-btn"
                   aria-label="Open guided description for current image"
                   ref={guidedButtonRef}
-                  data-autofocus={
-                    !speechMode && images.length <= 1 && !hasTranscript ? "" : undefined
-                  }
                 >
                   Guided Description
                 </button>
@@ -409,7 +537,6 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   className="carousel-btn"
                   aria-label="Open transcript for current image"
                   ref={transcriptButtonRef}
-                  data-autofocus={!speechMode && images.length <= 1 ? "" : undefined}
                 >
                   Transcript
                 </button>
@@ -418,7 +545,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                 <button
                   type="button"
                   onClick={exitExpanded}
-                  aria-label="Exit image carousel"
+                  aria-label="Exit viewer"
                   className="carousel-btn carousel-exit-btn"
                 >
                   Exit
@@ -470,7 +597,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                   ref={transcriptRef}
                   role="dialog"
                   aria-modal="true"
-                  aria-label="Image transcript"
+                  aria-label={transcriptTitle}
                   onKeyDown={handleTranscriptKeyDown}
                 >
                   <button
@@ -492,7 +619,7 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                     Exit
                   </button>
                   <div className="carousel-guided-body">
-                    <h2 className="carousel-guided-heading">Transcript</h2>
+                    <h2 className="carousel-guided-heading">{transcriptTitle}</h2>
                     <div
                       className="artifact-document-transcript-text"
                       ref={transcriptBodyRef}
@@ -502,7 +629,9 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
                         resetTranscriptAnchors();
                       }}
                     >
-                      <p>{transcriptText}</p>
+                      {transcriptText.split("\n").map((line, index) => (
+                        <p key={index}>{line}</p>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -512,16 +641,65 @@ export default function Carousel({ images = [], transcriptText, guidedDescriptio
         </div>
       )}
 
-      {/* Layer 3: Zoom Mode (disabled — restore with ZoomControls + zoom button above)
-      {subscene === "zoom" && (
-        <div className="carousel-layer carousel-zoom" ref={zoomRef}>
-          <ZoomControls
-            image={currentImage}
-            onExit={exitZoom}
-          />
+      {subscene === "zoom" && currentImage && (
+        <div
+          className="carousel-layer carousel-zoom"
+          ref={zoomRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${dialogLabel.split(",")[0].trim()}, zoom view`}
+        >
+          <div className="snap-zoom-panel">
+            <div className="snap-zoom-window" ref={snapWindowRef}>
+              <img
+                ref={snapImageRef}
+                src={currentImage.src}
+                alt={currentImage.alt}
+                className="snap-zoom-image"
+                style={snapImageStyle}
+                tabIndex={-1}
+              />
+            </div>
+            <div className="snap-zoom-controls" role="toolbar" aria-label="Zoom scroll controls">
+              <div
+                className="document-toolbar-arrows"
+                role="toolbar"
+                aria-label="Snap image view"
+              >
+                <button
+                  type="button"
+                  ref={snapUpRef}
+                  onClick={snapStepUp}
+                  className="carousel-btn carousel-btn-icon document-arrow-up"
+                  disabled={atSnapTop}
+                  aria-label="Snap view up one step"
+                >
+                  <img src="./Back.svg" alt="" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  ref={snapDownRef}
+                  onClick={snapStepDown}
+                  className="carousel-btn carousel-btn-icon document-arrow-down"
+                  disabled={atSnapBottom}
+                  aria-label="Snap view down one step"
+                  data-autofocus=""
+                >
+                  <img src="./Back.svg" alt="" aria-hidden="true" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={exitZoom}
+                className="carousel-btn"
+                aria-label="Exit zoom mode"
+              >
+                Exit Zoom
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      */}
 
     </div>
   );

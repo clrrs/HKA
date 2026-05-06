@@ -30,7 +30,9 @@ export const themes = {
           { src: "1A2IWW3.jpeg", alt: "Page 3 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
           { src: "1A2IWW4.jpeg", alt: "Page 4 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
           { src: "1A2IWW5.jpeg", alt: "Page 5 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "1A3",
@@ -42,7 +44,9 @@ export const themes = {
         images: [
           { src: "1A3Suffrage1.jpeg", alt: "Page 1 of Helen Keller\u2019s Women\u2019s Suffrage Speech, 1920" },
           { src: "1A3Suffrage2.jpeg", alt: "Page 2 of Helen Keller\u2019s Women\u2019s Suffrage Speech, 1920" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "1A4",
@@ -54,7 +58,9 @@ export const themes = {
         images: [
           { src: "1A4ACLU1.jpeg", alt: "Page 1 of Helen Keller\u2019s letter to the ACLU, 1919" },
           { src: "1A4ACLU2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter to the ACLU, 1919" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "1A5",
@@ -72,7 +78,9 @@ export const themes = {
           { src: "1A5NAACP6.jpeg", alt: "Page 6 of Helen Keller\u2019s letter to the NAACP, 1916" },
           { src: "1A5NAACP7.jpeg", alt: "Page 7 of Helen Keller\u2019s letter to the NAACP, 1916" },
           { src: "1A5NAACP8.jpeg", alt: "Page 8 of Helen Keller\u2019s letter to the NAACP, 1916" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "1A6",
@@ -85,7 +93,9 @@ export const themes = {
           { src: "1A6PrevBlind1.jpeg", alt: "Page 1 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
           { src: "1A6PrevBlind2.jpeg", alt: "Page 2 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
           { src: "1A6PrevBlind3.jpeg", alt: "Page 3 of Helen Keller\u2019s Blindness Prevention Article, 1914" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       }
     ]
   },
@@ -107,7 +117,9 @@ export const themes = {
         images: [
           { src: "2A1Debs1.jpeg", alt: "Page 1 of letter from Eugene Debs to Helen Keller, 1919" },
           { src: "2A1Debs2.jpeg", alt: "Page 2 of letter from Eugene Debs to Helen Keller, 1919" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "2A2",
@@ -121,7 +133,9 @@ export const themes = {
           { src: "2A2MacA2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter to General MacArthur, 1949" },
           { src: "2A2MacA3.jpeg", alt: "Page 3 of Helen Keller\u2019s letter to General MacArthur, 1949" },
           { src: "2A2MacA4.jpeg", alt: "Page 4 of Helen Keller\u2019s letter to General MacArthur, 1949" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "2A3",
@@ -133,7 +147,9 @@ export const themes = {
         images: [
           { src: "2A3Twain1.jpeg", alt: "Front of handwritten letter from Mark Twain to Helen Keller, 1905" },
           { src: "2A3Twain2.jpeg", alt: "Back of handwritten letter from Mark Twain to Helen Keller, 1905" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "2A4",
@@ -158,7 +174,9 @@ export const themes = {
           { src: "2A4Student13.jpeg", alt: "Student Christmas letter to Helen Keller, page 13" },
           { src: "2A4Student14.jpeg", alt: "Student Christmas letter to Helen Keller, page 14" },
           { src: "2A4Student15.jpeg", alt: "Student Christmas letter to Helen Keller, page 15" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "2A5",
@@ -181,7 +199,9 @@ export const themes = {
         images: [
           { src: "2A6FDR1.jpeg", alt: "Page 1 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" },
           { src: "2A6FDR2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       }
     ]
   },
@@ -473,7 +493,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         images: [
           { src: "4A2AFB1.jpeg", alt: "Helen Keller evaluating a braille typewriter at the AFB, 1954" },
           { src: "4A2AFB2.jpeg", alt: "Another view of Helen Keller at the AFB evaluating equipment, 1954" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "4A3",
@@ -489,7 +511,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
           { src: "4A3Vaudeville4.jpeg", alt: "Page 4 of Helen Keller\u2019s Vaudeville script" },
           { src: "4A3Vaudeville5.jpeg", alt: "Page 5 of Helen Keller\u2019s Vaudeville script" },
           { src: "4A3Vaudeville6.jpeg", alt: "Page 6 of Helen Keller\u2019s Vaudeville script" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "4A4",
@@ -501,7 +525,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         images: [
           { src: "4A4Chaplin1.jpeg", alt: "Helen Keller with Charlie Chaplin in a Hollywood studio, 1918" },
           { src: "4A4Chaplin2.jpeg", alt: "Another photograph of Helen Keller with Charlie Chaplin, 1918" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "4A5",
@@ -512,7 +538,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         type: "images",
         images: [
           { src: "4A5Radcliffe.jpeg", alt: "Helen Keller\u2019s letter of admission to Radcliffe College, 1899" }
-        ]
+        ],
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       },
       {
         id: "4A6",
@@ -525,7 +553,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
           { src: "4A6Perkins.jpeg", alt: "Letter from Perkins School Director to Annie Sullivan about Helen Keller, 1886" }
         ],
         guidedDescription:
-          "A handwritten letter to Anne Sullivan asking her to be Helen's assistant is printed on Perkins Institution for the Blind stationary. Institutional and date information is printed in red, calligraphy-style script on the top of the page. Lines to write along are printed in light blue. Anagnos' ornate, cursive handwriting is in black ink, and his message fills the entire page."
+          "A handwritten letter to Anne Sullivan asking her to be Helen's assistant is printed on Perkins Institution for the Blind stationary. Institutional and date information is printed in red, calligraphy-style script on the top of the page. Lines to write along are printed in light blue. Anagnos' ornate, cursive handwriting is in black ink, and his message fills the entire page.",
+        transcriptTitle: "Transcript",
+        transcriptText: "Missing transcript copy"
       }
     ]
   }

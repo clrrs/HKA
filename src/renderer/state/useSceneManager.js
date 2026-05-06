@@ -167,7 +167,6 @@ export function useKeyboardNav() {
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-video-transcript-modal") ||
             document.querySelector(".artifact-video-modal") ||
-            document.querySelector(".document-viewer-expanded") ||
             document.querySelector(".carousel-zoom") ||
             document.querySelector(".carousel-expanded") ||
             document;
@@ -227,7 +226,6 @@ export function useKeyboardNav() {
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-video-transcript-modal") ||
             document.querySelector(".artifact-video-modal") ||
-            document.querySelector(".document-viewer-expanded") ||
             document.querySelector(".carousel-zoom") ||
             document.querySelector(".carousel-expanded") ||
             document;

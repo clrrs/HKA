@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme, getArtifact, getNextArtifact, getPrevArtifact } from "../../data/artifacts";
 import Carousel from "../Carousel";
-import DocumentViewer from "../DocumentViewer";
 import ArtifactVideoPreview from "../ArtifactVideoPreview";
 import ArtifactVideoOverlay from "../ArtifactVideoOverlay";
 
@@ -104,12 +103,24 @@ export default function ArtifactScene() {
               }}
             />
           )}
-          {artifact.type === "document" && <DocumentViewer artifact={artifact} />}
-          {artifact.type !== "video" && artifact.type !== "document" && (
+          {artifact.type !== "video" && (
             <Carousel
               images={artifact.images}
-              transcriptText={artifact.transcriptText}
+              transcriptText={
+                artifact.type === "document"
+                  ? artifact.transcriptText || "Missing Transcript"
+                  : artifact.transcriptText
+              }
+              transcriptTitle={artifact.transcriptTitle}
               guidedDescription={artifact.guidedDescription}
+              surfaceLabel={
+                artifact.type === "document" ? "Open Document" : "Open Image Carousel"
+              }
+              dialogLabel={
+                artifact.type === "document"
+                  ? "Document viewer, expanded view"
+                  : "Image carousel, expanded view"
+              }
             />
           )}
         </div>
