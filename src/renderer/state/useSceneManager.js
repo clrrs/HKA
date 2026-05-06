@@ -48,6 +48,7 @@ export function useKeyboardNav() {
 
   useEffect(() => {
     const ENABLE_TEST_SHORTCUTS = true;
+    const ENABLE_TEST_EASTER_EGGS = false;
     const KL_EGG_PATTERN = ["k", "l", "k", "l", "k", "l"];
     const KL_EGG_MAX_GAP_MS = 450;
     const Q_EGG_MAX_GAP_MS = 280;
@@ -115,10 +116,12 @@ export function useKeyboardNav() {
       let testEggResult = null;
       // Test-only backdoor shortcuts (always active)
       if (ENABLE_TEST_SHORTCUTS) {
-        testEggResult = processTestEasterEggKeys(key);
-        if (testEggResult === "triggered") {
-          e.preventDefault();
-          return;
+        if (ENABLE_TEST_EASTER_EGGS) {
+          testEggResult = processTestEasterEggKeys(key);
+          if (testEggResult === "triggered") {
+            e.preventDefault();
+            return;
+          }
         }
 
         if (key === "1") {
@@ -263,7 +266,11 @@ export function useKeyboardNav() {
 
       // TTS (Q) - toggle NVDA speech via Electron IPC and in-app state
       if (key === "q") {
-        if (ENABLE_TEST_SHORTCUTS && testEggResult === "suppress-q") {
+        if (
+          ENABLE_TEST_SHORTCUTS &&
+          ENABLE_TEST_EASTER_EGGS &&
+          testEggResult === "suppress-q"
+        ) {
           e.preventDefault();
           return;
         }

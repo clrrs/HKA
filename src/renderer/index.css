@@ -1285,6 +1285,18 @@ h1[tabindex]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.idle-overlay-card {
+  max-width: 720px;
+  width: 100%;
+  background: var(--bg-primary);
+  border: 2px solid var(--btn-border);
+  border-radius: 16px;
+  padding: 28px 32px 32px;
+  box-sizing: border-box;
 }
 
 .idle-overlay-content {
@@ -1299,13 +1311,14 @@ h1[tabindex]:focus-visible {
 .idle-overlay-line {
   margin: 0;
   font-size: calc(var(--font-size-body) * var(--text-scale));
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
 }
 
 .idle-countdown {
   font-size: calc(var(--font-size-h1) * 2 * var(--text-scale));
-  font-weight: 900;
+  font-weight: 500;
+  line-height: 1.1;
   color: var(--text-primary);
 }
 
