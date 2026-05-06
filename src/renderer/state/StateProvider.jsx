@@ -27,7 +27,8 @@ const TEST_EASTER_EGG_SFX = [
 const DEFAULT_PREFS = {
   textSize: "medium",
   theme: "dark",
-  brightness: 1
+  brightness: 1,
+  speechRate: "normal"
 };
 
 const AppState = createContext();
@@ -43,10 +44,12 @@ export default function StateProvider({ children }) {
   const [currentTheme, setCurrentTheme] = useState(null);
   
   const [prefs, setPrefs] = useState(() => {
-    try { 
-      return JSON.parse(localStorage.getItem("prefs")) || DEFAULT_PREFS; 
-    } catch { 
-      return DEFAULT_PREFS; 
+    try {
+      // speechRate always starts at "normal" so a crash can't leave a
+      // previous user's fast/slow setting active for the next user.
+      return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem("prefs")) || {}), speechRate: "normal" };
+    } catch {
+      return DEFAULT_PREFS;
     }
   });
 
@@ -126,6 +129,7 @@ export default function StateProvider({ children }) {
     setPreviousScene("attract");
     setTestEasterEgg(null);
     setHasVisitedThemeSelection(false);
+    window.kioskApi?.send("reset-speech-rate");
     try {
       localStorage.removeItem("prefs");
     } catch {

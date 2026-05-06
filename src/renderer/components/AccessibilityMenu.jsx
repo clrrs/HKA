@@ -19,12 +19,20 @@ const brightnessOptions = [
   { value: 1.25, label: "125%" }
 ];
 
+// Steps relative to NVDA's current rate; NVDA+Ctrl+Right/Left moves one step each press
+const speechRateOptions = [
+  { value: "slow", label: "Slow", steps: -3 },
+  { value: "normal", label: "Normal", steps: 0 },
+  { value: "fast", label: "Fast", steps: 3 },
+];
+
 export default function AccessibilityMenu() {
   const { prefs, setPref, resetPrefs, toggleSettings } = useAppState();
   const [expandedSection, setExpandedSection] = useState(null);
   const textSizeFirstRef = useRef(null);
   const themeFirstRef = useRef(null);
   const brightnessFirstRef = useRef(null);
+  const speechRateFirstRef = useRef(null);
 
   useEffect(() => {
     if (expandedSection === "textSize" && textSizeFirstRef.current) {
@@ -33,6 +41,8 @@ export default function AccessibilityMenu() {
       themeFirstRef.current.focus();
     } else if (expandedSection === "brightness" && brightnessFirstRef.current) {
       brightnessFirstRef.current.focus();
+    } else if (expandedSection === "speechRate" && speechRateFirstRef.current) {
+      speechRateFirstRef.current.focus();
     }
   }, [expandedSection]);
 
@@ -51,6 +61,17 @@ export default function AccessibilityMenu() {
   const currentTextSizeLabel = textSizeOptions.find((o) => o.value === prefs.textSize)?.label ?? prefs.textSize;
   const currentThemeLabel = themeOptions.find((o) => o.value === prefs.theme)?.label ?? prefs.theme;
   const currentBrightnessLabel = brightnessOptions.find((o) => o.value === prefs.brightness)?.label ?? String(prefs.brightness);
+  const currentSpeechRateLabel = speechRateOptions.find((o) => o.value === prefs.speechRate)?.label ?? "Normal";
+
+  const handleSpeechRate = (newValue) => {
+    const currentSteps = speechRateOptions.find((o) => o.value === (prefs.speechRate ?? "normal"))?.steps ?? 0;
+    const newSteps = speechRateOptions.find((o) => o.value === newValue)?.steps ?? 0;
+    const delta = newSteps - currentSteps;
+    if (delta !== 0) {
+      window.kioskApi?.send("speech-rate-change", delta);
+    }
+    setPref("speechRate", newValue);
+  };
 
   return (
     <div className="accessibility-menu">
@@ -152,6 +173,41 @@ export default function AccessibilityMenu() {
                 className={`setting-btn ${prefs.brightness === option.value ? "active" : ""}`}
                 onClick={() => setPref("brightness", option.value)}
                 aria-pressed={prefs.brightness === option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="setting-group">
+        <button
+          type="button"
+          className="setting-section-trigger"
+          onClick={() => openSection("speechRate")}
+          aria-expanded={expandedSection === "speechRate"}
+          aria-controls="access-speech-rate-options"
+          id="access-speech-rate-trigger"
+        >
+          <span className="setting-section-label">Speech Speed</span>
+          <span className="setting-section-value" aria-hidden="true">{currentSpeechRateLabel}</span>
+        </button>
+        {expandedSection === "speechRate" && (
+          <div
+            id="access-speech-rate-options"
+            className="setting-options"
+            role="group"
+            aria-labelledby="access-speech-rate-trigger"
+            onBlur={handleOptionsBlur}
+          >
+            {speechRateOptions.map((option, i) => (
+              <button
+                key={option.value}
+                ref={i === 0 ? speechRateFirstRef : null}
+                className={`setting-btn ${(prefs.speechRate ?? "normal") === option.value ? "active" : ""}`}
+                onClick={() => handleSpeechRate(option.value)}
+                aria-pressed={(prefs.speechRate ?? "normal") === option.value}
               >
                 {option.label}
               </button>
