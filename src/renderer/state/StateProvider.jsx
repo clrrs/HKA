@@ -71,11 +71,24 @@ export default function StateProvider({ children }) {
     setSubscene(options.subscene || null);
     if (options.artifactId !== undefined) {
       setArtifactId(options.artifactId);
+    } else if (sceneName !== "theme") {
+      // Artifact popup only exists on the theme scene; clear it so it
+      // doesn't reappear stale the next time the theme scene is entered.
+      setArtifactId(null);
     }
     if (options.theme !== undefined) {
       setCurrentTheme(options.theme);
     }
   };
+
+  const openArtifact = useCallback((id) => {
+    setArtifactId(id);
+  }, []);
+
+  const closeArtifact = useCallback(() => {
+    setArtifactId(null);
+    setSubscene(null);
+  }, []);
 
   const [showSettings, setShowSettings] = useState(false);
   const [settingsOnboarding, setSettingsOnboarding] = useState(false);
@@ -107,7 +120,11 @@ export default function StateProvider({ children }) {
 
   const [speechMode, setSpeechMode] = useState(true);
   const toggleSpeechMode = () => setSpeechMode(prev => !prev);
-  const [hasVisitedThemeSelection, setHasVisitedThemeSelection] = useState(false);
+  const [visitedThemes, setVisitedThemes] = useState({});
+
+  const markThemeVisited = useCallback((themeId) => {
+    setVisitedThemes((prev) => (prev[themeId] ? prev : { ...prev, [themeId]: true }));
+  }, []);
 
   const [previousScene, setPreviousScene] = useState("home");
 
@@ -153,7 +170,7 @@ export default function StateProvider({ children }) {
     setPendingAccessibilityOnboarding(true);
     setPreviousScene("attract");
     setTestEasterEgg(null);
-    setHasVisitedThemeSelection(false);
+    setVisitedThemes({});
     window.kioskApi?.send("reset-speech-rate");
     try {
       localStorage.removeItem("prefs");
@@ -168,9 +185,7 @@ export default function StateProvider({ children }) {
     // } else
     if (subscene === "expanded") {
       setSubscene(null);
-    } else if (scene === "artifact") {
-      setScene("travel");
-    } else if (scene === "travel") {
+    } else if (scene === "theme") {
       setScene("quote");
     } else if (scene === "quote") {
       setScene("home");
@@ -197,6 +212,8 @@ export default function StateProvider({ children }) {
       setSubscene, 
       artifactId,
       setArtifactId,
+      openArtifact,
+      closeArtifact,
       currentTheme,
       prefs, 
       setPref,
@@ -213,8 +230,8 @@ export default function StateProvider({ children }) {
       setVideoOverlayOpen,
       speechMode,
       toggleSpeechMode,
-      hasVisitedThemeSelection,
-      setHasVisitedThemeSelection,
+      visitedThemes,
+      markThemeVisited,
       resetToStart,
       idleTimeoutDisabled,
       toggleIdleTimeoutDisabled,

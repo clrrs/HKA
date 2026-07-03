@@ -72,7 +72,7 @@ export default function QuoteScene() {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        goToScene("travel");
+        goToScene("theme");
       }, 1000);
     };
 

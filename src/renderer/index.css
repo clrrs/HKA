@@ -219,86 +219,8 @@ body {
 }
 
 /* ============================================
-   Artifact Page (full-width two-column layout)
+   Snap Zoom (reused by the artifact popup's Zoom mode)
    ============================================ */
-
-.artifact-page {
-  position: relative;
-  width: 1920px;
-  height: 1080px;
-  padding: 0;
-  background-color: transparent;
-  display: grid;
-  grid-template-columns: 756px 1fr;
-  grid-template-rows: 1fr auto;
-  grid-template-areas:
-    "text media"
-    "nav nav";
-  gap: 0 135px;
-}
-
-.artifact-content {
-  grid-area: text;
-  grid-row: 1;
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 756px 1fr;
-  gap: 0 135px;
-  align-items: start;
-  padding-left: 84px;
-  padding-right: 84px;
-  padding-top: 80px;
-  min-height: 0;
-}
-
-.artifact-text {
-  grid-column: 1;
-  min-width: 0;
-  max-width: 756px;
-}
-
-.artifact-media {
-  grid-column: 2;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  min-width: 0;
-  padding-right: 84px;
-  padding-top: 120px;
-}
-
-.artifact-media .carousel {
-  width: 836px;
-  height: 614px;
-  margin: 0;
-  flex-shrink: 0;
-}
-
-.artifact-media .carousel-surface {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 25px 31px 31px 31px;
-  box-sizing: border-box;
-}
-
-/* Image area: 774px wide (836 - 31*2), 514px tall (614 - 25 top - 75 bottom). Photo fits and centers; box does not resize. */
-.artifact-media .carousel-viewport {
-  flex: 0 0 514px;
-  width: 100%;
-  min-height: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.artifact-media .carousel-viewport img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
 
 .snap-zoom-panel {
   width: 100%;
@@ -357,177 +279,6 @@ body {
 
 .document-arrow-down img {
   transform: rotate(-90deg);
-}
-
-/* Artifact video preview tile (for artifact videos only) */
-.artifact-media .artifact-video-preview {
-  width: 836px;
-  height: 614px;
-  margin: 0;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.artifact-video-preview-frame {
-  flex: 1;
-  padding: 25px 31px 31px 31px;
-  box-sizing: border-box;
-  background: #111;
-  border: 2px solid white;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  transition: border-color 0.2s;
-}
-
-.artifact-video-preview:focus-visible .artifact-video-preview-frame {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.artifact-video-preview-viewport {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.artifact-video-preview-viewport img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  object-position: center;
-}
-
-.artifact-video-preview-play-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 64px;
-  color: #fff;
-}
-
-.artifact-video-preview-prompt {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 400;
-  pointer-events: none;
-}
-
-/* Indicators pinned to bottom edge of carousel surface. */
-.artifact-media .carousel-indicators {
-  flex-shrink: 0;
-  margin-top: auto;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.artifact-header {
-  color: var(--text-primary);
-  font-weight: 400;
-  font-size: calc(38px * var(--text-scale));
-  line-height: 1;
-  margin-bottom: 70px;
-}
-
-.artifact-header-accent {
-  color: var(--text-heading);
-}
-
-.artifact-text h1 {
-  font-size: calc(58px * var(--text-scale));
-  margin-bottom: 32px;
-}
-
-.artifact-text .artifact-title {
-  display: block;
-  width: 716px;
-  color: var(--text-heading);
-  font-weight: 700;
-  font-size: calc(58px * var(--text-scale));
-  line-height: 1.1;
-  margin-bottom: 32px;
-}
-
-.artifact-text p {
-  font-weight: 300;
-  font-size: calc(30px * var(--text-scale));
-  line-height: 1.55;
-}
-
-.artifact-nav {
-  grid-area: nav;
-  margin: 0;
-  margin-top: auto;
-  padding: 0 84px 60px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.artifact-nav-left {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-}
-
-.artifact-nav .nav-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: calc(20px * var(--text-scale));
-  font-weight: 300;
-  min-height: 40px;
-  padding: 8px 20px;
-}
-
-.artifact-nav .nav-btn img {
-  width: 24px;
-  height: 24px;
-  filter: var(--icon-filter);
-}
-
-.artifact-nav .nav-btn:focus-visible img {
-  filter: var(--icon-focus-filter);
-}
-
-/* Menu.svg is white; show white by default in dark theme, black on focus */
-[data-theme="dark"] .artifact-nav .nav-btn.nav-btn-icon-white img {
-  filter: none;
-}
-[data-theme="dark"] .artifact-nav .nav-btn.nav-btn-icon-white:focus-visible img {
-  filter: invert(1);
-}
-[data-theme="light"] .artifact-nav .nav-btn.nav-btn-icon-white img {
-  filter: invert(1);
-}
-[data-theme="light"] .artifact-nav .nav-btn.nav-btn-icon-white:focus-visible img {
-  filter: none;
 }
 
 /* ============================================
@@ -714,10 +465,12 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 }
 
 /* Tabindex text groups (NVDA/speech): keep programmatic focus, no visible ring — overrides global + browser default */
-.travel-heading-inner:focus,
-.travel-heading-inner:focus-visible,
-.artifact-heading-inner:focus,
-.artifact-heading-inner:focus-visible,
+.theme-heading-inner:focus,
+.theme-heading-inner:focus-visible,
+.artifact-popup-text:focus,
+.artifact-popup-text:focus-visible,
+.artifact-popup-transcript-body:focus,
+.artifact-popup-transcript-body:focus-visible,
 .artifact-document-transcript-text:focus,
 .artifact-document-transcript-text:focus-visible,
 h1[tabindex]:focus,
@@ -726,50 +479,8 @@ h1[tabindex]:focus-visible {
 }
 
 /* ============================================
-   Carousel
+   Shared dot indicators (artifact popup image dots)
    ============================================ */
-
-.carousel {
-  position: relative;
-  margin: 20px 0;
-  background: #111;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.carousel-surface {
-  position: relative;
-  cursor: pointer;
-  border: 2px solid white;
-  border-radius: 8px;
-  transition: border-color 0.2s;
-}
-
-.carousel-surface:hover,
-.carousel-surface:focus {
-  outline: none;
-}
-
-.carousel-viewport {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-}
-
-.carousel-viewport img {
-  max-width: 100%;
-  max-height: 400px;
-  object-fit: contain;
-}
-
-.carousel-indicators {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 15px;
-}
 
 .indicator {
   width: 14px;
@@ -785,83 +496,9 @@ h1[tabindex]:focus-visible {
   border-color: var(--text-primary);
 }
 
-.carousel-prompt {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  font-size: 18px;
-  font-weight: 400;
-  pointer-events: none;
-}
-
-/* Carousel Expanded Mode - Full-screen overlay with backdrop */
-.carousel-expanded {
-  position: fixed;
-  inset: 0;
-  z-index: 900;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.carousel-expanded::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  z-index: -1;
-}
-
-.carousel-expanded-content {
-  position: relative;
-  background: var(--bg-container);
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
-  border-radius: 0;
-  padding: 40px 40px 40px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-.carousel-image-display {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
-  min-height: 350px;
-  padding-bottom: 40px;
-}
-
-.carousel-image-display img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.carousel-menu {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 16px 0 0;
-  flex-wrap: wrap;
-}
-
-.carousel-expanded .carousel-indicators {
-  margin-top: 16px;
-}
+/* ============================================
+   Pill buttons (reused by the artifact popup's controls)
+   ============================================ */
 
 .carousel-btn {
   background-color: var(--btn-bg);
@@ -907,54 +544,13 @@ h1[tabindex]:focus-visible {
   filter: var(--icon-focus-filter);
 }
 
-/* Guided Description pill button */
-.carousel-guided-btn {
-  padding-inline: 32px;
-}
-
-/* Guided Description text popup */
-.carousel-guided-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 3;
-}
-
-.carousel-guided-modal {
-  position: relative;
-  max-width: 900px;
-  max-height: 90%;
-  width: 90%;
-  background: var(--bg-container);
-  padding: 32px 40px 40px;
-  border-radius: 16px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-.carousel-guided-close-btn {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-}
-
-.carousel-guided-body {
-  margin-top: 32px;
-}
-
-.carousel-guided-heading,
-.artifact-video-transcript-heading,
-.artifact-document-transcript-heading {
+.artifact-video-transcript-heading {
   margin: 0;
   font-size: calc(var(--font-size-h1) * .5 * var(--text-scale));
 }
 
 /* ============================================
-   Zoom Mode
+   Zoom Mode (used by the artifact popup's Zoom button)
    ============================================ */
 
 .carousel-zoom {
@@ -966,10 +562,6 @@ h1[tabindex]:focus-visible {
   display: flex;
   justify-content: center;
   align-items: stretch;
-}
-
-.carousel-surface.carousel-hovering {
-  border-color: var(--accent);
 }
 
 .zoom-container {
@@ -1195,37 +787,6 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-video-transcript-body {
-  margin-top: 32px;
-}
-
-.artifact-document-transcript-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 3;
-}
-
-.artifact-document-transcript-modal {
-  position: relative;
-  max-width: 900px;
-  max-height: 90%;
-  width: 90%;
-  background: var(--bg-container);
-  padding: 32px 40px 40px;
-  border-radius: 16px;
-  box-sizing: border-box;
-}
-
-.artifact-document-transcript-close-btn {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-}
-
-.artifact-document-transcript-body {
   margin-top: 32px;
 }
 
@@ -1987,26 +1548,18 @@ h1[tabindex]:focus-visible {
 }
 
 /* ============================================
-   Travel / Artifact Selection Scene (carousel)
+   Theme / Artifact Selection Scene (carousel)
    ============================================ */
 
-.travel-scene {
+.theme-scene {
   position: relative;
   width: 100%;
   height: 1080px;
   overflow: hidden;
 }
 
-.travel-scene .artifact-nav {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 4;
-}
-
 /* --- Left info panel --- */
-.travel-heading {
+.theme-heading {
   position: absolute;
   z-index: 1;
   left: 84px;
@@ -2016,7 +1569,7 @@ h1[tabindex]:focus-visible {
   transition: transform 0.55s ease-in-out, opacity 0.45s ease-in-out;
 }
 
-.travel-heading--hidden {
+.theme-heading--hidden {
   transform: translateX(-700px);
   opacity: 0;
   pointer-events: none;
@@ -2024,7 +1577,7 @@ h1[tabindex]:focus-visible {
 
 
 
-.travel-title {
+.theme-title {
   display: block;
   color: var(--text-heading);
   font-weight: 400;
@@ -2034,7 +1587,7 @@ h1[tabindex]:focus-visible {
   margin-bottom: 24px;
 }
 
-.travel-description {
+.theme-description {
   font-weight: 300;
   font-size: calc(30px * var(--text-scale));
   line-height: 1.55;
@@ -2042,7 +1595,7 @@ h1[tabindex]:focus-visible {
   margin-bottom: 40px;
 }
 
-.travel-cta {
+.theme-cta {
   color: var(--text-heading);
   font-size: calc(30px * var(--text-scale));
   font-weight: 400;
@@ -2050,13 +1603,33 @@ h1[tabindex]:focus-visible {
 }
 
 /* --- Artifact carousel --- */
-.travel-carousel {
+.theme-carousel {
   position: absolute;
   inset: 0;
   z-index: 2;
   overflow: hidden;
   display: flex;
   align-items: center;
+}
+
+.theme-tip-overlay {
+  z-index: 5;
+}
+
+.artifact-popup-slot {
+  width: 1200px;
+  height: 600px;
+  flex-shrink: 0;
+}
+
+.theme-scene--popup-open .artifact-circles {
+  gap: 0;
+}
+
+.theme-scene--popup-open .artifact-circles--active .artifact-circle {
+  transform: none;
+  opacity: 0.65;
+  filter: brightness(0.65);
 }
 
 .artifact-circles {
@@ -2270,6 +1843,259 @@ h1[tabindex]:focus-visible {
 
 .artifact-indicator.active {
   background-color: var(--text-primary);
+}
+
+/* ============================================
+   Artifact Popup (opens over the theme scene)
+   ============================================ */
+
+.artifact-popup-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 50px 0;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.artifact-popup {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  max-width: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.artifact-popup-nav-arrow {
+  flex-shrink: 0;
+  width: 80px;
+  height: 108px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.5;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.artifact-popup-nav-arrow:hover,
+.artifact-popup-nav-arrow:focus-visible {
+  opacity: 1;
+  outline: none;
+}
+
+.artifact-popup-nav-arrow--prev::before,
+.artifact-popup-nav-arrow--next::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 54px solid transparent;
+  border-bottom: 54px solid transparent;
+  transition: transform 0.2s ease;
+}
+
+.artifact-popup-nav-arrow:hover::before,
+.artifact-popup-nav-arrow:focus-visible::before {
+  transform: scale(1.3);
+}
+
+.artifact-popup-nav-arrow--prev::before {
+  border-right: 36px solid rgba(255, 255, 255, 0.85);
+}
+
+.artifact-popup-nav-arrow--next::before {
+  border-left: 36px solid rgba(255, 255, 255, 0.85);
+}
+
+.artifact-popup-card {
+  position: relative;
+  width: 1200px;
+  height: 980px;
+  flex-shrink: 0;
+  background: var(--bg-container);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artifact-popup-media {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 24px;
+  box-sizing: border-box;
+}
+
+.artifact-popup-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.artifact-popup-media-empty {
+  color: var(--text-primary);
+  font-size: calc(24px * var(--text-scale));
+  opacity: 0.6;
+}
+
+.artifact-popup-image-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 6px;
+  flex-shrink: 0;
+}
+
+.artifact-popup-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 32px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.artifact-popup-controls .carousel-btn {
+  min-height: 40px;
+  padding: 8px 20px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(22px * var(--text-scale));
+  font-weight: 300;
+}
+
+.artifact-popup-zoom-btn {
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.artifact-popup-zoom-btn img {
+  width: 20px;
+  height: 20px;
+  filter: var(--icon-filter);
+}
+
+.artifact-popup-zoom-btn:focus-visible img {
+  filter: var(--icon-focus-filter);
+}
+
+.artifact-popup-text {
+  padding: 0 100px 40px;
+  overflow-y: auto;
+  min-height: 0;
+  flex-shrink: 0;
+  max-height: 380px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.artifact-popup-text::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.artifact-popup-text::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.artifact-popup-text::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+}
+
+.artifact-popup-title {
+  font-weight: 700;
+  font-size: calc(38px * var(--text-scale));
+  margin-bottom: 16px;
+}
+
+.artifact-popup-description {
+  font-weight: 300;
+  font-size: calc(26px * var(--text-scale));
+  line-height: 1.5;
+}
+
+.artifact-popup-transcript {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 25%;
+  bottom: 0;
+  background: #111;
+  border-radius: 16px 16px 0 0;
+  padding: 32px 40px 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.artifact-popup-transcript-exit {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.artifact-popup-transcript-heading {
+  margin: 0 0 16px;
+  padding-left: 60px;
+  padding-right: 120px;
+  color: var(--text-heading);
+  font-size: calc(var(--font-size-h1) * 0.5 * var(--text-scale));
+}
+
+.artifact-popup-transcript-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 60px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.artifact-popup-transcript-body::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.artifact-popup-transcript-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.artifact-popup-transcript-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+}
+
+.artifact-popup-transcript-body p {
+  font-weight: 300;
+  font-size: calc(26px * var(--text-scale));
+  line-height: 1.5;
+  margin-bottom: 12px;
 }
 
 /* ============================================

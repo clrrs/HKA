@@ -168,11 +168,15 @@ export function useKeyboardNav() {
         e.preventDefault();
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
-          : document.querySelector(".artifact-video-transcript-modal") ||
+          : document.querySelector(".artifact-popup-transcript") ||
+            document.querySelector(".artifact-video-transcript-modal") ||
             document.querySelector(".artifact-video-modal") ||
             document.querySelector(".carousel-zoom") ||
-            document.querySelector(".carousel-expanded") ||
+            document.querySelector(".artifact-popup") ||
             document;
+        const noWraparound =
+          container.classList?.contains("artifact-popup") ||
+          container.classList?.contains("artifact-popup-transcript");
         const rawFocusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -180,16 +184,17 @@ export function useKeyboardNav() {
         );
         const focusables =
           container.classList &&
-          (container.classList.contains("carousel-expanded") ||
+          (container.classList.contains("artifact-popup") ||
+            container.classList.contains("artifact-popup-transcript") ||
             container.classList.contains("carousel-zoom"))
             ? rawFocusables
             : rawFocusables.filter((el) => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
         let nextEl = null;
         if (idx > 0) nextEl = focusables[idx - 1];
-        else if (focusables.length) nextEl = focusables[focusables.length - 1];
+        else if (focusables.length && !noWraparound) nextEl = focusables[focusables.length - 1];
         if (nextEl) {
-          if (scene === "artifact") {
+          if (container !== document) {
             logInputEvent({
               source: "useKeyboardNav",
               scene,
@@ -208,7 +213,11 @@ export function useKeyboardNav() {
       // Select (J) - simulate Enter
       if (key === "j") {
         e.preventDefault();
-        if (scene === "artifact") {
+        const activeContainer =
+          document.activeElement?.closest(
+            ".artifact-popup-transcript, .artifact-video-transcript-modal, .artifact-video-modal, .carousel-zoom, .artifact-popup"
+          ) || null;
+        if (activeContainer) {
           logInputEvent({
             source: "useKeyboardNav",
             scene,
@@ -227,11 +236,15 @@ export function useKeyboardNav() {
         e.preventDefault();
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
-          : document.querySelector(".artifact-video-transcript-modal") ||
+          : document.querySelector(".artifact-popup-transcript") ||
+            document.querySelector(".artifact-video-transcript-modal") ||
             document.querySelector(".artifact-video-modal") ||
             document.querySelector(".carousel-zoom") ||
-            document.querySelector(".carousel-expanded") ||
+            document.querySelector(".artifact-popup") ||
             document;
+        const noWraparound =
+          container.classList?.contains("artifact-popup") ||
+          container.classList?.contains("artifact-popup-transcript");
         const rawFocusables = Array.from(
           container.querySelectorAll(
             'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -239,16 +252,17 @@ export function useKeyboardNav() {
         );
         const focusables =
           container.classList &&
-          (container.classList.contains("carousel-expanded") ||
+          (container.classList.contains("artifact-popup") ||
+            container.classList.contains("artifact-popup-transcript") ||
             container.classList.contains("carousel-zoom"))
             ? rawFocusables
             : rawFocusables.filter((el) => el.offsetParent !== null);
         const idx = focusables.indexOf(document.activeElement);
         let nextEl = null;
         if (idx < focusables.length - 1) nextEl = focusables[idx + 1];
-        else if (focusables.length) nextEl = focusables[0];
+        else if (focusables.length && !noWraparound) nextEl = focusables[0];
         if (nextEl) {
-          if (scene === "artifact") {
+          if (container !== document) {
             logInputEvent({
               source: "useKeyboardNav",
               scene,

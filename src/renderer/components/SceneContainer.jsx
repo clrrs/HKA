@@ -5,8 +5,7 @@ import AttractScene from "./scenes/AttractScene";
 import InstructionScene from "./scenes/InstructionScene";
 import HomeScene from "./scenes/HomeScene";
 import QuoteScene from "./scenes/QuoteScene";
-import TravelScene from "./scenes/TravelScene";
-import ArtifactScene from "./scenes/ArtifactScene";
+import ThemeScene from "./scenes/ThemeScene";
 
 export default function SceneContainer() {
   const { scene } = useAppState();
@@ -27,12 +26,8 @@ export default function SceneContainer() {
         <QuoteScene />
       </Scene>
       
-      <Scene id="travel" isActive={scene === "travel"}>
-        <TravelScene />
-      </Scene>
-      
-      <Scene id="artifact" isActive={scene === "artifact"}>
-        <ArtifactScene />
+      <Scene id="theme" isActive={scene === "theme"}>
+        <ThemeScene />
       </Scene>
     </div>
   );

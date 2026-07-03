@@ -5,7 +5,7 @@
 - Single React app. Scenes are components shown/hidden by state.
 - Scene manager controls `currentScene` and focuses the first focusable element on scene change.
 - Global `state` (Context) stores theme, text size, brightness, subscene, zoom state.
-- Carousel is a subscene, and zoom is a nested sub-subscene within carousel with its own controls.
+- Selecting an artifact opens a popup (`ArtifactPopup.jsx`) on top of ThemeScene rather than navigating to a separate scene; zoom is a nested layer within that popup with its own controls.
 - This system is designed for a custom, controlled kiosk use case with specific hardware
 - Accessibility has been intentionally curated to meet project requirements, and available options are limited and streamlined. Interaction is intended to be performed using a keypad device, with all primary actions mapped to keys as detailed below.
 
@@ -25,8 +25,7 @@ kiosk-app/
 │  │   ├─ components/
 │  │   │   ├─ SceneContainer.jsx
 │  │   │   ├─ Scene.jsx
-│  │   │   ├─ Carousel.jsx
-│  │   │   ├─ ZoomControls.jsx
+│  │   │   ├─ ArtifactPopup.jsx
 │  │   │   └─ AccessibilityMenu.jsx
 │  │   └─ state/
 │  │       ├─ StateProvider.jsx
@@ -70,18 +69,18 @@ All interaction in the final build is through a custom keypad. There is NO mouse
 ## Scene navigation flow (keypad-driven)
 
 ```
-StartScene → HomeScene → QuoteScene → TravelScene → ArtifactScene
+StartScene → HomeScene → QuoteScene → ThemeScene (artifact popup opens on top)
 ```
 
 **StartScene**: Focus starts on the help (?) button. L (next) to reach the bubble, then L again to enter HomeScene.
 
 **HomeScene**: L/K cycle through the four theme circles. J (select) on a theme navigates to QuoteScene with that theme's data.
 
-**QuoteScene**: Displays the theme's quote full-screen. ANY keypress (or touch/click) dismisses it and navigates to TravelScene. The global keypad handler (`useKeyboardNav`) explicitly yields during QuoteScene -- it early-returns so that only QuoteScene's own dismiss listener processes input. A 250ms debounce prevents the J keypress that entered the scene from immediately dismissing it via key-repeat.
+**QuoteScene**: Displays the theme's quote full-screen. ANY keypress (or touch/click) dismisses it and navigates to ThemeScene. The global keypad handler (`useKeyboardNav`) explicitly yields during QuoteScene -- it early-returns so that only QuoteScene's own dismiss listener processes input. A 250ms debounce prevents the J keypress that entered the scene from immediately dismissing it via key-repeat.
 
-**TravelScene**: Shows the theme description and artifact list. L/K navigate the list. J selects an artifact to open ArtifactScene. The Back button (or S for Home) returns to HomeScene.
+**ThemeScene**: Shows the theme description and artifact list. L/K navigate the list. J selects an artifact to open the artifact popup (`ArtifactPopup.jsx`) on top of the scene, with the bubble list still visible (dimmed) behind it. The Back button (or S for Home) returns to HomeScene.
 
-**ArtifactScene**: Shows artifact details with media (carousel or video). L/K navigate between the title, description, media, and prev/next artifact buttons. J activates the focused element. S returns to HomeScene.
+**ArtifactPopup**: Shows artifact details with media (image/document or video) inside a popup card. L/K navigate between the prev-artifact arrow, title/description (inline guided description and transcript, step-scrollable), next-image button, zoom/play button, and next-artifact arrow — no wraparound at either end. J activates the focused element; selecting the boundary prev/next arrow when there's no adjacent artifact closes the popup instead. S returns to HomeScene.
 
 
 # Auto-Update Pipeline (For Development)
