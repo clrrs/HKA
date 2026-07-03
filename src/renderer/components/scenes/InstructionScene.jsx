@@ -6,7 +6,8 @@ import { useAppState } from "../../state/StateProvider";
 const SKIP_DELAY_SECONDS = 1;
 
 export default function InstructionScene({ isActive }) {
-  const { goToScene } = useAppState();
+  const { goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding } =
+    useAppState();
   const [showSkip, setShowSkip] = useState(false);
   const videoRef = useRef(null);
   const emptyFocusRef = useRef(null);
@@ -52,12 +53,19 @@ export default function InstructionScene({ isActive }) {
     }
   };
 
-  const handleEnded = () => {
+  const finishInstruction = () => {
     goToScene("home");
+    if (pendingAccessibilityOnboarding) {
+      openSettingsOnboarding();
+    }
+  };
+
+  const handleEnded = () => {
+    finishInstruction();
   };
 
   const handleSkip = () => {
-    goToScene("home");
+    finishInstruction();
   };
 
   return (

@@ -7,7 +7,6 @@ import HomeScene from "./scenes/HomeScene";
 import QuoteScene from "./scenes/QuoteScene";
 import TravelScene from "./scenes/TravelScene";
 import ArtifactScene from "./scenes/ArtifactScene";
-import StartScene from "./scenes/StartScene";
 
 export default function SceneContainer() {
   const { scene } = useAppState();
@@ -20,10 +19,6 @@ export default function SceneContainer() {
       <Scene id="instruction" isActive={scene === "instruction"}>
         <InstructionScene isActive={scene === "instruction"} />
       </Scene>
-      <Scene id="start" isActive={scene === "start"}>
-        <StartScene />
-      </Scene>
-      
       <Scene id="home" isActive={scene === "home"}>
         <HomeScene />
       </Scene>

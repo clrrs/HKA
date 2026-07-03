@@ -1,7 +1,10 @@
+// Home scene — theme selection (landing page after instructions).
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
+import { getThemeFocusAnnouncement } from "../../data/artifacts";
 import { useAppState } from "../../state/StateProvider";
+import { useAnnounce } from "../../state/AnnouncerProvider";
 
 const TESTING_ADVENTURE_ONLY = false;
 
@@ -25,6 +28,7 @@ const GAP = 77;
 const ITEM_STEP = ITEM_WIDTH + GAP;
 const SCREEN_CENTER = 960;
 const IDLE_OFFSET = 800;
+const THEME_FOCUS_ANNOUNCE_DELAY_MS = 3000;
 
 function getTrackTranslateX(focusedIndex) {
   if (focusedIndex < 0) return IDLE_OFFSET;
@@ -33,7 +37,8 @@ function getTrackTranslateX(focusedIndex) {
 }
 
 export default function HomeScene() {
-  const { goToScene, setVideoOverlayOpen } = useAppState();
+  const { goToScene, setVideoOverlayOpen, speechMode } = useAppState();
+  const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
   const circleRefs = useRef([]);
@@ -45,6 +50,24 @@ export default function HomeScene() {
   const focusedIndexRef = useRef(focusedIndex);
   focusedIndexRef.current = focusedIndex;
   useHeadphoneSinkEffect(videoRef, showVideo);
+
+  useEffect(() => {
+    if (!speechMode || showVideo || focusedIndex < 0) return;
+
+    const theme = themes[focusedIndex];
+    if (!theme || theme.disabledForTesting) return;
+
+    const timer = setTimeout(() => {
+      const message = getThemeFocusAnnouncement(theme.id);
+      if (!message) return;
+      announce(message, {
+        politeness: "polite",
+        source: "HomeScene-theme-focus",
+      });
+    }, THEME_FOCUS_ANNOUNCE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [focusedIndex, speechMode, showVideo, announce]);
 
   useEffect(() => {
     if (!showVideo) return;
@@ -203,16 +226,27 @@ export default function HomeScene() {
 
       <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
         <div
-          className="home-heading-text"
+          className="home-heading-inner"
           ref={headingRef}
           tabIndex={-1}
           data-autofocus
           onFocus={handleHeadingFocus}
-          aria-label="Choose a theme from Helen Keller's life journey"
+          aria-label={
+            speechMode
+              ? "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page."
+              : undefined
+          }
         >
-          <span aria-hidden="true">
+          <p className="home-heading-text" aria-hidden={speechMode ? true : undefined}>
             Choose a theme from Helen&nbsp;Keller&#8217;s life journey
-          </span>
+          </p>
+          <p className="home-heading-cta" aria-hidden={speechMode ? true : undefined}>
+            Use arrow keys to view themes.
+            <br />
+            Press the select key to enter a theme.
+            <br />
+            Use the home key to return to this page.
+          </p>
         </div>
       </div>
 

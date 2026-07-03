@@ -5,6 +5,7 @@ export const themes = {
     label: "Change",
     quote: "\u201CThe power of effecting changes for the better is within ourselves\u2026\u201D",
     description: "Helen Keller was a life-long advocate for change across society. Beginning with her fundraising campaign as a 10-year-old student, Helen was an advocate for voting, labor, and economic rights, in addition to working for several decades to advocate for people who were blind and deafblind.",
+    screenReaderBlurb: "Helen Keller was a lifelong advocate for voting, labor, economic rights, and disability rights.",
     artifacts: [
       {
         id: "1A1",
@@ -106,6 +107,7 @@ export const themes = {
     label: "Together",
     quote: "\u201CTogether we can do so much.\u201D",
     description: "Relationships were an essential part of Helen Keller\u2019s growth, education, and her accomplishments. Through friends across both society and the globe, known and unknown, Helen knew that collaboration was the key to success.",
+    screenReaderBlurb: "Helen Keller\u2019s growth and accomplishments grew from friendships and collaboration across society and the world.",
     artifacts: [
       {
         id: "2A1",
@@ -212,6 +214,7 @@ export const themes = {
     label: "Adventure",
     quote: "\u201CLife is either a daring adventure or nothing at all.\u201D",
     description: "Whether exploring one of the 39 different countries she traveled to, or piloting an airplane over Europe, Helen\u2019s lust for adventure was an inspiration to the world. Each of her travels left a lasting impression on the people and nations that she visited.",
+    screenReaderBlurb: "Helen Keller traveled to 39 countries and even piloted a plane, inspiring people everywhere she went.",
     artifacts: [
       {
         id: "3A1",
@@ -470,6 +473,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
     label: "Work",
     quote: "\u201CIf we do not like our work, and do not try to get happiness out of it, we are a menace to our profession as well as to ourselves.\u201D",
     description: "No less a fixture in Vaudeville than in the Cambridge School for Young Ladies, Helen had an extremely diverse life in both education and employment. Her work in literary circles, Radcliffe College, and even in Hollywood no doubt contributed to her incredible ability to prevail in the most challenging of endeavors.",
+    screenReaderBlurb: "From Vaudeville and Radcliffe College to Hollywood, Helen Keller pursued an extraordinarily diverse life of education and work.",
     artifacts: [
       {
         id: "4A1",
@@ -565,6 +569,12 @@ export const themeOrder = ["change", "together", "adventure", "work"];
 
 export function getTheme(themeId) {
   return themes[themeId] || null;
+}
+
+export function getThemeFocusAnnouncement(themeId) {
+  const blurb = themes[themeId]?.screenReaderBlurb;
+  if (!blurb) return null;
+  return `${blurb} Press select key to view the artifacts in this theme.`;
 }
 
 export function getThemeArtifacts(themeId) {

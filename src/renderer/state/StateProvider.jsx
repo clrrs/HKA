@@ -78,7 +78,30 @@ export default function StateProvider({ children }) {
   };
 
   const [showSettings, setShowSettings] = useState(false);
-  const toggleSettings = () => setShowSettings(prev => !prev);
+  const [settingsOnboarding, setSettingsOnboarding] = useState(false);
+  const [pendingAccessibilityOnboarding, setPendingAccessibilityOnboarding] =
+    useState(true);
+
+  const dismissSettings = useCallback(() => {
+    setShowSettings(false);
+    setSettingsOnboarding(false);
+    setPendingAccessibilityOnboarding(false);
+  }, []);
+
+  const openSettingsOnboarding = useCallback(() => {
+    setSettingsOnboarding(true);
+    setShowSettings(true);
+  }, []);
+
+  const toggleSettings = () => {
+    setShowSettings((prev) => {
+      if (prev && settingsOnboarding) {
+        setSettingsOnboarding(false);
+        setPendingAccessibilityOnboarding(false);
+      }
+      return !prev;
+    });
+  };
 
   const [videoOverlayOpen, setVideoOverlayOpen] = useState(false);
 
@@ -86,7 +109,7 @@ export default function StateProvider({ children }) {
   const toggleSpeechMode = () => setSpeechMode(prev => !prev);
   const [hasVisitedThemeSelection, setHasVisitedThemeSelection] = useState(false);
 
-  const [previousScene, setPreviousScene] = useState("start");
+  const [previousScene, setPreviousScene] = useState("home");
 
   const [idleTimeoutDisabled, setIdleTimeoutDisabled] = useState(false);
   const toggleIdleTimeoutDisabled = () =>
@@ -126,6 +149,8 @@ export default function StateProvider({ children }) {
     setCurrentTheme(null);
     setPrefs(DEFAULT_PREFS);
     setShowSettings(false);
+    setSettingsOnboarding(false);
+    setPendingAccessibilityOnboarding(true);
     setPreviousScene("attract");
     setTestEasterEgg(null);
     setHasVisitedThemeSelection(false);
@@ -150,7 +175,7 @@ export default function StateProvider({ children }) {
     } else if (scene === "quote") {
       setScene("home");
     } else if (scene === "home") {
-      setScene("start");
+      setScene("instruction");
     } else if (scene === "accessibility") {
       setScene(previousScene);
     }
@@ -180,6 +205,10 @@ export default function StateProvider({ children }) {
       goBack,
       showSettings,
       toggleSettings,
+      settingsOnboarding,
+      pendingAccessibilityOnboarding,
+      openSettingsOnboarding,
+      dismissSettings,
       videoOverlayOpen,
       setVideoOverlayOpen,
       speechMode,

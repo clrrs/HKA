@@ -26,8 +26,9 @@ const speechRateOptions = [
   { value: "fast", label: "Fast", steps: 3 },
 ];
 
-export default function AccessibilityMenu() {
-  const { prefs, setPref, resetPrefs, toggleSettings } = useAppState();
+export default function AccessibilityMenu({ onboarding = false }) {
+  const { prefs, setPref, resetPrefs, dismissSettings, toggleSettings } =
+    useAppState();
   const [expandedSection, setExpandedSection] = useState(null);
   const textSizeFirstRef = useRef(null);
   const themeFirstRef = useRef(null);
@@ -75,6 +76,61 @@ export default function AccessibilityMenu() {
 
   return (
     <div className="accessibility-menu">
+      {onboarding && (
+        <div className="settings-onboarding-intro">
+          <p id="accessibility-onboarding-blurb">
+            By default, the screen reader is on. Press Skip to continue with
+            these settings, or use the arrow keys to customize. Press the
+            settings key to access this menu at any time.
+          </p>
+          <button
+            type="button"
+            className="setting-btn settings-onboarding-skip"
+            onClick={dismissSettings}
+            data-autofocus
+            aria-label="Press the Select key to stick with these settings or press the right arrow key to customize speech speed, text size, contrast, or brightness."
+          >
+            Skip
+          </button>
+        </div>
+      )}
+
+      <div className="setting-group">
+        <button
+          type="button"
+          className="setting-section-trigger"
+          onClick={() => openSection("speechRate")}
+          aria-expanded={expandedSection === "speechRate"}
+          aria-controls="access-speech-rate-options"
+          id="access-speech-rate-trigger"
+          {...(!onboarding ? { "data-autofocus": true } : {})}
+        >
+          <span className="setting-section-label">Speech Speed</span>
+          <span className="setting-section-value" aria-hidden="true">{currentSpeechRateLabel}</span>
+        </button>
+        {expandedSection === "speechRate" && (
+          <div
+            id="access-speech-rate-options"
+            className="setting-options"
+            role="group"
+            aria-labelledby="access-speech-rate-trigger"
+            onBlur={handleOptionsBlur}
+          >
+            {speechRateOptions.map((option, i) => (
+              <button
+                key={option.value}
+                ref={i === 0 ? speechRateFirstRef : null}
+                className={`setting-btn ${(prefs.speechRate ?? "normal") === option.value ? "active" : ""}`}
+                onClick={() => handleSpeechRate(option.value)}
+                aria-pressed={(prefs.speechRate ?? "normal") === option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="setting-group">
         <button
           type="button"
@@ -83,7 +139,6 @@ export default function AccessibilityMenu() {
           aria-expanded={expandedSection === "textSize"}
           aria-controls="access-text-size-options"
           id="access-text-size-trigger"
-          data-autofocus
         >
           <span className="setting-section-label">Text Size</span>
           <span className="setting-section-value" aria-hidden="true">{currentTextSizeLabel}</span>
@@ -120,7 +175,7 @@ export default function AccessibilityMenu() {
           aria-controls="access-theme-options"
           id="access-theme-trigger"
         >
-          <span className="setting-section-label">Theme / Contrast</span>
+          <span className="setting-section-label">Contrast</span>
           <span className="setting-section-value" aria-hidden="true">{currentThemeLabel}</span>
         </button>
         {expandedSection === "theme" && (
@@ -181,56 +236,20 @@ export default function AccessibilityMenu() {
         )}
       </div>
 
-      <div className="setting-group">
-        <button
-          type="button"
-          className="setting-section-trigger"
-          onClick={() => openSection("speechRate")}
-          aria-expanded={expandedSection === "speechRate"}
-          aria-controls="access-speech-rate-options"
-          id="access-speech-rate-trigger"
-        >
-          <span className="setting-section-label">Speech Speed</span>
-          <span className="setting-section-value" aria-hidden="true">{currentSpeechRateLabel}</span>
-        </button>
-        {expandedSection === "speechRate" && (
-          <div
-            id="access-speech-rate-options"
-            className="setting-options"
-            role="group"
-            aria-labelledby="access-speech-rate-trigger"
-            onBlur={handleOptionsBlur}
-          >
-            {speechRateOptions.map((option, i) => (
-              <button
-                key={option.value}
-                ref={i === 0 ? speechRateFirstRef : null}
-                className={`setting-btn ${(prefs.speechRate ?? "normal") === option.value ? "active" : ""}`}
-                onClick={() => handleSpeechRate(option.value)}
-                aria-pressed={(prefs.speechRate ?? "normal") === option.value}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
       <div className="settings-footer">
         <button
           type="button"
           className="setting-btn settings-reset-btn"
           onClick={resetPrefs}
         >
-          Reset All Settings
+          Reset to Defaults
         </button>
         <button
           type="button"
           className="setting-btn"
-          onClick={toggleSettings}
-          aria-label="Close accessibility settings"
+          onClick={onboarding ? dismissSettings : toggleSettings}
         >
-          Exit
+          Save and Exit
         </button>
       </div>
     </div>

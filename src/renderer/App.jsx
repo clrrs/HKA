@@ -40,6 +40,8 @@ export default function App() {
     scene,
     showSettings,
     toggleSettings,
+    settingsOnboarding,
+    dismissSettings,
     resetToStart,
     videoOverlayOpen,
     speechMode,
@@ -258,7 +260,7 @@ export default function App() {
         first.focus();
       }, 50);
     }
-  }, [showSettings]);
+  }, [showSettings, settingsOnboarding]);
 
   useEffect(() => {
     if (idleCountdown === null) {
@@ -324,8 +326,14 @@ export default function App() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="accessibility-settings-title"
+            {...(settingsOnboarding
+              ? { "aria-describedby": "accessibility-onboarding-blurb" }
+              : {})}
           >
-            <div className="settings-backdrop" onClick={toggleSettings} />
+            <div
+              className="settings-backdrop"
+              onClick={settingsOnboarding ? dismissSettings : toggleSettings}
+            />
             <div
               className="settings-panel"
               ref={settingsPanelRef}
@@ -333,7 +341,7 @@ export default function App() {
               onKeyDown={handleSettingsKeyDown}
             >
               <h2 id="accessibility-settings-title">Accessibility Settings</h2>
-              <AccessibilityMenu />
+              <AccessibilityMenu onboarding={settingsOnboarding} />
             </div>
           </div>
         )}

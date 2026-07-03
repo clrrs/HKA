@@ -126,12 +126,12 @@ export function useKeyboardNav() {
 
         if (key === "1") {
           e.preventDefault();
-          goToScene("start");
+          goToScene("instruction");
           return;
         }
         if (key === "2") {
           e.preventDefault();
-          goToScene("home");
+          goToScene("home"); // theme selection (home)
           return;
         }
         if (key === "3") {
@@ -155,7 +155,7 @@ export function useKeyboardNav() {
         return;
       }
 
-      // Home (S or Home key) — guard against synthetic S from toggle-tts (Insert+S)
+      // Home / theme selection (S or Home key) — guard against synthetic S from toggle-tts (Insert+S)
       if (key === "s" || key === "home") {
         if (Date.now() - lastTtsToggleRef.current < 500) return;
         e.preventDefault();
