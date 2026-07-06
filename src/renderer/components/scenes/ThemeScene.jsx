@@ -117,6 +117,12 @@ export default function ThemeScene() {
   useEffect(() => {
     if (!showTip || !theme) return;
 
+    announce(getThemeTipMessage(theme.label), {
+      politeness: "assertive",
+      source: "theme-tip-show",
+      dedupeMs: 0,
+    });
+
     const announcePage = () => {
       requestAnimationFrame(() => {
         const text = getThemePageAnnouncement(theme, speechMode);

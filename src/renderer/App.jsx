@@ -289,11 +289,16 @@ export default function App() {
     }
     if (idleFocusSessionRef.current) return;
     idleFocusSessionRef.current = true;
+    announce("Still there? Press any key to stay.", {
+      politeness: "assertive",
+      source: "idle-warning-show",
+      dedupeMs: 0,
+    });
     const t = window.setTimeout(() => {
       idleOverlayRef.current?.focus();
     }, 50);
     return () => window.clearTimeout(t);
-  }, [idleCountdown]);
+  }, [idleCountdown, announce]);
 
   useEffect(() => {
     if (!speechHudSeenFirstStateRef.current) {
