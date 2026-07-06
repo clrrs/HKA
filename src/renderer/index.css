@@ -1918,6 +1918,25 @@ h1[tabindex]:focus-visible {
   border-left: 36px solid rgba(255, 255, 255, 0.85);
 }
 
+@keyframes navArrowBump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.artifact-popup-nav-arrow--bump::before {
+  animation: navArrowBump 0.35s ease-out forwards;
+}
+
 .artifact-popup-card {
   position: relative;
   width: 1200px;

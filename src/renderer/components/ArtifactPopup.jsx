@@ -7,7 +7,7 @@ import ArtifactVideoOverlay from "./ArtifactVideoOverlay";
 
 const SCROLL_STEP_RATIO = 0.75;
 const WORDS_PER_SEC = 3;
-const CHUNK_BUFFER_MS = 2000;
+const CHUNK_BUFFER_MS = 4000;
 
 function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -34,9 +34,15 @@ function buildAutoplayChunks(artifact, images, isVideo) {
     return chunks;
   }
 
-  const firstImageText = artifact.guidedDescription?.trim() || images[0]?.alt || "";
-  if (firstImageText) {
-    chunks.push({ text: firstImageText, imageIndex: 0 });
+  const firstGuided = artifact.guidedDescription?.trim();
+  if (firstGuided) {
+    const count = images.length;
+    chunks.push({
+      text: `Image 1 of ${count}: Guided Description. ${firstGuided}`,
+      imageIndex: 0,
+    });
+  } else if (images[0]?.alt) {
+    chunks.push({ text: images[0].alt, imageIndex: 0 });
   }
 
   for (let i = 1; i < images.length; i++) {
@@ -320,7 +326,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         autoplayingRef.current = false;
         autoplayTimeoutRef.current = null;
         setIsAutoplaying(false);
-        prevArrowRef.current?.focus({ preventScroll: true });
         return;
       }
 
@@ -507,6 +512,20 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const handlePrimaryAction = isVideo ? openVideoPlayer : openZoom;
 
+  const bumpArrow = useCallback((ref) => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.remove("artifact-popup-nav-arrow--bump");
+    requestAnimationFrame(() => {
+      el.classList.add("artifact-popup-nav-arrow--bump");
+      el.addEventListener(
+        "animationend",
+        () => el.classList.remove("artifact-popup-nav-arrow--bump"),
+        { once: true }
+      );
+    });
+  }, []);
+
   const handlePopupKeyDown = useCallback(
     (e) => {
       if (e.repeat) return;
@@ -546,10 +565,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (isNext) {
         if (idx >= 0 && idx < focusables.length - 1) {
           focusables[idx + 1].focus();
+        } else if (idx === focusables.length - 1) {
+          bumpArrow(nextArrowRef);
+          const label = nextArrowRef.current?.getAttribute("aria-label");
+          if (label) announce(label, { politeness: "assertive" });
         }
       } else if (isBack) {
         if (idx > 0) {
           focusables[idx - 1].focus();
+        } else if (idx === 0) {
+          bumpArrow(prevArrowRef);
+          const label = prevArrowRef.current?.getAttribute("aria-label");
+          if (label) announce(label, { politeness: "assertive" });
         }
       }
     },
@@ -557,6 +584,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       transcriptOpen,
       guidedOpen,
       getPopupFocusables,
+      bumpArrow,
+      announce,
       handlePrevArrow,
       handleNextArrow,
       handleNextImage,
