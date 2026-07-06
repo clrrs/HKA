@@ -97,17 +97,3 @@ Pushing a version tag (e.g. `v1.0.3`) triggers a GitHub Actions workflow that bu
    git push origin v1.0.3
    ```
 
-# Kiosk deployment checklist
-
-- Create a dedicated kiosk user account on the machine with auto-login.
-- Set Electron app to launch on startup.
-- Disable sleep and screensaver system-wide.
-- Keep system hotkeys since active
-- On macOS set `kiosk: true` and consider `fullscreen: true`.
-- Test with keypad
-- Ensure graceful recovery on crashes (auto restart via systemd or launchd).
-
-# Persistence and state recovery
-
-- Save `prefs` in `localStorage`
-- Keep state small and serializable
