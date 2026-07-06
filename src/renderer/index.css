@@ -268,7 +268,9 @@ body {
 
 .document-arrow-disabled,
 .document-arrow-up:disabled,
-.document-arrow-down:disabled {
+.document-arrow-down:disabled,
+.document-arrow-up[aria-disabled="true"],
+.document-arrow-down[aria-disabled="true"] {
   opacity: 0.4;
   cursor: default;
 }
@@ -2080,11 +2082,21 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-popup-transcript-heading {
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   padding-left: 60px;
   padding-right: 120px;
   color: var(--text-heading);
   font-size: calc(var(--font-size-h1) * 0.5 * var(--text-scale));
+}
+
+.artifact-popup-transcript-subtitle {
+  margin: 0 0 14px;
+  padding-left: 60px;
+  padding-right: 120px;
+  color: var(--text-primary);
+  opacity: 0.8;
+  font-size: calc(20px * var(--text-scale));
+  font-weight: 400;
 }
 
 .artifact-popup-transcript-body {

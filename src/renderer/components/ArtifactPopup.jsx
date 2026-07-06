@@ -6,8 +6,10 @@ import { textOrMissing } from "../data/contentPlaceholder";
 import ArtifactVideoOverlay from "./ArtifactVideoOverlay";
 
 const SCROLL_STEP_RATIO = 0.75;
-const WORDS_PER_SEC = 3;
+const WORDS_PER_SEC = 2.4;
 const CHUNK_BUFFER_MS = 4000;
+const AUTO_READ_COMPLETE_INSTRUCTION =
+  "Use the artifact control menu to continue exploring this artifact, or navigate to the next artifact button to go to the next artifact.";
 
 function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -29,7 +31,10 @@ function buildAutoplayChunks(artifact, images, isVideo) {
   if (isVideo || images.length === 0) {
     const guided = artifact.guidedDescription?.trim();
     if (guided) {
-      chunks.push({ text: guided, imageIndex: 0 });
+      chunks.push({
+        text: `Image 1 of 1: Guided Description. ${guided}`,
+        imageIndex: 0,
+      });
     }
     return chunks;
   }
@@ -326,6 +331,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         autoplayingRef.current = false;
         autoplayTimeoutRef.current = null;
         setIsAutoplaying(false);
+        announce(AUTO_READ_COMPLETE_INSTRUCTION, { politeness: "assertive" });
         return;
       }
 
@@ -783,6 +789,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     typeof artifact.guidedDescription === "string" && artifact.guidedDescription.trim().length > 0;
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
   const guidedText = hasGuided ? artifact.guidedDescription.trim() : null;
+  const guidedImageTotal = images.length > 0 ? images.length : 1;
+  const guidedImageIndex = Math.min(guidedImageTotal, Math.max(1, currentImageIndex + 1));
+  const guidedImageSubtitle = `Image ${guidedImageIndex} of ${guidedImageTotal}`;
   const speechLabel = `${artifact.title}. ${artifact.description}`;
   const videoAlt = isVideo ? getVideoAlt(artifact) : "";
 
@@ -959,6 +968,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 Exit
               </button>
               <h2 className="artifact-popup-transcript-heading">Guided Description</h2>
+              <p className="artifact-popup-transcript-subtitle">{guidedImageSubtitle}</p>
               <div
                 className="artifact-popup-transcript-body"
                 ref={guidedBodyRef}
@@ -1013,7 +1023,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   ref={snapUpRef}
                   onClick={snapStepUp}
                   className="carousel-btn carousel-btn-icon document-arrow-up"
-                  disabled={atSnapTop}
+                  aria-disabled={atSnapTop ? true : undefined}
                   aria-label="Snap view up one step"
                 >
                   <img src="Back.svg" alt="" aria-hidden="true" />
@@ -1023,7 +1033,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   ref={snapDownRef}
                   onClick={snapStepDown}
                   className="carousel-btn carousel-btn-icon document-arrow-down"
-                  disabled={atSnapBottom}
+                  aria-disabled={atSnapBottom ? true : undefined}
                   aria-label="Snap view down one step"
                   data-autofocus=""
                 >

@@ -54,6 +54,8 @@ export default function App() {
   const lastActivityRef = useRef(Date.now());
   const warningVisibleRef = useRef(false);
   const settingsPanelRef = useRef(null);
+  const settingsReturnFocusRef = useRef(null);
+  const prevShowSettingsRef = useRef(false);
   const idleOverlayRef = useRef(null);
   const idleFocusSessionRef = useRef(false);
   const speechHudSeenFirstStateRef = useRef(false);
@@ -244,6 +246,24 @@ export default function App() {
     e.preventDefault();
     focusables[nextIndex].focus();
   };
+
+  useEffect(() => {
+    if (showSettings && !prevShowSettingsRef.current) {
+      const active = document.activeElement;
+      if (active && active !== document.body) {
+        settingsReturnFocusRef.current = active;
+      }
+    } else if (!showSettings && prevShowSettingsRef.current) {
+      const el = settingsReturnFocusRef.current;
+      settingsReturnFocusRef.current = null;
+      if (el && document.contains(el)) {
+        requestAnimationFrame(() => {
+          el.focus({ preventScroll: true });
+        });
+      }
+    }
+    prevShowSettingsRef.current = showSettings;
+  }, [showSettings]);
 
   useEffect(() => {
     if (!showSettings) return;

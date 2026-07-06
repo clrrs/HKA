@@ -19,7 +19,7 @@ export default function SceneContainer() {
         <InstructionScene isActive={scene === "instruction"} />
       </Scene>
       <Scene id="home" isActive={scene === "home"}>
-        <HomeScene />
+        <HomeScene isActive={scene === "home"} />
       </Scene>
 
       <Scene id="quote" isActive={scene === "quote"}>

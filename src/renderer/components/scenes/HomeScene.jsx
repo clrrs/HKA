@@ -36,11 +36,15 @@ function getTrackTranslateX(focusedIndex) {
   return SCREEN_CENTER - itemCenter;
 }
 
-export default function HomeScene() {
+const HOME_HEADING_LABEL =
+  "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page.";
+
+export default function HomeScene({ isActive = false }) {
   const { goToScene, setVideoOverlayOpen, speechMode } = useAppState();
   const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
+  const [announceHomeArrival, setAnnounceHomeArrival] = useState(false);
   const circleRefs = useRef([]);
   const headingRef = useRef(null);
   const carouselRef = useRef(null);
@@ -48,7 +52,14 @@ export default function HomeScene() {
   const modalRef = useRef(null);
   const videoRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
+  const wasActiveRef = useRef(isActive);
   focusedIndexRef.current = focusedIndex;
+
+  if (isActive && !wasActiveRef.current) {
+    setAnnounceHomeArrival(true);
+  }
+  wasActiveRef.current = isActive;
+
   useHeadphoneSinkEffect(videoRef, showVideo);
 
   useEffect(() => {
@@ -145,6 +156,13 @@ export default function HomeScene() {
     hideCarousel();
   }, [hideCarousel]);
 
+  const handleHeadingBlur = useCallback((e) => {
+    const next = e.relatedTarget;
+    if (next && carouselRef.current?.contains(next)) {
+      setAnnounceHomeArrival(false);
+    }
+  }, []);
+
   const handleBlur = useCallback((e) => {
     const scene = e.currentTarget.closest(".home-scene");
     requestAnimationFrame(() => {
@@ -218,7 +236,7 @@ export default function HomeScene() {
         ref={helpButtonRef}
         type="button"
         className="nav-btn icon-btn home-help-btn"
-        aria-label="Watch instructional video"
+        aria-label="Watch instructional video for help navigating the controls"
         onClick={openVideo}
       >
         <img src="./InformationIcon.svg" alt="" aria-hidden="true" />
@@ -231,9 +249,12 @@ export default function HomeScene() {
           tabIndex={-1}
           data-autofocus
           onFocus={handleHeadingFocus}
+          onBlur={handleHeadingBlur}
           aria-label={
             speechMode
-              ? "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page."
+              ? announceHomeArrival
+                ? `Home. ${HOME_HEADING_LABEL}`
+                : HOME_HEADING_LABEL
               : undefined
           }
         >

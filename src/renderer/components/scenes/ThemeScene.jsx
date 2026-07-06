@@ -60,6 +60,7 @@ const TIP_AUTO_DISMISS_MS = 20000;
 
 export default function ThemeScene() {
   const {
+    scene,
     currentTheme,
     speechMode,
     visitedThemes,
@@ -96,8 +97,10 @@ export default function ThemeScene() {
   }, [popupOpen]);
 
   useEffect(() => {
-    if (!currentTheme || !theme) {
-      setShowTip(false);
+    if (scene !== "theme" || !currentTheme || !theme) {
+      if (scene !== "theme") {
+        setShowTip(false);
+      }
       return;
     }
 
@@ -109,7 +112,7 @@ export default function ThemeScene() {
     }
     // Only re-check first-visit when the active theme changes, not when visitedThemes updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTheme, theme?.id, markThemeVisited]);
+  }, [scene, currentTheme, theme?.id, markThemeVisited]);
 
   useEffect(() => {
     if (!showTip || !theme) return;
