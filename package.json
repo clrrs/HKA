@@ -12,7 +12,8 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "build:win": "vite build && electron-builder --win",
-    "publish": "vite build && electron-builder --win --publish always"
+    "publish": "vite build && electron-builder --win --publish always",
+    "export:sr": "node scripts/export_sr_announcements.mjs"
   },
   "dependencies": {
     "electron-updater": "^6.7.3",
