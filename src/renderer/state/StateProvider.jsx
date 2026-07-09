@@ -11,6 +11,7 @@ import {
   resumeRegisteredMedia,
 } from "../audio/pauseMediaRegistry";
 import { setMediaInterruptHandler } from "../audio/pauseBridge";
+import { setAppPaused } from "../audio/pauseAnnounceGate";
 
 const TEST_EASTER_EGG_MESSAGES = [
   "thank you for trying to break something!",
@@ -73,23 +74,30 @@ export default function StateProvider({ children }) {
   };
 
   const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
 
-  const clearPaused = useCallback(() => {
-    setIsPaused((prev) => {
-      if (prev) {
-        resumeRegisteredMedia();
-      }
-      return false;
-    });
+  const applyPauseState = useCallback((next) => {
+    isPausedRef.current = next;
+    setAppPaused(next);
+    setIsPaused(next);
+    if (next) {
+      pauseRegisteredMedia();
+    } else {
+      resumeRegisteredMedia();
+    }
   }, []);
 
+  const clearPaused = useCallback(() => {
+    if (!isPausedRef.current) return;
+    applyPauseState(false);
+  }, [applyPauseState]);
+
+  const syncPauseFromShift = useCallback(() => {
+    applyPauseState(!isPausedRef.current);
+  }, [applyPauseState]);
+
   const goToScene = (sceneName, options = {}) => {
-    setIsPaused((prev) => {
-      if (prev) {
-        resumeRegisteredMedia();
-      }
-      return false;
-    });
+    clearPaused();
     setScene(sceneName);
     setSubscene(options.subscene || null);
     if (options.artifactId !== undefined) {
@@ -146,19 +154,12 @@ export default function StateProvider({ children }) {
   const lastTtsToggleRef = useRef(0);
 
   const togglePaused = useCallback(() => {
-    setIsPaused((prev) => {
-      const next = !prev;
-      if (speechMode) {
-        window.kioskApi?.send("pause-speech");
-      }
-      if (next) {
-        pauseRegisteredMedia();
-      } else {
-        resumeRegisteredMedia();
-      }
-      return next;
-    });
-  }, [speechMode]);
+    const next = !isPausedRef.current;
+    if (speechMode) {
+      window.kioskApi?.send("pause-speech");
+    }
+    applyPauseState(next);
+  }, [speechMode, applyPauseState]);
 
   const setSpeechModeWithTts = useCallback((enabled) => {
     lastTtsToggleRef.current = Date.now();
@@ -206,15 +207,10 @@ export default function StateProvider({ children }) {
 
   useEffect(() => {
     setMediaInterruptHandler(() => {
-      setIsPaused((prev) => {
-        if (prev) {
-          resumeRegisteredMedia();
-        }
-        return false;
-      });
+      clearPaused();
     });
     return () => setMediaInterruptHandler(null);
-  }, []);
+  }, [clearPaused]);
 
   const resetToStart = () => {
     setScene("attract");
@@ -228,6 +224,8 @@ export default function StateProvider({ children }) {
     setPreviousScene("attract");
     setTestEasterEgg(null);
     setVisitedThemes({});
+    isPausedRef.current = false;
+    setAppPaused(false);
     setIsPaused(false);
     window.kioskApi?.send("reset-speech-rate");
     try {
@@ -292,6 +290,7 @@ export default function StateProvider({ children }) {
       lastTtsToggleRef,
       isPaused,
       togglePaused,
+      syncPauseFromShift,
       clearPaused,
       visitedThemes,
       markThemeVisited,

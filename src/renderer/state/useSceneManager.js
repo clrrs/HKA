@@ -40,8 +40,8 @@ export function useKeyboardNav() {
     showSettings,
     speechMode,
     togglePaused,
+    syncPauseFromShift,
     clearPaused,
-    isPaused,
     lastTtsToggleRef,
     toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
@@ -153,7 +153,7 @@ export function useKeyboardNav() {
         }
       }
 
-      // Play / Pause (Q) — before attract/quote early return for active scenes
+      // Play / Pause (Q) — Shift to NVDA; sync media/timers in app
       if (key === "q") {
         if (
           ENABLE_TEST_SHORTCUTS &&
@@ -168,6 +168,15 @@ export function useKeyboardNav() {
           return;
         }
         togglePaused();
+        return;
+      }
+
+      // Physical Shift — NVDA handles speech; sync media/timers only
+      if (key === "shift") {
+        if (scene === "attract" || scene === "quote") {
+          return;
+        }
+        syncPauseFromShift();
         return;
       }
 
@@ -333,8 +342,8 @@ export function useKeyboardNav() {
     toggleSettings,
     showSettings,
     speechMode,
-    isPaused,
     togglePaused,
+    syncPauseFromShift,
     clearPaused,
     lastTtsToggleRef,
     toggleIdleTimeoutDisabled,
