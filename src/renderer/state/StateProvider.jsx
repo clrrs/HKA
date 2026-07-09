@@ -72,6 +72,17 @@ export default function StateProvider({ children }) {
     setPrefs(DEFAULT_PREFS);
   };
 
+  const [isPaused, setIsPaused] = useState(false);
+
+  const clearPaused = useCallback(() => {
+    setIsPaused((prev) => {
+      if (prev) {
+        resumeRegisteredMedia();
+      }
+      return false;
+    });
+  }, []);
+
   const goToScene = (sceneName, options = {}) => {
     setIsPaused((prev) => {
       if (prev) {
@@ -133,17 +144,6 @@ export default function StateProvider({ children }) {
   const [speechMode, setSpeechMode] = useState(true);
   const toggleSpeechMode = () => setSpeechMode((prev) => !prev);
   const lastTtsToggleRef = useRef(0);
-
-  const [isPaused, setIsPaused] = useState(false);
-
-  const clearPaused = useCallback(() => {
-    setIsPaused((prev) => {
-      if (prev) {
-        resumeRegisteredMedia();
-      }
-      return false;
-    });
-  }, []);
 
   const togglePaused = useCallback(() => {
     setIsPaused((prev) => {

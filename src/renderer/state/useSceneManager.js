@@ -44,6 +44,7 @@ export function useKeyboardNav() {
     clearPaused,
     isPaused,
     lastTtsToggleRef,
+    toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
   } = useAppState();
   const announce = useAnnounce();
