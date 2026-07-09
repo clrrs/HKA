@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useAppState } from "./StateProvider";
-import { useAnnounce } from "./AnnouncerProvider";
 import {
   ensureInputLogTools,
   getElementSummary,
@@ -47,7 +46,6 @@ export function useKeyboardNav() {
     toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
   } = useAppState();
-  const announce = useAnnounce();
   const klEggRef = useRef({ step: 0, lastTs: 0 });
   const qEggRef = useRef({ streak: 0, lastTs: 0 });
 
@@ -169,13 +167,7 @@ export function useKeyboardNav() {
         if (scene === "attract" || scene === "quote") {
           return;
         }
-        const wasPaused = isPaused;
         togglePaused();
-        announce(wasPaused ? "Playing" : "Paused", {
-          politeness: "assertive",
-          source: "play-pause-toggle",
-          dedupeMs: 0,
-        });
         return;
       }
 
@@ -347,7 +339,6 @@ export function useKeyboardNav() {
     lastTtsToggleRef,
     toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
-    announce,
   ]);
 }
 
