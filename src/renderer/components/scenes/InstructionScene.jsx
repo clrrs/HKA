@@ -1,21 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
-import { usePausableMedia } from "../../audio/pauseMediaRegistry";
 import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 
 const SKIP_DELAY_SECONDS = 1;
 
 export default function InstructionScene({ isActive }) {
-  const { goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding } =
+  const { goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding, isPaused } =
     useAppState();
   const [showSkip, setShowSkip] = useState(false);
   const videoRef = useRef(null);
   const emptyFocusRef = useRef(null);
   const skipButtonRef = useRef(null);
+  const wasPlayingRef = useRef(false);
 
   useHeadphoneSinkEffect(videoRef, isActive);
-  usePausableMedia(videoRef, isActive);
 
   // Focus trap: L/Tab from Skip goes to empty; K/Shift+Tab from empty goes to Skip (loop)
   const handleKeyDown = (e) => {
@@ -47,6 +46,24 @@ export default function InstructionScene({ isActive }) {
       setShowSkip(false);
     }
   }, [isActive]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isActive) return;
+
+    if (isPaused) {
+      if (!video.paused) {
+        wasPlayingRef.current = true;
+        video.pause();
+      }
+      return;
+    }
+
+    if (wasPlayingRef.current) {
+      wasPlayingRef.current = false;
+      video.play().catch(() => {});
+    }
+  }, [isPaused, isActive]);
 
   const handleTimeUpdate = () => {
     const video = videoRef.current;

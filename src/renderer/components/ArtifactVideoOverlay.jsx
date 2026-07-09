@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
-import { usePausableMedia } from "../audio/pauseMediaRegistry";
 import { stopNvdaSpeechForMediaStart } from "../audio/nvdaSpeechControl";
 import { useAppState } from "../state/StateProvider";
 import { textOrMissing } from "../data/contentPlaceholder";
@@ -59,16 +58,16 @@ export default function ArtifactVideoOverlay({
   onClose,
   videoAlt,
 }) {
-  const { speechMode } = useAppState();
+  const { speechMode, isPaused } = useAppState();
   const overlayRef = useRef(null);
   const videoRef = useRef(null);
   const transcriptRef = useRef(null);
   const transcriptButtonRef = useRef(null);
   const guidedRef = useRef(null);
   const guidedButtonRef = useRef(null);
+  const wasPlayingBeforePauseRef = useRef(false);
 
   useHeadphoneSinkEffect(videoRef, src);
-  usePausableMedia(videoRef, true);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
@@ -107,16 +106,23 @@ export default function ArtifactVideoOverlay({
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return undefined;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    video.addEventListener("play", onPlay);
-    video.addEventListener("pause", onPause);
-    return () => {
-      video.removeEventListener("play", onPlay);
-      video.removeEventListener("pause", onPause);
-    };
-  }, [src]);
+    if (!video) return;
+
+    if (isPaused) {
+      if (!video.paused) {
+        wasPlayingBeforePauseRef.current = true;
+        video.pause();
+        setIsPlaying(false);
+      }
+      return;
+    }
+
+    if (wasPlayingBeforePauseRef.current) {
+      wasPlayingBeforePauseRef.current = false;
+      video.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  }, [isPaused]);
 
   const handleEnded = () => {
     setIsPlaying(false);

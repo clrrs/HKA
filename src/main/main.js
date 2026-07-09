@@ -136,14 +136,6 @@ ipcMain.on("stop-speech", () => {
   );
 });
 
-// Pause or resume NVDA speech (Shift) — toggles mid-utterance on supported synths
-ipcMain.on("pause-speech", () => {
-  sendKeys(
-    "[KbdEvent]::keybd_event(0x10,0,0,[UIntPtr]::Zero);" +
-    "[KbdEvent]::keybd_event(0x10,0,2,[UIntPtr]::Zero)"
-  );
-});
-
 app.whenReady().then(() => {
   ensurePowerShell();
   createWindow();

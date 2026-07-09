@@ -40,18 +40,12 @@ export function useKeyboardNav() {
     showSettings,
     speechMode,
     togglePaused,
-    syncPauseFromShift,
-    clearPaused,
     lastTtsToggleRef,
     toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
   } = useAppState();
   const klEggRef = useRef({ step: 0, lastTs: 0 });
   const qEggRef = useRef({ streak: 0, lastTs: 0 });
-
-  const dismissPauseForNav = () => {
-    clearPaused();
-  };
 
   useEffect(() => {
     const ENABLE_TEST_SHORTCUTS = true;
@@ -153,30 +147,12 @@ export function useKeyboardNav() {
         }
       }
 
-      // Play / Pause (Q) — Shift to NVDA; sync media/timers in app
-      if (key === "q") {
-        if (
-          ENABLE_TEST_SHORTCUTS &&
-          ENABLE_TEST_EASTER_EGGS &&
-          testEggResult === "suppress-q"
-        ) {
-          e.preventDefault();
-          return;
-        }
-        e.preventDefault();
-        if (scene === "attract" || scene === "quote") {
-          return;
-        }
-        togglePaused();
-        return;
-      }
-
-      // Physical Shift — NVDA handles speech; sync media/timers only
+      // Shift — NVDA handles speech; app syncs media/timers only
       if (key === "shift") {
         if (scene === "attract" || scene === "quote") {
           return;
         }
-        syncPauseFromShift();
+        togglePaused();
         return;
       }
 
@@ -185,7 +161,6 @@ export function useKeyboardNav() {
       // Settings (A) - toggle settings overlay
       if (key === "a") {
         e.preventDefault();
-        dismissPauseForNav();
         toggleSettings();
         return;
       }
@@ -194,7 +169,6 @@ export function useKeyboardNav() {
       if (key === "s" || key === "home") {
         if (Date.now() - lastTtsToggleRef.current < 500) return;
         e.preventDefault();
-        dismissPauseForNav();
         goToScene("home");
         return;
       }
@@ -202,7 +176,6 @@ export function useKeyboardNav() {
       // Back (K) - simulate Shift+Tab
       if (key === "k") {
         e.preventDefault();
-        dismissPauseForNav();
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-popup-transcript") ||
@@ -250,7 +223,6 @@ export function useKeyboardNav() {
       // Select (J) - simulate Enter
       if (key === "j") {
         e.preventDefault();
-        dismissPauseForNav();
         const activeContainer =
           document.activeElement?.closest(
             ".artifact-popup-transcript, .artifact-video-transcript-modal, .artifact-video-modal, .carousel-zoom, .artifact-popup"
@@ -272,7 +244,6 @@ export function useKeyboardNav() {
       // Next (L) - simulate Tab
       if (key === "l") {
         e.preventDefault();
-        dismissPauseForNav();
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-popup-transcript") ||
@@ -343,8 +314,6 @@ export function useKeyboardNav() {
     showSettings,
     speechMode,
     togglePaused,
-    syncPauseFromShift,
-    clearPaused,
     lastTtsToggleRef,
     toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,

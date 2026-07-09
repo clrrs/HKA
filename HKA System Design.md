@@ -50,7 +50,7 @@ All interaction in the final build is through a custom keypad. There is NO mouse
 |-----------|----------|
 | A | Settings – toggle popup overlay on/off |
 | S | Home – navigate to theme selection (home scene) |
-| Q | Play / Pause – pause or resume speech (via NVDA Shift), media, and auto-advance timers |
+| Shift | Play / Pause – NVDA handles speech natively; app syncs auto-read timers and video |
 | W | Volume Up – increase system volume (via Electron IPC) |
 | I | Volume Down – decrease system volume (via Electron IPC) |
 | K | Back – move to previous focusable element (Shift+Tab) |

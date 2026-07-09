@@ -8,7 +8,6 @@ contextBridge.exposeInMainWorld("kioskApi", {
       "volume-up",
       "volume-down",
       "stop-speech",
-      "pause-speech",
       "speech-rate-change",
       "reset-speech-rate",
     ];

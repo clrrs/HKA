@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useCallback, useRef, useEffect } from "react";
-import { isAppPaused } from "../audio/pauseAnnounceGate";
 
 const AnnouncerContext = createContext(null);
 const ANNOUNCE_LOG_KEY = "__HKA_ANNOUNCE_LOG__";
@@ -110,10 +109,6 @@ export default function AnnouncerProvider({ children }) {
     }
 
     if (!message) return;
-
-    if (isAppPaused()) {
-      return;
-    }
 
     const now = Date.now();
     if (

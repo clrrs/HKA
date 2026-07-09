@@ -6,12 +6,6 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import {
-  pauseRegisteredMedia,
-  resumeRegisteredMedia,
-} from "../audio/pauseMediaRegistry";
-import { setMediaInterruptHandler } from "../audio/pauseBridge";
-import { setAppPaused } from "../audio/pauseAnnounceGate";
 
 const TEST_EASTER_EGG_MESSAGES = [
   "thank you for trying to break something!",
@@ -74,30 +68,11 @@ export default function StateProvider({ children }) {
   };
 
   const [isPaused, setIsPaused] = useState(false);
-  const isPausedRef = useRef(false);
-
-  const applyPauseState = useCallback((next) => {
-    isPausedRef.current = next;
-    setAppPaused(next);
-    setIsPaused(next);
-    if (next) {
-      pauseRegisteredMedia();
-    } else {
-      resumeRegisteredMedia();
-    }
+  const togglePaused = useCallback(() => {
+    setIsPaused((prev) => !prev);
   }, []);
 
-  const clearPaused = useCallback(() => {
-    if (!isPausedRef.current) return;
-    applyPauseState(false);
-  }, [applyPauseState]);
-
-  const syncPauseFromShift = useCallback(() => {
-    applyPauseState(!isPausedRef.current);
-  }, [applyPauseState]);
-
   const goToScene = (sceneName, options = {}) => {
-    clearPaused();
     setScene(sceneName);
     setSubscene(options.subscene || null);
     if (options.artifactId !== undefined) {
@@ -153,14 +128,6 @@ export default function StateProvider({ children }) {
   const toggleSpeechMode = () => setSpeechMode((prev) => !prev);
   const lastTtsToggleRef = useRef(0);
 
-  const togglePaused = useCallback(() => {
-    const next = !isPausedRef.current;
-    if (speechMode) {
-      window.kioskApi?.send("pause-speech");
-    }
-    applyPauseState(next);
-  }, [speechMode, applyPauseState]);
-
   const setSpeechModeWithTts = useCallback((enabled) => {
     lastTtsToggleRef.current = Date.now();
     setSpeechMode(enabled);
@@ -205,13 +172,6 @@ export default function StateProvider({ children }) {
     document.documentElement.dataset.speechMode = speechMode ? "on" : "off";
   }, [speechMode]);
 
-  useEffect(() => {
-    setMediaInterruptHandler(() => {
-      clearPaused();
-    });
-    return () => setMediaInterruptHandler(null);
-  }, [clearPaused]);
-
   const resetToStart = () => {
     setScene("attract");
     setSubscene(null);
@@ -224,8 +184,6 @@ export default function StateProvider({ children }) {
     setPreviousScene("attract");
     setTestEasterEgg(null);
     setVisitedThemes({});
-    isPausedRef.current = false;
-    setAppPaused(false);
     setIsPaused(false);
     window.kioskApi?.send("reset-speech-rate");
     try {
@@ -290,8 +248,6 @@ export default function StateProvider({ children }) {
       lastTtsToggleRef,
       isPaused,
       togglePaused,
-      syncPauseFromShift,
-      clearPaused,
       visitedThemes,
       markThemeVisited,
       resetToStart,
@@ -305,4 +261,3 @@ export default function StateProvider({ children }) {
     </AppState.Provider>
   );
 }
-

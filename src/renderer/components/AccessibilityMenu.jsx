@@ -40,7 +40,6 @@ export default function AccessibilityMenu({ onboarding = false }) {
     toggleSettings,
     speechMode,
     setSpeechModeWithTts,
-    clearPaused,
     lastTtsToggleRef,
   } = useAppState();
   const [expandedSection, setExpandedSection] = useState(null);
@@ -94,7 +93,6 @@ export default function AccessibilityMenu({ onboarding = false }) {
 
   const handleScreenReader = (enabled) => {
     if (enabled === speechMode) return;
-    clearPaused();
     lastTtsToggleRef.current = Date.now();
     setSpeechModeWithTts(enabled);
   };
@@ -106,7 +104,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           <p id="accessibility-onboarding-blurb">
             By default, the screen reader is on. Press Skip to continue with
             these settings, or use the arrow keys to customize screen reader,
-            speech speed, text size, contrast, or brightness. Press Q to pause
+            speech speed, text size, contrast, or brightness.
             or resume speech and media. Press the settings key to access this
             menu at any time.
           </p>
