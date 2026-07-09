@@ -4,7 +4,13 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
+import {
+  pauseRegisteredMedia,
+  resumeRegisteredMedia,
+} from "../audio/pauseMediaRegistry";
+import { setMediaInterruptHandler } from "../audio/pauseBridge";
 
 const TEST_EASTER_EGG_MESSAGES = [
   "thank you for trying to break something!",
@@ -67,6 +73,12 @@ export default function StateProvider({ children }) {
   };
 
   const goToScene = (sceneName, options = {}) => {
+    setIsPaused((prev) => {
+      if (prev) {
+        resumeRegisteredMedia();
+      }
+      return false;
+    });
     setScene(sceneName);
     setSubscene(options.subscene || null);
     if (options.artifactId !== undefined) {
@@ -119,7 +131,40 @@ export default function StateProvider({ children }) {
   const [videoOverlayOpen, setVideoOverlayOpen] = useState(false);
 
   const [speechMode, setSpeechMode] = useState(true);
-  const toggleSpeechMode = () => setSpeechMode(prev => !prev);
+  const toggleSpeechMode = () => setSpeechMode((prev) => !prev);
+  const lastTtsToggleRef = useRef(0);
+
+  const [isPaused, setIsPaused] = useState(false);
+
+  const clearPaused = useCallback(() => {
+    setIsPaused((prev) => {
+      if (prev) {
+        resumeRegisteredMedia();
+      }
+      return false;
+    });
+  }, []);
+
+  const togglePaused = useCallback(() => {
+    setIsPaused((prev) => {
+      const next = !prev;
+      if (speechMode) {
+        window.kioskApi?.send("pause-speech");
+      }
+      if (next) {
+        pauseRegisteredMedia();
+      } else {
+        resumeRegisteredMedia();
+      }
+      return next;
+    });
+  }, [speechMode]);
+
+  const setSpeechModeWithTts = useCallback((enabled) => {
+    lastTtsToggleRef.current = Date.now();
+    setSpeechMode(enabled);
+    window.kioskApi?.send("toggle-tts");
+  }, []);
   const [visitedThemes, setVisitedThemes] = useState({});
 
   const markThemeVisited = useCallback((themeId) => {
@@ -159,6 +204,18 @@ export default function StateProvider({ children }) {
     document.documentElement.dataset.speechMode = speechMode ? "on" : "off";
   }, [speechMode]);
 
+  useEffect(() => {
+    setMediaInterruptHandler(() => {
+      setIsPaused((prev) => {
+        if (prev) {
+          resumeRegisteredMedia();
+        }
+        return false;
+      });
+    });
+    return () => setMediaInterruptHandler(null);
+  }, []);
+
   const resetToStart = () => {
     setScene("attract");
     setSubscene(null);
@@ -171,6 +228,7 @@ export default function StateProvider({ children }) {
     setPreviousScene("attract");
     setTestEasterEgg(null);
     setVisitedThemes({});
+    setIsPaused(false);
     window.kioskApi?.send("reset-speech-rate");
     try {
       localStorage.removeItem("prefs");
@@ -230,6 +288,11 @@ export default function StateProvider({ children }) {
       setVideoOverlayOpen,
       speechMode,
       toggleSpeechMode,
+      setSpeechModeWithTts,
+      lastTtsToggleRef,
+      isPaused,
+      togglePaused,
+      clearPaused,
       visitedThemes,
       markThemeVisited,
       resetToStart,

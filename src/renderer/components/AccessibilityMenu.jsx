@@ -26,17 +26,34 @@ const speechRateOptions = [
   { value: "fast", label: "Fast", steps: 3 },
 ];
 
+const screenReaderOptions = [
+  { value: true, label: "On" },
+  { value: false, label: "Off" },
+];
+
 export default function AccessibilityMenu({ onboarding = false }) {
-  const { prefs, setPref, resetPrefs, dismissSettings, toggleSettings } =
-    useAppState();
+  const {
+    prefs,
+    setPref,
+    resetPrefs,
+    dismissSettings,
+    toggleSettings,
+    speechMode,
+    setSpeechModeWithTts,
+    clearPaused,
+    lastTtsToggleRef,
+  } = useAppState();
   const [expandedSection, setExpandedSection] = useState(null);
+  const screenReaderFirstRef = useRef(null);
   const textSizeFirstRef = useRef(null);
   const themeFirstRef = useRef(null);
   const brightnessFirstRef = useRef(null);
   const speechRateFirstRef = useRef(null);
 
   useEffect(() => {
-    if (expandedSection === "textSize" && textSizeFirstRef.current) {
+    if (expandedSection === "screenReader" && screenReaderFirstRef.current) {
+      screenReaderFirstRef.current.focus();
+    } else if (expandedSection === "textSize" && textSizeFirstRef.current) {
       textSizeFirstRef.current.focus();
     } else if (expandedSection === "theme" && themeFirstRef.current) {
       themeFirstRef.current.focus();
@@ -63,6 +80,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
   const currentThemeLabel = themeOptions.find((o) => o.value === prefs.theme)?.label ?? prefs.theme;
   const currentBrightnessLabel = brightnessOptions.find((o) => o.value === prefs.brightness)?.label ?? String(prefs.brightness);
   const currentSpeechRateLabel = speechRateOptions.find((o) => o.value === prefs.speechRate)?.label ?? "Normal";
+  const currentScreenReaderLabel = speechMode ? "On" : "Off";
 
   const handleSpeechRate = (newValue) => {
     const currentSteps = speechRateOptions.find((o) => o.value === (prefs.speechRate ?? "normal"))?.steps ?? 0;
@@ -74,21 +92,30 @@ export default function AccessibilityMenu({ onboarding = false }) {
     setPref("speechRate", newValue);
   };
 
+  const handleScreenReader = (enabled) => {
+    if (enabled === speechMode) return;
+    clearPaused();
+    lastTtsToggleRef.current = Date.now();
+    setSpeechModeWithTts(enabled);
+  };
+
   return (
     <div className="accessibility-menu">
       {onboarding && (
         <div className="settings-onboarding-intro">
           <p id="accessibility-onboarding-blurb">
             By default, the screen reader is on. Press Skip to continue with
-            these settings, or use the arrow keys to customize. Press the
-            settings key to access this menu at any time.
+            these settings, or use the arrow keys to customize screen reader,
+            speech speed, text size, contrast, or brightness. Press Q to pause
+            or resume speech and media. Press the settings key to access this
+            menu at any time.
           </p>
           <button
             type="button"
             className="setting-btn settings-onboarding-skip"
             onClick={dismissSettings}
             data-autofocus
-            aria-label="Press the Select key to stick with these settings or press the right arrow key to customize speech speed, text size, contrast, or brightness."
+            aria-label="Press the Select key to stick with these settings or press the right arrow key to customize screen reader, speech speed, text size, contrast, or brightness."
           >
             Skip
           </button>
@@ -99,11 +126,46 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-section-trigger"
+          onClick={() => openSection("screenReader")}
+          aria-expanded={expandedSection === "screenReader"}
+          aria-controls="access-screen-reader-options"
+          id="access-screen-reader-trigger"
+          {...(!onboarding ? { "data-autofocus": true } : {})}
+        >
+          <span className="setting-section-label">Screen Reader</span>
+          <span className="setting-section-value" aria-hidden="true">{currentScreenReaderLabel}</span>
+        </button>
+        {expandedSection === "screenReader" && (
+          <div
+            id="access-screen-reader-options"
+            className="setting-options"
+            role="group"
+            aria-labelledby="access-screen-reader-trigger"
+            onBlur={handleOptionsBlur}
+          >
+            {screenReaderOptions.map((option, i) => (
+              <button
+                key={String(option.value)}
+                ref={i === 0 ? screenReaderFirstRef : null}
+                className={`setting-btn ${speechMode === option.value ? "active" : ""}`}
+                onClick={() => handleScreenReader(option.value)}
+                aria-pressed={speechMode === option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="setting-group">
+        <button
+          type="button"
+          className="setting-section-trigger"
           onClick={() => openSection("speechRate")}
           aria-expanded={expandedSection === "speechRate"}
           aria-controls="access-speech-rate-options"
           id="access-speech-rate-trigger"
-          {...(!onboarding ? { "data-autofocus": true } : {})}
         >
           <span className="setting-section-label">Speech Speed</span>
           <span className="setting-section-value" aria-hidden="true">{currentSpeechRateLabel}</span>

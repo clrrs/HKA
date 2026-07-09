@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useAppState } from "./StateProvider";
+import { useAnnounce } from "./AnnouncerProvider";
 import {
   ensureInputLogTools,
   getElementSummary,
@@ -38,13 +39,20 @@ export function useKeyboardNav() {
     goBack,
     toggleSettings,
     showSettings,
-    toggleSpeechMode,
-    toggleIdleTimeoutDisabled,
+    speechMode,
+    togglePaused,
+    clearPaused,
+    isPaused,
+    lastTtsToggleRef,
     triggerTestEasterEgg,
   } = useAppState();
-  const lastTtsToggleRef = useRef(0);
+  const announce = useAnnounce();
   const klEggRef = useRef({ step: 0, lastTs: 0 });
   const qEggRef = useRef({ streak: 0, lastTs: 0 });
+
+  const dismissPauseForNav = () => {
+    clearPaused();
+  };
 
   useEffect(() => {
     const ENABLE_TEST_SHORTCUTS = true;
@@ -146,11 +154,36 @@ export function useKeyboardNav() {
         }
       }
 
+      // Play / Pause (Q) — before attract/quote early return for active scenes
+      if (key === "q") {
+        if (
+          ENABLE_TEST_SHORTCUTS &&
+          ENABLE_TEST_EASTER_EGGS &&
+          testEggResult === "suppress-q"
+        ) {
+          e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+        if (scene === "attract" || scene === "quote") {
+          return;
+        }
+        const wasPaused = isPaused;
+        togglePaused();
+        announce(wasPaused ? "Playing" : "Paused", {
+          politeness: "assertive",
+          source: "play-pause-toggle",
+          dedupeMs: 0,
+        });
+        return;
+      }
+
       if (scene === "quote" || scene === "attract") return;
 
       // Settings (A) - toggle settings overlay
       if (key === "a") {
         e.preventDefault();
+        dismissPauseForNav();
         toggleSettings();
         return;
       }
@@ -159,6 +192,7 @@ export function useKeyboardNav() {
       if (key === "s" || key === "home") {
         if (Date.now() - lastTtsToggleRef.current < 500) return;
         e.preventDefault();
+        dismissPauseForNav();
         goToScene("home");
         return;
       }
@@ -166,6 +200,7 @@ export function useKeyboardNav() {
       // Back (K) - simulate Shift+Tab
       if (key === "k") {
         e.preventDefault();
+        dismissPauseForNav();
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-popup-transcript") ||
@@ -213,6 +248,7 @@ export function useKeyboardNav() {
       // Select (J) - simulate Enter
       if (key === "j") {
         e.preventDefault();
+        dismissPauseForNav();
         const activeContainer =
           document.activeElement?.closest(
             ".artifact-popup-transcript, .artifact-video-transcript-modal, .artifact-video-modal, .carousel-zoom, .artifact-popup"
@@ -234,6 +270,7 @@ export function useKeyboardNav() {
       // Next (L) - simulate Tab
       if (key === "l") {
         e.preventDefault();
+        dismissPauseForNav();
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-popup-transcript") ||
@@ -278,23 +315,6 @@ export function useKeyboardNav() {
         return;
       }
 
-      // TTS (Q) - toggle NVDA speech via Electron IPC and in-app state
-      if (key === "q") {
-        if (
-          ENABLE_TEST_SHORTCUTS &&
-          ENABLE_TEST_EASTER_EGGS &&
-          testEggResult === "suppress-q"
-        ) {
-          e.preventDefault();
-          return;
-        }
-        e.preventDefault();
-        lastTtsToggleRef.current = Date.now();
-        toggleSpeechMode();
-        window.kioskApi?.send("toggle-tts");
-        return;
-      }
-
       // Vol Up (W)
       if (key === "w") {
         e.preventDefault();
@@ -319,9 +339,14 @@ export function useKeyboardNav() {
     goBack,
     toggleSettings,
     showSettings,
-    toggleSpeechMode,
+    speechMode,
+    isPaused,
+    togglePaused,
+    clearPaused,
+    lastTtsToggleRef,
     toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
+    announce,
   ]);
 }
 

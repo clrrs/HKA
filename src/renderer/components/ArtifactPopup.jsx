@@ -162,7 +162,7 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
 }
 
 export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }) {
-  const { speechMode, setVideoOverlayOpen } = useAppState();
+  const { speechMode, isPaused, setVideoOverlayOpen } = useAppState();
   const globalAnnounce = useAnnounce();
   const announce = useCallback(
     (message, options = {}) => globalAnnounce(message, { source: "ArtifactPopup", ...options }),
@@ -188,11 +188,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const autoplayAnchorRef = useRef(null);
   const autoplayingRef = useRef(false);
   const autoplayTimeoutRef = useRef(null);
+  const autoplayDeadlineRef = useRef(null);
+  const autoplayRemainingRef = useRef(null);
+  const autoplayPlayNextRef = useRef(null);
+  const isPausedRef = useRef(isPaused);
   const autoplayDoneRef = useRef(false);
   const lastMainFocusRef = useRef(null);
   const skipNextTrapAutofocusRef = useRef(false);
   const popupInitialFocusDoneRef = useRef(false);
   const prevSpeechModeRef = useRef(speechMode);
+  isPausedRef.current = isPaused;
   const prevArrowRef = useRef(null);
   const textRef = useRef(null);
   const nextImageRef = useRef(null);
@@ -231,6 +236,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const cancelAutoplay = useCallback(() => {
     autoplayingRef.current = false;
+    autoplayRemainingRef.current = null;
+    autoplayPlayNextRef.current = null;
+    autoplayDeadlineRef.current = null;
     if (autoplayTimeoutRef.current !== null) {
       clearTimeout(autoplayTimeoutRef.current);
       autoplayTimeoutRef.current = null;
@@ -308,6 +316,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => {
     if (!speechMode || !artifact) return;
+    if (isPausedRef.current) return;
     if (zoomOpen || videoPlayerOpen || transcriptOpen || guidedOpen) {
       cancelAutoplay();
       setIsAutoplaying(false);
@@ -325,11 +334,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayAnchorRef.current?.focus({ preventScroll: true });
 
     const playNext = () => {
-      if (!autoplayingRef.current) return;
+      if (!autoplayingRef.current || isPausedRef.current) return;
       if (chunkIndex >= chunks.length) {
         autoplayDoneRef.current = true;
         autoplayingRef.current = false;
         autoplayTimeoutRef.current = null;
+        autoplayDeadlineRef.current = null;
+        autoplayPlayNextRef.current = null;
+        autoplayRemainingRef.current = null;
         setIsAutoplaying(false);
         announce(AUTO_READ_COMPLETE_INSTRUCTION, { politeness: "assertive" });
         return;
@@ -341,9 +353,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       chunkIndex += 1;
 
       const delay = estimateChunkDurationMs(chunk.text);
+      autoplayPlayNextRef.current = playNext;
+      autoplayDeadlineRef.current = Date.now() + delay;
       autoplayTimeoutRef.current = setTimeout(playNext, delay);
     };
 
+    autoplayPlayNextRef.current = playNext;
+    autoplayDeadlineRef.current = Date.now() + 100;
     autoplayTimeoutRef.current = setTimeout(playNext, 100);
 
     return () => cancelAutoplay();
@@ -360,6 +376,34 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     announce,
     cancelAutoplay,
   ]);
+
+  useEffect(() => {
+    if (!autoplayingRef.current) return;
+
+    if (isPaused) {
+      if (autoplayTimeoutRef.current !== null && autoplayDeadlineRef.current !== null) {
+        autoplayRemainingRef.current = Math.max(
+          0,
+          autoplayDeadlineRef.current - Date.now()
+        );
+        clearTimeout(autoplayTimeoutRef.current);
+        autoplayTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    if (
+      autoplayTimeoutRef.current === null &&
+      autoplayRemainingRef.current !== null &&
+      autoplayPlayNextRef.current
+    ) {
+      const delay = autoplayRemainingRef.current;
+      const fn = autoplayPlayNextRef.current;
+      autoplayRemainingRef.current = null;
+      autoplayDeadlineRef.current = Date.now() + delay;
+      autoplayTimeoutRef.current = setTimeout(fn, delay);
+    }
+  }, [isPaused]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {

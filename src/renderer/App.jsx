@@ -45,6 +45,7 @@ export default function App() {
     resetToStart,
     videoOverlayOpen,
     speechMode,
+    isPaused,
     idleTimeoutDisabled,
     testEasterEgg,
     dismissTestEasterEgg,
@@ -427,7 +428,11 @@ export default function App() {
             </div>
           </div>
         )}
-        {speechHud.visible && (
+        {isPaused ? (
+          <div className="speech-mode-hud" aria-hidden="true">
+            <span className="speech-mode-hud-label">Paused</span>
+          </div>
+        ) : speechHud.visible ? (
           <div
             className={`speech-mode-hud ${speechHud.closing ? "speech-mode-hud--closing" : ""}`}
             aria-hidden="true"
@@ -436,7 +441,7 @@ export default function App() {
               Speech {speechHud.enabled ? "On" : "Off"}
             </span>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
+import { usePausableTimeout } from "../../audio/usePausableTimeout";
 import { getTheme, getArtifactIndex } from "../../data/artifacts";
 import ArtifactPopup from "../ArtifactPopup";
 
@@ -63,6 +64,7 @@ export default function ThemeScene() {
     scene,
     currentTheme,
     speechMode,
+    isPaused,
     visitedThemes,
     markThemeVisited,
     artifactId,
@@ -70,6 +72,7 @@ export default function ThemeScene() {
     closeArtifact,
   } = useAppState();
   const announce = useAnnounce();
+  const { schedule: scheduleTipDismiss, clear: clearTipDismiss } = usePausableTimeout(isPaused);
   const theme = getTheme(currentTheme);
 
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -162,18 +165,18 @@ export default function ThemeScene() {
     window.addEventListener("keydown", handleKeyDownCapture, true);
     window.addEventListener("pointerdown", handlePointerDownCapture, true);
 
-    const autoDismissId = setTimeout(() => {
+    scheduleTipDismiss(() => {
       if (showTipRef.current) {
         setShowTip(false);
       }
     }, TIP_AUTO_DISMISS_MS);
 
     return () => {
-      clearTimeout(autoDismissId);
+      clearTipDismiss();
       window.removeEventListener("keydown", handleKeyDownCapture, true);
       window.removeEventListener("pointerdown", handlePointerDownCapture, true);
     };
-  }, [showTip, theme, speechMode, announce]);
+  }, [showTip, theme, speechMode, announce, scheduleTipDismiss, clearTipDismiss]);
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");

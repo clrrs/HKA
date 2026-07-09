@@ -1,3 +1,5 @@
+import { notifyMediaInterrupt } from "./pauseBridge";
+
 const MEDIA_STOP_DEBOUNCE_MS = 250;
 
 let lastStopAt = 0;
@@ -12,5 +14,6 @@ export function stopNvdaSpeechForMediaStart() {
     return;
   }
   lastStopAt = now;
+  notifyMediaInterrupt();
   window.kioskApi?.send("stop-speech");
 }

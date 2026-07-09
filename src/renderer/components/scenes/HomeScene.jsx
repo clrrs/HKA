@@ -1,6 +1,8 @@
 // Home scene — theme selection (landing page after instructions).
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
+import { usePausableMedia } from "../../audio/pauseMediaRegistry";
+import { usePausableTimeout } from "../../audio/usePausableTimeout";
 import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { getThemeFocusAnnouncement } from "../../data/artifacts";
 import { useAppState } from "../../state/StateProvider";
@@ -40,7 +42,7 @@ const HOME_HEADING_LABEL =
   "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page.";
 
 export default function HomeScene({ isActive = false }) {
-  const { goToScene, setVideoOverlayOpen, speechMode } = useAppState();
+  const { goToScene, setVideoOverlayOpen, speechMode, isPaused } = useAppState();
   const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
@@ -61,6 +63,8 @@ export default function HomeScene({ isActive = false }) {
   wasActiveRef.current = isActive;
 
   useHeadphoneSinkEffect(videoRef, showVideo);
+  usePausableMedia(videoRef, showVideo);
+  const { schedule: scheduleThemeBlurb, clear: clearThemeBlurb } = usePausableTimeout(isPaused);
 
   useEffect(() => {
     if (!speechMode || showVideo || focusedIndex < 0) return;
@@ -68,7 +72,7 @@ export default function HomeScene({ isActive = false }) {
     const theme = themes[focusedIndex];
     if (!theme || theme.disabledForTesting) return;
 
-    const timer = setTimeout(() => {
+    scheduleThemeBlurb(() => {
       const message = getThemeFocusAnnouncement(theme.id);
       if (!message) return;
       announce(message, {
@@ -77,8 +81,8 @@ export default function HomeScene({ isActive = false }) {
       });
     }, THEME_FOCUS_ANNOUNCE_DELAY_MS);
 
-    return () => clearTimeout(timer);
-  }, [focusedIndex, speechMode, showVideo, announce]);
+    return () => clearThemeBlurb();
+  }, [focusedIndex, speechMode, showVideo, announce, scheduleThemeBlurb, clearThemeBlurb]);
 
   useEffect(() => {
     if (!showVideo) return;

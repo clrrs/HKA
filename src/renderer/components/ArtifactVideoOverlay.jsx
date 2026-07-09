@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
+import { usePausableMedia } from "../audio/pauseMediaRegistry";
 import { stopNvdaSpeechForMediaStart } from "../audio/nvdaSpeechControl";
 import { useAppState } from "../state/StateProvider";
 import { textOrMissing } from "../data/contentPlaceholder";
@@ -67,6 +68,7 @@ export default function ArtifactVideoOverlay({
   const guidedButtonRef = useRef(null);
 
   useHeadphoneSinkEffect(videoRef, src);
+  usePausableMedia(videoRef, true);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
@@ -102,6 +104,19 @@ export default function ArtifactVideoOverlay({
     videoRef.current.pause();
     setIsPlaying(false);
   };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
+    return () => {
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
+    };
+  }, [src]);
 
   const handleEnded = () => {
     setIsPlaying(false);
