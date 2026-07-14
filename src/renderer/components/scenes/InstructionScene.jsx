@@ -61,10 +61,10 @@ export default function InstructionScene({ isActive }) {
     if (isActive) {
       advancingRef.current = false;
       stopNvdaSpeechForMediaStart();
+      video.currentTime = 0;
       video.play().catch(() => {});
     } else {
       video.pause();
-      video.currentTime = 0;
       setShowSkip(false);
       setVideoEnded(false);
       clearAutoContinueTimer();
