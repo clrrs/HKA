@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { getArtifact, getNextArtifact, getPrevArtifact } from "../data/artifacts";
@@ -179,7 +179,7 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
 }
 
 export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }) {
-  const { speechMode, isPaused, setVideoOverlayOpen } = useAppState();
+  const { speechMode, isPaused, setVideoOverlayOpen, showSettings } = useAppState();
   const globalAnnounce = useAnnounce();
   const announce = useCallback(
     (message, options = {}) => globalAnnounce(message, { source: "ArtifactPopup", ...options }),
@@ -218,6 +218,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const lastMainFocusRef = useRef(null);
   const skipNextTrapAutofocusRef = useRef(false);
   const popupInitialFocusDoneRef = useRef(false);
+  const settingsFocusRef = useRef(null);
+  const prevShowSettingsRef = useRef(showSettings);
   const prevSpeechModeRef = useRef(speechMode);
   isPausedRef.current = isPaused;
   const prevArrowRef = useRef(null);
@@ -243,13 +245,42 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const currentImage = images.length > 0 ? images[currentImageIndex] : null;
 
   const mainPopupActive = !zoomOpen && !videoPlayerOpen && !transcriptOpen;
-  useFocusTrap(popupRef, mainPopupActive, {
+  useFocusTrap(popupRef, mainPopupActive && !showSettings, {
     skipAutofocusRef: skipNextTrapAutofocusRef,
     initialFocusDoneRef: popupInitialFocusDoneRef,
     autofocusOnActivate: !speechMode,
   });
-  useFocusTrap(zoomRef, zoomOpen);
-  useFocusTrap(transcriptPanelRef, transcriptOpen);
+  useFocusTrap(zoomRef, zoomOpen && !showSettings);
+  useFocusTrap(transcriptPanelRef, transcriptOpen && !showSettings);
+
+  useLayoutEffect(() => {
+    const wasOpen = prevShowSettingsRef.current;
+    prevShowSettingsRef.current = showSettings;
+
+    if (showSettings) {
+      // Keep skip latched so reactivating the trap on close does not autofocus the first control.
+      skipNextTrapAutofocusRef.current = true;
+      const active = document.activeElement;
+      if (popupRef.current?.contains(active)) {
+        settingsFocusRef.current = active;
+      }
+      return;
+    }
+
+    if (!wasOpen) return;
+
+    skipNextTrapAutofocusRef.current = true;
+    const target = settingsFocusRef.current;
+    settingsFocusRef.current = null;
+    const restore = () => {
+      if (target && popupRef.current?.contains(target)) {
+        target.focus({ preventScroll: true });
+      }
+    };
+    restore();
+    const t = window.setTimeout(restore, 50);
+    return () => window.clearTimeout(t);
+  }, [showSettings]);
 
   const setVisualSection = useCallback((section) => {
     visualActiveSectionRef.current = section;
@@ -569,6 +600,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (showSettings) return;
       if (!autoplayingRef.current || e.repeat) return;
       const key = e.key.toLowerCase();
       const isNext = key === "l" || key === "arrowright";
@@ -583,27 +615,31 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [markAutoplayEnded, focusVisualActiveOrFallback]);
+  }, [markAutoplayEnded, focusVisualActiveOrFallback, showSettings]);
 
   useEffect(() => {
+    if (showSettings) return;
     if (!isAutoplaying || !speechMode || !mainPopupActive) return;
 
     requestAnimationFrame(() => {
+      if (showSettings) return;
       if (!autoplayingRef.current) return;
       const active = document.activeElement;
       if (active === autoplayAnchorRef.current) return;
       autoplayAnchorRef.current?.focus({ preventScroll: true });
     });
-  }, [isAutoplaying, speechMode, mainPopupActive]);
+  }, [isAutoplaying, speechMode, mainPopupActive, showSettings]);
 
   useEffect(() => {
     const prev = prevSpeechModeRef.current;
     if (prev === speechMode) return;
     prevSpeechModeRef.current = speechMode;
 
+    if (showSettings) return;
     if (!popupRef.current) return;
 
     requestAnimationFrame(() => {
+      if (showSettings) return;
       const popup = popupRef.current;
       if (!popup || !mainPopupActive) return;
 
@@ -628,7 +664,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         }
       }
     });
-  }, [speechMode, mainPopupActive, getFirstControlRef]);
+  }, [speechMode, mainPopupActive, getFirstControlRef, showSettings]);
 
   const goToArtifact = useCallback(
     (nextId, closeOptions) => {
@@ -776,6 +812,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const handlePopupKeyDown = useCallback(
     (e) => {
       if (e.repeat) return;
+      if (showSettings) return;
       if (transcriptOpen) return;
 
       const isNext = (e.key === "Tab" && !e.shiftKey) || e.key === "l";
@@ -915,6 +952,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }
     },
     [
+      showSettings,
       transcriptOpen,
       getPopupFocusables,
       bumpArrow,
@@ -964,6 +1002,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.repeat || e.key !== "Escape") return;
+      if (showSettings) return;
       if (zoomOpen) {
         e.preventDefault();
         exitZoom();
@@ -977,7 +1016,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [zoomOpen, transcriptOpen, videoPlayerOpen, exitZoom, closeTranscript, onClose]);
+  }, [showSettings, zoomOpen, transcriptOpen, videoPlayerOpen, exitZoom, closeTranscript, onClose]);
 
   const atSnapTop = snapIndex === 0;
   const atSnapBottom = snapIndex >= totalSteps - 1;

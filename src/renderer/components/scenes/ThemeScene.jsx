@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme, getArtifactIndex } from "../../data/artifacts";
@@ -68,6 +68,7 @@ export default function ThemeScene() {
     artifactId,
     openArtifact,
     closeArtifact,
+    showSettings,
   } = useAppState();
   const announce = useAnnounce();
   const theme = getTheme(currentTheme);
@@ -80,11 +81,22 @@ export default function ThemeScene() {
   const carouselRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
   const showTipRef = useRef(showTip);
+  const prevShowSettingsRef = useRef(showSettings);
   focusedIndexRef.current = focusedIndex;
   showTipRef.current = showTip;
 
   const artifacts = theme?.artifacts || [];
   const popupOpen = Boolean(artifactId);
+
+  useLayoutEffect(() => {
+    const wasOpen = prevShowSettingsRef.current;
+    prevShowSettingsRef.current = showSettings;
+    if (!wasOpen || showSettings || popupOpen) return;
+    const idx = focusedIndexRef.current;
+    if (idx < 0) return;
+    const el = circleRefs.current[idx];
+    el?.focus({ preventScroll: true });
+  }, [showSettings, popupOpen]);
 
   useEffect(() => {
     setCarouselTransitionEnabled(false);
@@ -218,14 +230,16 @@ export default function ThemeScene() {
   }, [hideCarousel]);
 
   const handleBlur = useCallback((e) => {
+    if (showSettings || document.querySelector(".settings-overlay")) return;
     const scene = e.currentTarget.closest(".theme-scene");
     requestAnimationFrame(() => {
+      if (document.querySelector(".settings-overlay")) return;
       if (scene && !scene.contains(document.activeElement)) {
         setFocusedIndex(-1);
         hideCarousel();
       }
     });
-  }, [hideCarousel]);
+  }, [hideCarousel, showSettings]);
 
   const handleSceneKeyDown = useCallback((e) => {
     if (showTipRef.current) return;

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from "react";
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import { useKeyboardNav } from "./state/useSceneManager";
@@ -248,7 +248,7 @@ export default function App() {
     focusables[nextIndex].focus();
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (showSettings && !prevShowSettingsRef.current) {
       const active = document.activeElement;
       if (active && active !== document.body) {
@@ -257,30 +257,46 @@ export default function App() {
     } else if (!showSettings && prevShowSettingsRef.current) {
       const el = settingsReturnFocusRef.current;
       settingsReturnFocusRef.current = null;
-      if (el && document.contains(el)) {
-        requestAnimationFrame(() => {
+      const restore = () => {
+        if (el && document.contains(el)) {
           el.focus({ preventScroll: true });
-        });
-      }
+        }
+      };
+      restore();
+      const t1 = window.setTimeout(restore, 50);
+      const t2 = window.setTimeout(restore, 150);
+      prevShowSettingsRef.current = showSettings;
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+      };
     }
     prevShowSettingsRef.current = showSettings;
   }, [showSettings]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!showSettings) return;
     const panel = settingsPanelRef.current;
     if (!panel) return;
 
-    const first = panel.querySelector("[data-autofocus]") ||
+    const getTarget = () =>
+      panel.querySelector("[data-autofocus]") ||
       panel.querySelector(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       );
 
-    if (first) {
-      setTimeout(() => {
-        first.focus();
-      }, 50);
-    }
+    const focusIntro = () => {
+      const target = getTarget();
+      target?.focus({ preventScroll: true });
+    };
+
+    focusIntro();
+    const t1 = window.setTimeout(focusIntro, 50);
+    const t2 = window.setTimeout(focusIntro, 150);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, [showSettings, settingsOnboarding]);
 
   useEffect(() => {

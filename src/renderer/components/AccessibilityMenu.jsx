@@ -34,12 +34,8 @@ const screenReaderOptions = [
 const ONBOARDING_BLURB =
   "By default, the screen reader is on. Press Skip to continue, or use the arrow keys to customize. Press the settings key to access this menu at any time.";
 
-const ONBOARDING_INTRO_SR = `Accessibility Settings. ${ONBOARDING_BLURB}`;
-
-const NORMAL_INTRO_SR = "Accessibility Settings.";
-
 const SKIP_SR_LABEL =
-  "Skip. Press the Select key to stick with these settings, or press the right arrow key to customize screen reader, speech speed, text size, contrast, or brightness.";
+  "Skip button. Press the Select key to stick with these settings, or press the right arrow key to customize screen reader, speech speed, text size, contrast, or brightness.";
 
 function prefsMatchDefaults(prefs) {
   return (
@@ -127,43 +123,45 @@ export default function AccessibilityMenu({ onboarding = false }) {
     });
   };
 
-  const introSrLabel = onboarding ? ONBOARDING_INTRO_SR : NORMAL_INTRO_SR;
-
   return (
     <div className="accessibility-menu">
       <div
-        ref={introRef}
-        className={`settings-intro${onboarding ? " settings-intro--onboarding" : ""}`}
-        tabIndex={0}
-        data-autofocus
-        aria-label={speechMode ? introSrLabel : undefined}
+        className={`settings-intro-block${onboarding ? " settings-intro-block--onboarding" : ""}`}
       >
-        <h2
-          id="accessibility-settings-title"
-          aria-hidden={speechMode ? true : undefined}
+        <div
+          ref={introRef}
+          className="settings-intro"
+          tabIndex={0}
+          data-autofocus
+          aria-label={speechMode && onboarding ? ONBOARDING_BLURB : undefined}
         >
-          Accessibility Settings
-        </h2>
-        {onboarding && (
-          <p
-            id="accessibility-onboarding-blurb"
+          <h2
+            id="accessibility-settings-title"
             aria-hidden={speechMode ? true : undefined}
           >
-            {ONBOARDING_BLURB}
-          </p>
+            Accessibility Settings
+          </h2>
+          {onboarding && (
+            <p
+              id="accessibility-onboarding-blurb"
+              aria-hidden={speechMode ? true : undefined}
+            >
+              {ONBOARDING_BLURB}
+            </p>
+          )}
+        </div>
+
+        {onboarding && (
+          <button
+            type="button"
+            className="setting-btn settings-onboarding-skip"
+            onClick={dismissSettings}
+            aria-label={SKIP_SR_LABEL}
+          >
+            Skip
+          </button>
         )}
       </div>
-
-      {onboarding && (
-        <button
-          type="button"
-          className="setting-btn settings-onboarding-skip"
-          onClick={dismissSettings}
-          aria-label={SKIP_SR_LABEL}
-        >
-          Skip
-        </button>
-      )}
 
       <div className="setting-group">
         <button

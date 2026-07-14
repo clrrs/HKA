@@ -1096,18 +1096,18 @@ h1[tabindex]:focus-visible {
   font-size: 40px;
 }
 
-.settings-intro--onboarding {
-  margin-bottom: 20px;
+.settings-intro-block--onboarding {
+  margin-bottom: 28px;
   padding-bottom: 24px;
   border-bottom: 2px solid var(--btn-border);
 }
 
-.settings-intro--onboarding #accessibility-settings-title {
+.settings-intro-block--onboarding #accessibility-settings-title {
   margin-bottom: 20px;
 }
 
 .settings-intro p {
-  margin: 0;
+  margin: 0 0 20px 0;
   font-size: calc(22px * var(--text-scale));
   line-height: 1.5;
 }
@@ -1116,7 +1116,6 @@ h1[tabindex]:focus-visible {
   width: 50%;
   text-align: center;
   box-sizing: border-box;
-  margin-bottom: 24px;
 }
 
 /* ============================================

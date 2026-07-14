@@ -1,5 +1,5 @@
 // Home scene — theme selection (landing page after instructions).
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { getThemeFocusAnnouncement } from "../../data/artifacts";
@@ -40,7 +40,7 @@ const HOME_HEADING_LABEL =
   "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page.";
 
 export default function HomeScene({ isActive = false }) {
-  const { goToScene, setVideoOverlayOpen, speechMode } = useAppState();
+  const { goToScene, setVideoOverlayOpen, speechMode, showSettings } = useAppState();
   const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
@@ -53,12 +53,23 @@ export default function HomeScene({ isActive = false }) {
   const videoRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
   const wasActiveRef = useRef(isActive);
+  const prevShowSettingsRef = useRef(showSettings);
   focusedIndexRef.current = focusedIndex;
 
   if (isActive && !wasActiveRef.current) {
     setAnnounceHomeArrival(true);
   }
   wasActiveRef.current = isActive;
+
+  useLayoutEffect(() => {
+    const wasOpen = prevShowSettingsRef.current;
+    prevShowSettingsRef.current = showSettings;
+    if (!wasOpen || showSettings) return;
+    const idx = focusedIndexRef.current;
+    if (idx < 0) return;
+    const el = circleRefs.current[idx];
+    el?.focus({ preventScroll: true });
+  }, [showSettings]);
 
   useHeadphoneSinkEffect(videoRef, showVideo);
 
@@ -164,14 +175,16 @@ export default function HomeScene({ isActive = false }) {
   }, []);
 
   const handleBlur = useCallback((e) => {
+    if (showSettings || document.querySelector(".settings-overlay")) return;
     const scene = e.currentTarget.closest(".home-scene");
     requestAnimationFrame(() => {
+      if (document.querySelector(".settings-overlay")) return;
       if (scene && !scene.contains(document.activeElement)) {
         setFocusedIndex(-1);
         hideCarousel();
       }
     });
-  }, [hideCarousel]);
+  }, [hideCarousel, showSettings]);
 
   const handleSceneKeyDown = useCallback((e) => {
     if (e.repeat) return;
