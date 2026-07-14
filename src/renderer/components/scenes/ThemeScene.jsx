@@ -418,7 +418,8 @@ export default function ThemeScene() {
           tabIndex={-1}
           data-autofocus
         >
-          <div className="idle-overlay-card">
+          {/* Visual only — spoken once via announce(); hiding prevents focus+name double-read */}
+          <div className="idle-overlay-card" aria-hidden="true">
             <div className="idle-overlay-content">
               <p id="theme-tip-message" className="idle-overlay-line">
                 {getThemeTipMessage(theme.label)}
