@@ -25,7 +25,7 @@ const TEST_EASTER_EGG_SFX = [
   "/zz_testingMaterials/testsfx3.mp3",
 ];
 
-const DEFAULT_PREFS = {
+export const DEFAULT_PREFS = {
   textSize: "medium",
   theme: "dark",
   brightness: 1,
@@ -62,10 +62,6 @@ export default function StateProvider({ children }) {
   }, [prefs]);
 
   const setPref = (k, v) => setPrefs(prev => ({...prev, [k]: v}));
-
-  const resetPrefs = () => {
-    setPrefs(DEFAULT_PREFS);
-  };
 
   const [isPaused, setIsPaused] = useState(false);
   const togglePaused = useCallback(() => {
@@ -133,6 +129,20 @@ export default function StateProvider({ children }) {
     setSpeechMode(enabled);
     window.kioskApi?.send("toggle-tts");
   }, []);
+
+  const resetPrefs = useCallback(() => {
+    setPrefs(DEFAULT_PREFS);
+    window.kioskApi?.send("reset-speech-rate");
+    setSpeechMode((prev) => {
+      if (!prev) {
+        lastTtsToggleRef.current = Date.now();
+        window.kioskApi?.send("toggle-tts");
+        return true;
+      }
+      return prev;
+    });
+  }, []);
+
   const [visitedThemes, setVisitedThemes] = useState({});
 
   const markThemeVisited = useCallback((themeId) => {

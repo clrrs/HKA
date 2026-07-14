@@ -8,8 +8,14 @@ import ArtifactVideoOverlay from "./ArtifactVideoOverlay";
 const SCROLL_STEP_RATIO = 0.75;
 const WORDS_PER_SEC = 2.4;
 const CHUNK_BUFFER_MS = 4000;
-const AUTO_READ_COMPLETE_INSTRUCTION =
-  "Use the artifact control menu to continue exploring this artifact, or navigate to the next artifact button to go to the next artifact.";
+const MISSING_GUIDED_DESCRIPTION = "[MISSING GUIDED DESCRIPTION]";
+const AUTO_READ_END_PROMPT = "Press Select for next Artifact description";
+const TRANSCRIPT_AUTOPLAY_PROMPT =
+  "Transcript. Press Select for the full transcript of this artifact.";
+const AUTO_READ_THEME_END_PROMPT =
+  "End of artifacts in this theme. Press Select to return to the start of the theme.";
+const TRANSCRIPT_DWELL_MS = 6000;
+const NEXT_IMAGE_ADVANCE_MS = 1200;
 
 function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -20,41 +26,52 @@ function estimateChunkDurationMs(text) {
   return Math.round((words / WORDS_PER_SEC) * 1000) + CHUNK_BUFFER_MS;
 }
 
+function getGuidedTextForImage(artifact, images, imageIndex) {
+  const fromImage = images[imageIndex]?.guidedDescription?.trim();
+  if (fromImage) return fromImage;
+  if (imageIndex === 0) {
+    const fromArtifact = artifact?.guidedDescription?.trim();
+    if (fromArtifact) return fromArtifact;
+  }
+  return MISSING_GUIDED_DESCRIPTION;
+}
+
 function buildAutoplayChunks(artifact, images, isVideo) {
   if (!artifact) return [];
 
   const chunks = [
-    { text: artifact.title, imageIndex: 0 },
-    { text: artifact.description, imageIndex: 0 },
+    { text: artifact.title, imageIndex: 0, section: "title" },
+    {
+      text: `Artifact description. ${artifact.description}`,
+      imageIndex: 0,
+      section: "description",
+    },
   ];
 
   if (isVideo || images.length === 0) {
-    const guided = artifact.guidedDescription?.trim();
-    if (guided) {
-      chunks.push({
-        text: `Image 1 of 1: Guided Description. ${guided}`,
-        imageIndex: 0,
-      });
-    }
+    const guided = getGuidedTextForImage(artifact, images, 0);
+    chunks.push({
+      text: `Image 1 of 1: Guided Description. ${guided}`,
+      imageIndex: 0,
+      section: "guided",
+    });
     return chunks;
   }
 
-  const firstGuided = artifact.guidedDescription?.trim();
-  if (firstGuided) {
-    const count = images.length;
+  const count = images.length;
+  for (let i = 0; i < count; i++) {
+    if (i > 0) {
+      chunks.push({
+        text: `Image ${i + 1} of ${count}.`,
+        imageIndex: i,
+        section: "nextImage",
+      });
+    }
+    const guided = getGuidedTextForImage(artifact, images, i);
     chunks.push({
-      text: `Image 1 of ${count}: Guided Description. ${firstGuided}`,
-      imageIndex: 0,
-    });
-  } else if (images[0]?.alt) {
-    chunks.push({ text: images[0].alt, imageIndex: 0 });
-  }
-
-  for (let i = 1; i < images.length; i++) {
-    const alt = images[i]?.alt || "";
-    chunks.push({
-      text: `Image ${i + 1} of ${images.length}. ${alt}`,
+      text: `Image ${i + 1} of ${count}: Guided Description. ${guided}`,
       imageIndex: i,
+      section: "guided",
     });
   }
 
@@ -181,8 +198,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const [zoomOpen, setZoomOpen] = useState(false);
   const [videoPlayerOpen, setVideoPlayerOpen] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
-  const [guidedOpen, setGuidedOpen] = useState(false);
   const [isAutoplaying, setIsAutoplaying] = useState(false);
+  const [bottomPanelMode, setBottomPanelMode] = useState("content");
+  const [visualActiveSection, setVisualActiveSection] = useState(null);
+  const bottomPanelModeRef = useRef("content");
+  bottomPanelModeRef.current = bottomPanelMode;
 
   const popupRef = useRef(null);
   const autoplayAnchorRef = useRef(null);
@@ -191,8 +211,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const autoplayDeadlineRef = useRef(null);
   const autoplayRemainingRef = useRef(null);
   const autoplayPlayNextRef = useRef(null);
+  const autoAdvanceTimeoutRef = useRef(null);
   const isPausedRef = useRef(isPaused);
   const autoplayDoneRef = useRef(false);
+  const visualActiveSectionRef = useRef(null);
   const lastMainFocusRef = useRef(null);
   const skipNextTrapAutofocusRef = useRef(false);
   const popupInitialFocusDoneRef = useRef(false);
@@ -209,9 +231,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const transcriptPanelRef = useRef(null);
   const transcriptExitRef = useRef(null);
   const transcriptBodyRef = useRef(null);
-  const guidedPanelRef = useRef(null);
-  const guidedExitRef = useRef(null);
-  const guidedBodyRef = useRef(null);
 
   const [snapIndex, setSnapIndex] = useState(0);
   const [totalSteps, setTotalSteps] = useState(2);
@@ -223,8 +242,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const currentImage = images.length > 0 ? images[currentImageIndex] : null;
 
-  const mainPopupActive =
-    !zoomOpen && !videoPlayerOpen && !transcriptOpen && !guidedOpen;
+  const mainPopupActive = !zoomOpen && !videoPlayerOpen && !transcriptOpen;
   useFocusTrap(popupRef, mainPopupActive, {
     skipAutofocusRef: skipNextTrapAutofocusRef,
     initialFocusDoneRef: popupInitialFocusDoneRef,
@@ -232,7 +250,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   });
   useFocusTrap(zoomRef, zoomOpen);
   useFocusTrap(transcriptPanelRef, transcriptOpen);
-  useFocusTrap(guidedPanelRef, guidedOpen);
+
+  const setVisualSection = useCallback((section) => {
+    visualActiveSectionRef.current = section;
+    setVisualActiveSection(section);
+  }, []);
 
   const cancelAutoplay = useCallback(() => {
     autoplayingRef.current = false;
@@ -243,13 +265,49 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       clearTimeout(autoplayTimeoutRef.current);
       autoplayTimeoutRef.current = null;
     }
+    if (autoAdvanceTimeoutRef.current !== null) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
   }, []);
 
   const markAutoplayEnded = useCallback(() => {
     cancelAutoplay();
     autoplayDoneRef.current = true;
     setIsAutoplaying(false);
-  }, [cancelAutoplay]);
+    setVisualSection(null);
+    setBottomPanelMode("content");
+  }, [cancelAutoplay, setVisualSection]);
+
+  const landOnNextArrowEnd = useCallback(
+    (hasNext) => {
+      setVisualSection(null);
+      setBottomPanelMode("content");
+      nextArrowRef.current?.focus({ preventScroll: true });
+      announce(hasNext ? AUTO_READ_END_PROMPT : AUTO_READ_THEME_END_PROMPT, {
+        politeness: "assertive",
+      });
+    },
+    [announce, setVisualSection]
+  );
+
+  const startTranscriptDwell = useCallback(
+    (hasNext) => {
+      setVisualSection("transcript");
+      setBottomPanelMode("content");
+      transcriptBtnRef.current?.focus({ preventScroll: true });
+      announce(TRANSCRIPT_AUTOPLAY_PROMPT, { politeness: "assertive" });
+
+      if (autoAdvanceTimeoutRef.current !== null) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        autoAdvanceTimeoutRef.current = null;
+        landOnNextArrowEnd(hasNext);
+      }, TRANSCRIPT_DWELL_MS);
+    },
+    [announce, setVisualSection, landOnNextArrowEnd]
+  );
 
   const rememberMainFocus = useCallback(() => {
     const el = document.activeElement;
@@ -281,31 +339,70 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const getPopupFocusables = useCallback(() => {
     const hasTranscriptLocal =
       typeof artifact?.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
-    const hasGuidedLocal =
-      typeof artifact?.guidedDescription === "string" &&
-      artifact.guidedDescription.trim().length > 0;
+    const textFocusable = speechMode ? textRef.current : null;
+    if (isVideo) {
+      return [
+        prevArrowRef.current,
+        textFocusable,
+        zoomOrPlayRef.current,
+        guidedBtnRef.current,
+        hasTranscriptLocal ? transcriptBtnRef.current : null,
+        nextArrowRef.current,
+      ].filter(Boolean);
+    }
     return [
       prevArrowRef.current,
-      speechMode ? textRef.current : null,
+      textFocusable,
       hasMultipleImages ? nextImageRef.current : null,
+      guidedBtnRef.current,
       hasTranscriptLocal ? transcriptBtnRef.current : null,
-      hasGuidedLocal ? guidedBtnRef.current : null,
       zoomOrPlayRef.current,
       nextArrowRef.current,
     ].filter(Boolean);
-  }, [speechMode, hasMultipleImages, artifact]);
+  }, [speechMode, hasMultipleImages, artifact, isVideo]);
 
   const getFirstControlRef = useCallback(() => {
+    if (isVideo && zoomOrPlayRef.current) return zoomOrPlayRef.current;
     if (hasMultipleImages && nextImageRef.current) return nextImageRef.current;
+    if (guidedBtnRef.current) return guidedBtnRef.current;
     const hasTranscriptLocal =
       typeof artifact?.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
     if (hasTranscriptLocal && transcriptBtnRef.current) return transcriptBtnRef.current;
-    const hasGuidedLocal =
-      typeof artifact?.guidedDescription === "string" &&
-      artifact.guidedDescription.trim().length > 0;
-    if (hasGuidedLocal && guidedBtnRef.current) return guidedBtnRef.current;
     return zoomOrPlayRef.current;
-  }, [hasMultipleImages, artifact]);
+  }, [hasMultipleImages, artifact, isVideo]);
+
+  const focusVisualActiveOrFallback = useCallback(
+    (isNext) => {
+      const section = visualActiveSectionRef.current;
+      if (section === "nextImage" && nextImageRef.current) {
+        nextImageRef.current.focus({ preventScroll: true });
+        return;
+      }
+      if (section === "guided" && guidedBtnRef.current) {
+        setBottomPanelMode("guided");
+        guidedBtnRef.current.focus({ preventScroll: true });
+        return;
+      }
+      if (section === "transcript" && transcriptBtnRef.current) {
+        transcriptBtnRef.current.focus({ preventScroll: true });
+        return;
+      }
+      if (section === "description" && speechMode && textRef.current) {
+        textRef.current.focus({ preventScroll: true });
+        return;
+      }
+      if (isNext) {
+        getFirstControlRef()?.focus({ preventScroll: true });
+      } else {
+        prevArrowRef.current?.focus({ preventScroll: true });
+      }
+    },
+    [getFirstControlRef, speechMode]
+  );
+
+  useEffect(() => {
+    autoplayDoneRef.current = false;
+  }, [artifactId]);
 
   useEffect(() => {
     if (artifact && !speechMode) {
@@ -317,9 +414,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useEffect(() => {
     if (!speechMode || !artifact) return;
     if (isPausedRef.current) return;
-    if (zoomOpen || videoPlayerOpen || transcriptOpen || guidedOpen) {
+    if (zoomOpen || videoPlayerOpen || transcriptOpen) {
       cancelAutoplay();
       setIsAutoplaying(false);
+      setVisualSection(null);
+      setBottomPanelMode("content");
       autoplayDoneRef.current = true;
       return;
     }
@@ -328,9 +427,15 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const chunks = buildAutoplayChunks(artifact, images, isVideo);
     if (chunks.length === 0) return;
 
+    const hasTranscriptLocal =
+      typeof artifact.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
+    const hasNext = Boolean(nextArtifact);
+
     let chunkIndex = 0;
     autoplayingRef.current = true;
     setIsAutoplaying(true);
+    setVisualSection(null);
+    setBottomPanelMode("content");
     autoplayAnchorRef.current?.focus({ preventScroll: true });
 
     const playNext = () => {
@@ -343,16 +448,35 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         autoplayPlayNextRef.current = null;
         autoplayRemainingRef.current = null;
         setIsAutoplaying(false);
-        announce(AUTO_READ_COMPLETE_INSTRUCTION, { politeness: "assertive" });
+        setBottomPanelMode("content");
+
+        if (hasTranscriptLocal && transcriptBtnRef.current) {
+          startTranscriptDwell(hasNext);
+        } else {
+          landOnNextArrowEnd(hasNext);
+        }
         return;
       }
 
       const chunk = chunks[chunkIndex];
       setCurrentImageIndex(chunk.imageIndex);
+      setVisualSection(chunk.section);
+
+      if (chunk.section === "guided") {
+        setBottomPanelMode("guided");
+      } else if (chunk.section === "title" || chunk.section === "description") {
+        setBottomPanelMode("content");
+      } else if (chunk.section === "nextImage") {
+        setBottomPanelMode("content");
+      }
+
       announce(chunk.text, { politeness: "assertive" });
       chunkIndex += 1;
 
-      const delay = estimateChunkDurationMs(chunk.text);
+      const delay =
+        chunk.section === "nextImage"
+          ? NEXT_IMAGE_ADVANCE_MS
+          : estimateChunkDurationMs(chunk.text);
       autoplayPlayNextRef.current = playNext;
       autoplayDeadlineRef.current = Date.now() + delay;
       autoplayTimeoutRef.current = setTimeout(playNext, delay);
@@ -369,12 +493,15 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     artifactId,
     isVideo,
     images,
+    nextArtifact,
     zoomOpen,
     videoPlayerOpen,
     transcriptOpen,
-    guidedOpen,
     announce,
     cancelAutoplay,
+    setVisualSection,
+    startTranscriptDwell,
+    landOnNextArrowEnd,
   ]);
 
   useEffect(() => {
@@ -406,6 +533,41 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, [isPaused]);
 
   useEffect(() => {
+    if (textRef.current) {
+      textRef.current.scrollTop = 0;
+    }
+  }, [bottomPanelMode]);
+
+  // Yellow scrollbar while snap-scrolling text / transcript panels
+  useEffect(() => {
+    const attachScrollHighlight = (el) => {
+      if (!el) return () => {};
+      let timer = null;
+      const onScroll = () => {
+        el.classList.add("is-scrolling");
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          el.classList.remove("is-scrolling");
+          timer = null;
+        }, 400);
+      };
+      el.addEventListener("scroll", onScroll, { passive: true });
+      return () => {
+        el.removeEventListener("scroll", onScroll);
+        if (timer) clearTimeout(timer);
+        el.classList.remove("is-scrolling");
+      };
+    };
+
+    const cleanupText = attachScrollHighlight(textRef.current);
+    const cleanupTranscript = attachScrollHighlight(transcriptBodyRef.current);
+    return () => {
+      cleanupText();
+      cleanupTranscript();
+    };
+  }, [transcriptOpen, bottomPanelMode]);
+
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (!autoplayingRef.current || e.repeat) return;
       const key = e.key.toLowerCase();
@@ -416,17 +578,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       e.preventDefault();
       e.stopImmediatePropagation();
       markAutoplayEnded();
-
-      if (isNext) {
-        getFirstControlRef()?.focus({ preventScroll: true });
-      } else {
-        prevArrowRef.current?.focus({ preventScroll: true });
-      }
+      focusVisualActiveOrFallback(isNext);
     };
 
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [markAutoplayEnded, getFirstControlRef]);
+  }, [markAutoplayEnded, focusVisualActiveOrFallback]);
 
   useEffect(() => {
     if (!isAutoplaying || !speechMode || !mainPopupActive) return;
@@ -484,27 +641,45 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     [onNavigate, onClose]
   );
 
+  const flashSelected = useCallback((ref) => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.add("is-selected");
+    window.setTimeout(() => {
+      el.classList.remove("is-selected");
+    }, 250);
+  }, []);
+
   const handlePrevArrow = useCallback(() => {
+    flashSelected(prevArrowRef);
     if (prevArtifact) {
       goToArtifact(prevArtifact.id);
     } else {
       goToArtifact(null, { focusThemeStart: true });
     }
-  }, [goToArtifact, prevArtifact]);
+  }, [goToArtifact, prevArtifact, flashSelected]);
 
   const handleNextArrow = useCallback(() => {
-    goToArtifact(nextArtifact?.id);
-  }, [goToArtifact, nextArtifact]);
+    flashSelected(nextArrowRef);
+    if (nextArtifact) {
+      goToArtifact(nextArtifact.id);
+    } else {
+      goToArtifact(null, { focusThemeStart: true });
+    }
+  }, [goToArtifact, nextArtifact, flashSelected]);
 
   const handleNextImage = useCallback(() => {
     if (images.length <= 1) return;
+    flashSelected(nextImageRef);
     setCurrentImageIndex((prev) => {
       const next = (prev + 1) % images.length;
-      const alt = images[next]?.alt || "";
-      announce(`Image ${next + 1} of ${images.length}. ${alt}`, { dedupeMs: 200 });
+      announce(
+        `Image ${next + 1} of ${images.length}. Guided Description.`,
+        { dedupeMs: 200 }
+      );
       return next;
     });
-  }, [images, announce]);
+  }, [images, announce, flashSelected]);
 
   const closeTranscript = useCallback(() => {
     setTranscriptOpen(false);
@@ -512,18 +687,40 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     restoreMainFocus(transcriptBtnRef);
   }, [announce, restoreMainFocus]);
 
-  const openGuided = useCallback(() => {
-    rememberMainFocus();
-    markAutoplayEnded();
-    setGuidedOpen(true);
-    announce("Guided description opened.", { politeness: "assertive" });
-  }, [announce, markAutoplayEnded, rememberMainFocus]);
+  const maybeCloseGuidedPanel = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (autoplayingRef.current && visualActiveSectionRef.current === "guided") return;
+      if (bottomPanelModeRef.current !== "guided") return;
+      const active = document.activeElement;
+      if (active === guidedBtnRef.current) return;
+      setBottomPanelMode("content");
+    });
+  }, []);
 
-  const closeGuided = useCallback(() => {
-    setGuidedOpen(false);
-    announce("Guided description closed.");
-    restoreMainFocus(guidedBtnRef);
-  }, [announce, restoreMainFocus]);
+  const handleGuidedSelect = useCallback(() => {
+    markAutoplayEnded();
+    if (bottomPanelModeRef.current === "guided") {
+      setBottomPanelMode("content");
+      announce("Guided Description closed.");
+      return;
+    }
+    setBottomPanelMode("guided");
+    announce(
+      `Guided Description. Image ${Math.min(
+        images.length || 1,
+        Math.max(1, currentImageIndex + 1)
+      )} of ${images.length || 1}. ${getGuidedTextForImage(artifact, images, currentImageIndex)}`,
+      { politeness: "assertive" }
+    );
+  }, [markAutoplayEnded, announce, images, currentImageIndex, artifact]);
+
+  const handleTextBlur = useCallback(() => {
+    maybeCloseGuidedPanel();
+  }, [maybeCloseGuidedPanel]);
+
+  const handleGuidedBlur = useCallback(() => {
+    maybeCloseGuidedPanel();
+  }, [maybeCloseGuidedPanel]);
 
   const openTranscript = useCallback(() => {
     rememberMainFocus();
@@ -579,12 +776,19 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const handlePopupKeyDown = useCallback(
     (e) => {
       if (e.repeat) return;
-      if (transcriptOpen || guidedOpen) return;
+      if (transcriptOpen) return;
 
       const isNext = (e.key === "Tab" && !e.shiftKey) || e.key === "l";
       const isBack = (e.key === "Tab" && e.shiftKey) || e.key === "k";
       const isSelect = e.key === "Enter" || e.key === "j";
       if (!isNext && !isBack && !isSelect) return;
+
+      // Any intentional nav/select during transcript dwell cancels auto-advance
+      if (autoAdvanceTimeoutRef.current !== null) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+        autoAdvanceTimeoutRef.current = null;
+        setVisualSection(null);
+      }
 
       const focusables = getPopupFocusables();
 
@@ -596,15 +800,95 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         else if (active === nextArrowRef.current) handleNextArrow();
         else if (active === nextImageRef.current) handleNextImage();
         else if (active === transcriptBtnRef.current) openTranscript();
-        else if (active === guidedBtnRef.current) openGuided();
+        else if (active === guidedBtnRef.current) handleGuidedSelect();
         else if (active === zoomOrPlayRef.current) handlePrimaryAction();
         return;
       }
 
+      const active = document.activeElement;
+      const keyLower = e.key.toLowerCase();
+      const isScrollKey = keyLower === "l" || keyLower === "k";
+
+      // Guided open + focus on button: scroll text panel, or leave when there's nothing to scroll
+      if (
+        active === guidedBtnRef.current &&
+        bottomPanelModeRef.current === "guided" &&
+        isScrollKey &&
+        (isNext || isBack)
+      ) {
+        const body = textRef.current;
+        if (body) {
+          const maxScroll = body.scrollHeight - body.clientHeight;
+          const step = Math.floor(body.clientHeight * SCROLL_STEP_RATIO) || body.clientHeight;
+
+          if (maxScroll <= 0) {
+            // No overflow: close guided and move to next/prev control
+            e.preventDefault();
+            e.stopPropagation();
+            setBottomPanelMode("content");
+            const idx = focusables.indexOf(active);
+            if (isNext) {
+              if (idx >= 0 && idx < focusables.length - 1) focusables[idx + 1].focus();
+              else if (idx === focusables.length - 1) {
+                bumpArrow(nextArrowRef);
+                const label = nextArrowRef.current?.getAttribute("aria-label");
+                if (label) announce(label, { politeness: "assertive" });
+              }
+            } else if (isBack) {
+              if (idx > 0) focusables[idx - 1].focus();
+              else if (idx === 0) {
+                bumpArrow(prevArrowRef);
+                const label = prevArrowRef.current?.getAttribute("aria-label");
+                if (label) announce(label, { politeness: "assertive" });
+              }
+            }
+            return;
+          }
+
+          if (isNext) {
+            if (body.scrollTop < maxScroll - 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              body.scrollTo({
+                top: Math.min(maxScroll, body.scrollTop + step),
+                behavior: "smooth",
+              });
+              return;
+            }
+            // At bottom with overflow: stay on button
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+
+          if (isBack) {
+            if (body.scrollTop > 0) {
+              e.preventDefault();
+              e.stopPropagation();
+              body.scrollTo({
+                top: Math.max(0, body.scrollTop - step),
+                behavior: "smooth",
+              });
+              return;
+            }
+            // At top with overflow: leave to previous control and close guided
+            e.preventDefault();
+            e.stopPropagation();
+            setBottomPanelMode("content");
+            const idx = focusables.indexOf(active);
+            if (idx > 0) focusables[idx - 1].focus();
+            else if (idx === 0) {
+              bumpArrow(prevArrowRef);
+              const label = prevArrowRef.current?.getAttribute("aria-label");
+              if (label) announce(label, { politeness: "assertive" });
+            }
+            return;
+          }
+        }
+      }
+
       e.preventDefault();
       e.stopPropagation();
-
-      const active = document.activeElement;
 
       const idx = focusables.indexOf(active);
       if (idx === -1) {
@@ -632,7 +916,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     },
     [
       transcriptOpen,
-      guidedOpen,
       getPopupFocusables,
       bumpArrow,
       announce,
@@ -640,8 +923,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       handleNextArrow,
       handleNextImage,
       openTranscript,
-      openGuided,
+      handleGuidedSelect,
       handlePrimaryAction,
+      setVisualSection,
     ]
   );
 
@@ -677,34 +961,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     stepScrollKeyDown(e, transcriptBodyRef);
   }, []);
 
-  const handleGuidedKeyDown = useCallback((e) => {
-    if (e.repeat) return;
-    const key = e.key.toLowerCase();
-    if (key !== "l" && key !== "k") return;
-
-    const body = guidedBodyRef.current;
-    const exitBtn = guidedExitRef.current;
-    if (!body || !exitBtn) return;
-
-    const maxScroll = body.scrollHeight - body.clientHeight;
-    if (maxScroll <= 0 && document.activeElement === body) {
-      e.preventDefault();
-      e.stopPropagation();
-      exitBtn.focus();
-      return;
-    }
-
-    if (key === "l" && document.activeElement === body && body.scrollTop >= maxScroll - 1) {
-      e.preventDefault();
-      e.stopPropagation();
-      body.scrollTo({ top: 0, behavior: "smooth" });
-      exitBtn.focus();
-      return;
-    }
-
-    stepScrollKeyDown(e, guidedBodyRef);
-  }, []);
-
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.repeat || e.key !== "Escape") return;
@@ -714,9 +970,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       } else if (transcriptOpen) {
         e.preventDefault();
         closeTranscript();
-      } else if (guidedOpen) {
-        e.preventDefault();
-        closeGuided();
       } else if (!videoPlayerOpen) {
         e.preventDefault();
         onClose();
@@ -724,7 +977,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [zoomOpen, transcriptOpen, guidedOpen, videoPlayerOpen, exitZoom, closeTranscript, closeGuided, onClose]);
+  }, [zoomOpen, transcriptOpen, videoPlayerOpen, exitZoom, closeTranscript, onClose]);
 
   const atSnapTop = snapIndex === 0;
   const atSnapBottom = snapIndex >= totalSteps - 1;
@@ -829,15 +1082,23 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const hasTranscript =
     typeof artifact.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
-  const hasGuided =
-    typeof artifact.guidedDescription === "string" && artifact.guidedDescription.trim().length > 0;
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
-  const guidedText = hasGuided ? artifact.guidedDescription.trim() : null;
   const guidedImageTotal = images.length > 0 ? images.length : 1;
   const guidedImageIndex = Math.min(guidedImageTotal, Math.max(1, currentImageIndex + 1));
   const guidedImageSubtitle = `Image ${guidedImageIndex} of ${guidedImageTotal}`;
-  const speechLabel = `${artifact.title}. ${artifact.description}`;
+  const guidedBodyText = getGuidedTextForImage(artifact, images, currentImageIndex);
+  const showingGuided = bottomPanelMode === "guided";
+  const speechLabel = showingGuided
+    ? `Guided Description. ${guidedImageSubtitle}. ${guidedBodyText}`
+    : `Artifact description. ${artifact.description}`;
   const videoAlt = isVideo ? getVideoAlt(artifact) : "";
+  const dialogAriaLabel =
+    speechMode && isAutoplaying
+      ? "Artifact details"
+      : `${artifact.title}, artifact details`;
+
+  const autoplayBtnClass = (section) =>
+    visualActiveSection === section ? " carousel-btn--autoplay-active" : "";
 
   return (
     <div className="artifact-popup-scrim">
@@ -846,7 +1107,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         ref={popupRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`${artifact.title}, artifact details`}
+        aria-label={dialogAriaLabel}
         onKeyDown={handlePopupKeyDown}
       >
         <div
@@ -865,7 +1126,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           aria-label={
             prevArtifact
               ? `Previous artifact: ${prevArtifact.displayTitle}`
-              : "Close artifact, return to theme"
+              : "Back to theme"
           }
         />
 
@@ -891,60 +1152,77 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           )}
 
           <div className="artifact-popup-controls" role="toolbar" aria-label="Artifact controls">
-            {hasMultipleImages && (
+            {isVideo ? (
               <button
                 type="button"
-                ref={nextImageRef}
-                className="carousel-btn"
-                onClick={handleNextImage}
-                aria-label="Next image"
+                ref={zoomOrPlayRef}
+                className={`carousel-btn${autoplayBtnClass("play")}${
+                  videoPlayerOpen ? " is-selected" : ""
+                }`}
+                onClick={handlePrimaryAction}
+                aria-label="Play video"
                 data-autofocus={!speechMode ? true : undefined}
               >
-                Next Image
+                Play
               </button>
+            ) : (
+              hasMultipleImages && (
+                <button
+                  type="button"
+                  ref={nextImageRef}
+                  className={`carousel-btn${autoplayBtnClass("nextImage")}`}
+                  onClick={handleNextImage}
+                  aria-label="Next image"
+                  data-autofocus={!speechMode ? true : undefined}
+                >
+                  Next Image
+                </button>
+              )
             )}
+            <button
+              type="button"
+              ref={guidedBtnRef}
+              className={`carousel-btn${autoplayBtnClass("guided")}${
+                showingGuided ? " is-selected" : ""
+              }`}
+              onClick={handleGuidedSelect}
+              onBlur={handleGuidedBlur}
+              aria-label="Guided description"
+              data-autofocus={
+                !speechMode && !isVideo && !hasMultipleImages ? true : undefined
+              }
+            >
+              Guided Description
+            </button>
             {hasTranscript && (
               <button
                 type="button"
                 ref={transcriptBtnRef}
-                className="carousel-btn"
+                className={`carousel-btn${autoplayBtnClass("transcript")}${
+                  transcriptOpen ? " is-selected" : ""
+                }`}
                 onClick={openTranscript}
                 aria-label="Transcript"
-                data-autofocus={!speechMode && !hasMultipleImages ? true : undefined}
               >
                 Transcript
               </button>
             )}
-            {hasGuided && (
+            {!isVideo && (
               <button
                 type="button"
-                ref={guidedBtnRef}
-                className="carousel-btn"
-                onClick={openGuided}
-                aria-label="Guided description"
+                ref={zoomOrPlayRef}
+                className={`carousel-btn artifact-popup-zoom-btn${
+                  zoomOpen ? " is-selected" : ""
+                }`}
+                onClick={handlePrimaryAction}
+                aria-label="Zoom"
                 data-autofocus={
                   !speechMode && !hasMultipleImages && !hasTranscript ? true : undefined
                 }
               >
-                Guided Description
+                <img src="Zoom.svg" alt="" aria-hidden="true" />
               </button>
             )}
-            <button
-              type="button"
-              ref={zoomOrPlayRef}
-              className={
-                isVideo ? "carousel-btn" : "carousel-btn artifact-popup-zoom-btn"
-              }
-              onClick={handlePrimaryAction}
-              aria-label={isVideo ? "Play video" : "Zoom"}
-              data-autofocus={
-                !speechMode && !hasMultipleImages && !hasTranscript && !hasGuided
-                  ? true
-                  : undefined
-              }
-            >
-              {isVideo ? "Play" : <img src="Zoom.svg" alt="" aria-hidden="true" />}
-            </button>
           </div>
 
           <div
@@ -952,14 +1230,31 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             ref={textRef}
             tabIndex={speechMode ? 0 : -1}
             onKeyDown={handleTextKeyDown}
+            onBlur={handleTextBlur}
             aria-label={speechMode ? speechLabel : undefined}
           >
-            <h2 className="artifact-popup-title" aria-hidden={speechMode ? true : undefined}>
-              {artifact.title}
-            </h2>
-            <p className="artifact-popup-description" aria-hidden={speechMode ? true : undefined}>
-              {artifact.description}
-            </p>
+            {showingGuided ? (
+              <>
+                <h2 className="artifact-popup-title" aria-hidden={speechMode ? true : undefined}>
+                  Guided Description
+                  <span className="artifact-popup-guided-subtitle-inline">
+                    {guidedImageSubtitle}
+                  </span>
+                </h2>
+                <p className="artifact-popup-description" aria-hidden={speechMode ? true : undefined}>
+                  {guidedBodyText}
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="artifact-popup-title" aria-hidden={speechMode ? true : undefined}>
+                  {artifact.title}
+                </h2>
+                <p className="artifact-popup-description" aria-hidden={speechMode ? true : undefined}>
+                  {artifact.description}
+                </p>
+              </>
+            )}
           </div>
 
           {transcriptOpen && transcriptText && (
@@ -993,39 +1288,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               </div>
             </div>
           )}
-
-          {guidedOpen && guidedText && (
-            <div
-              className="artifact-popup-transcript"
-              ref={guidedPanelRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Guided description"
-            >
-              <button
-                type="button"
-                ref={guidedExitRef}
-                className="exit-pill-btn artifact-popup-transcript-exit"
-                onClick={closeGuided}
-                aria-label="Close guided description"
-              >
-                Exit
-              </button>
-              <h2 className="artifact-popup-transcript-heading">Guided Description</h2>
-              <p className="artifact-popup-transcript-subtitle">{guidedImageSubtitle}</p>
-              <div
-                className="artifact-popup-transcript-body"
-                ref={guidedBodyRef}
-                tabIndex={0}
-                onKeyDown={handleGuidedKeyDown}
-                data-autofocus=""
-              >
-                {guidedText.split("\n").map((line, i) => (
-                  <p key={i}>{line}</p>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <button
@@ -1036,7 +1298,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           aria-label={
             nextArtifact
               ? `Next artifact: ${nextArtifact.displayTitle}`
-              : "Close artifact, return to theme"
+              : AUTO_READ_THEME_END_PROMPT
           }
         />
       </div>

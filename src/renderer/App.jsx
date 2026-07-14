@@ -228,16 +228,17 @@ export default function App() {
     let nextIndex;
 
     if (e.shiftKey) {
-      // Move backwards
       if (currentIndex <= 0) {
-        nextIndex = focusables.length - 1;
-      } else {
-        nextIndex = currentIndex - 1;
+        e.preventDefault();
+        return;
       }
+      nextIndex = currentIndex - 1;
     } else {
-      // Move forwards
-      if (currentIndex === -1 || currentIndex === focusables.length - 1) {
+      if (currentIndex === -1) {
         nextIndex = 0;
+      } else if (currentIndex >= focusables.length - 1) {
+        e.preventDefault();
+        return;
       } else {
         nextIndex = currentIndex + 1;
       }
@@ -350,10 +351,7 @@ export default function App() {
             className="settings-overlay"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="accessibility-settings-title"
-            {...(settingsOnboarding
-              ? { "aria-describedby": "accessibility-onboarding-blurb" }
-              : {})}
+            aria-label="Accessibility Settings"
           >
             <div
               className="settings-backdrop"
@@ -365,7 +363,6 @@ export default function App() {
               role="document"
               onKeyDown={handleSettingsKeyDown}
             >
-              <h2 id="accessibility-settings-title">Accessibility Settings</h2>
               <AccessibilityMenu onboarding={settingsOnboarding} />
             </div>
           </div>

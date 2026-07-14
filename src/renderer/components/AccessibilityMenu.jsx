@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAppState } from "../state/StateProvider";
+import { useAppState, DEFAULT_PREFS } from "../state/StateProvider";
 
 const textSizeOptions = [
   { value: "small", label: "Small" },
@@ -31,6 +31,25 @@ const screenReaderOptions = [
   { value: false, label: "Off" },
 ];
 
+const ONBOARDING_BLURB =
+  "By default, the screen reader is on. Press Skip to continue, or use the arrow keys to customize. Press the settings key to access this menu at any time.";
+
+const ONBOARDING_INTRO_SR = `Accessibility Settings. ${ONBOARDING_BLURB}`;
+
+const NORMAL_INTRO_SR = "Accessibility Settings.";
+
+const SKIP_SR_LABEL =
+  "Skip. Press the Select key to stick with these settings, or press the right arrow key to customize screen reader, speech speed, text size, contrast, or brightness.";
+
+function prefsMatchDefaults(prefs) {
+  return (
+    prefs.textSize === DEFAULT_PREFS.textSize &&
+    prefs.theme === DEFAULT_PREFS.theme &&
+    prefs.brightness === DEFAULT_PREFS.brightness &&
+    (prefs.speechRate ?? "normal") === DEFAULT_PREFS.speechRate
+  );
+}
+
 export default function AccessibilityMenu({ onboarding = false }) {
   const {
     prefs,
@@ -43,6 +62,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
     lastTtsToggleRef,
   } = useAppState();
   const [expandedSection, setExpandedSection] = useState(null);
+  const introRef = useRef(null);
   const screenReaderFirstRef = useRef(null);
   const textSizeFirstRef = useRef(null);
   const themeFirstRef = useRef(null);
@@ -81,6 +101,8 @@ export default function AccessibilityMenu({ onboarding = false }) {
   const currentSpeechRateLabel = speechRateOptions.find((o) => o.value === prefs.speechRate)?.label ?? "Normal";
   const currentScreenReaderLabel = speechMode ? "On" : "Off";
 
+  const isAtDefaults = prefsMatchDefaults(prefs) && speechMode === true;
+
   const handleSpeechRate = (newValue) => {
     const currentSteps = speechRateOptions.find((o) => o.value === (prefs.speechRate ?? "normal"))?.steps ?? 0;
     const newSteps = speechRateOptions.find((o) => o.value === newValue)?.steps ?? 0;
@@ -97,27 +119,50 @@ export default function AccessibilityMenu({ onboarding = false }) {
     setSpeechModeWithTts(enabled);
   };
 
+  const handleResetToDefaults = () => {
+    resetPrefs();
+    setExpandedSection(null);
+    requestAnimationFrame(() => {
+      introRef.current?.focus();
+    });
+  };
+
+  const introSrLabel = onboarding ? ONBOARDING_INTRO_SR : NORMAL_INTRO_SR;
+
   return (
     <div className="accessibility-menu">
-      {onboarding && (
-        <div className="settings-onboarding-intro">
-          <p id="accessibility-onboarding-blurb">
-            By default, the screen reader is on. Press Skip to continue with
-            these settings, or use the arrow keys to customize screen reader,
-            speech speed, text size, contrast, or brightness.
-            or resume speech and media. Press the settings key to access this
-            menu at any time.
-          </p>
-          <button
-            type="button"
-            className="setting-btn settings-onboarding-skip"
-            onClick={dismissSettings}
-            data-autofocus
-            aria-label="Press the Select key to stick with these settings or press the right arrow key to customize screen reader, speech speed, text size, contrast, or brightness."
+      <div
+        ref={introRef}
+        className={`settings-intro${onboarding ? " settings-intro--onboarding" : ""}`}
+        tabIndex={0}
+        data-autofocus
+        aria-label={speechMode ? introSrLabel : undefined}
+      >
+        <h2
+          id="accessibility-settings-title"
+          aria-hidden={speechMode ? true : undefined}
+        >
+          Accessibility Settings
+        </h2>
+        {onboarding && (
+          <p
+            id="accessibility-onboarding-blurb"
+            aria-hidden={speechMode ? true : undefined}
           >
-            Skip
-          </button>
-        </div>
+            {ONBOARDING_BLURB}
+          </p>
+        )}
+      </div>
+
+      {onboarding && (
+        <button
+          type="button"
+          className="setting-btn settings-onboarding-skip"
+          onClick={dismissSettings}
+          aria-label={SKIP_SR_LABEL}
+        >
+          Skip
+        </button>
       )}
 
       <div className="setting-group">
@@ -128,7 +173,6 @@ export default function AccessibilityMenu({ onboarding = false }) {
           aria-expanded={expandedSection === "screenReader"}
           aria-controls="access-screen-reader-options"
           id="access-screen-reader-trigger"
-          {...(!onboarding ? { "data-autofocus": true } : {})}
         >
           <span className="setting-section-label">Screen Reader</span>
           <span className="setting-section-value" aria-hidden="true">{currentScreenReaderLabel}</span>
@@ -300,7 +344,8 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-btn settings-reset-btn"
-          onClick={resetPrefs}
+          onClick={handleResetToDefaults}
+          disabled={isAtDefaults}
         >
           Reset to Defaults
         </button>
