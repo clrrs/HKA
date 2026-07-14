@@ -221,8 +221,6 @@ export default function HomeScene({ isActive = false }) {
         }
       } else if (idx < themes.length - 1) {
         circleRefs.current[idx + 1]?.focus();
-      } else {
-        headingRef.current?.focus();
       }
     } else {
       if (idx < 0) {

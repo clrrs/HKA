@@ -271,8 +271,6 @@ export default function ThemeScene() {
         circleRefs.current[0]?.focus();
       } else if (idx < artifacts.length - 1) {
         circleRefs.current[idx + 1]?.focus();
-      } else {
-        headingRef.current?.focus();
       }
     } else {
       if (idx < 0) {

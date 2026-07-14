@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 
 const SKIP_DELAY_SECONDS = 1;
-const AUTO_CONTINUE_DELAY_MS = 3000;
+const AUTO_CONTINUE_DELAY_MS = 10000;
 
 export default function InstructionScene({ isActive }) {
   const { goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding, isPaused } =
@@ -16,6 +16,7 @@ export default function InstructionScene({ isActive }) {
   const skipButtonRef = useRef(null);
   const wasPlayingRef = useRef(false);
   const autoContinueTimerRef = useRef(null);
+  const advancingRef = useRef(false);
 
   useHeadphoneSinkEffect(videoRef, isActive);
 
@@ -26,7 +27,17 @@ export default function InstructionScene({ isActive }) {
     }
   };
 
-  // Focus trap: L/Tab from Skip/Start goes to empty; K/Shift+Tab from empty goes to Skip/Start (loop)
+  const finishInstruction = useCallback(() => {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    clearAutoContinueTimer();
+    goToScene("home");
+    if (pendingAccessibilityOnboarding) {
+      openSettingsOnboarding();
+    }
+  }, [goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding]);
+
+  // Focus trap: L/Tab from Skip goes to empty; K/Shift+Tab from empty goes to Skip (loop)
   const handleKeyDown = (e) => {
     if (!showSkip || e.repeat) return;
     const key = e.key.toLowerCase();
@@ -48,6 +59,7 @@ export default function InstructionScene({ isActive }) {
     const video = videoRef.current;
     if (!video) return;
     if (isActive) {
+      advancingRef.current = false;
       stopNvdaSpeechForMediaStart();
       video.play().catch(() => {});
     } else {
@@ -56,6 +68,7 @@ export default function InstructionScene({ isActive }) {
       setShowSkip(false);
       setVideoEnded(false);
       clearAutoContinueTimer();
+      advancingRef.current = false;
     }
   }, [isActive]);
 
@@ -73,31 +86,50 @@ export default function InstructionScene({ isActive }) {
       return;
     }
 
-    if (wasPlayingRef.current) {
+    if (wasPlayingRef.current && !videoEnded) {
       wasPlayingRef.current = false;
       video.play().catch(() => {});
     }
-  }, [isPaused, isActive]);
+  }, [isPaused, isActive, videoEnded]);
+
+  // After the video ends, any key/click advances (Attract-style); capture so
+  // global keypad handlers don't steal S/A/J/etc.
+  useEffect(() => {
+    if (!isActive || !videoEnded) return;
+
+    const advance = (e) => {
+      if (advancingRef.current) return;
+      if (e.type === "keydown") {
+        if (e.repeat) return;
+        if (e.key === "Control" || e.ctrlKey) return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation?.();
+      finishInstruction();
+    };
+
+    window.addEventListener("keydown", advance, true);
+    window.addEventListener("pointerdown", advance, true);
+
+    return () => {
+      window.removeEventListener("keydown", advance, true);
+      window.removeEventListener("pointerdown", advance, true);
+    };
+  }, [isActive, videoEnded, finishInstruction]);
 
   const handleTimeUpdate = () => {
     const video = videoRef.current;
-    if (video && video.currentTime >= SKIP_DELAY_SECONDS) {
+    if (video && !videoEnded && video.currentTime >= SKIP_DELAY_SECONDS) {
       setShowSkip(true);
     }
   };
 
-  const finishInstruction = () => {
-    clearAutoContinueTimer();
-    goToScene("home");
-    if (pendingAccessibilityOnboarding) {
-      openSettingsOnboarding();
-    }
-  };
-
-  // Freeze on the last frame instead of transitioning immediately (avoids a
-  // flash) and let the visitor read "Start", or auto-continue after a pause.
+  // Freeze on the last frame (avoids a flash), hide Skip, and auto-continue
+  // after a buffer if the visitor doesn't press anything.
   const handleEnded = () => {
     setVideoEnded(true);
+    setShowSkip(false);
     autoContinueTimerRef.current = setTimeout(() => {
       autoContinueTimerRef.current = null;
       finishInstruction();
@@ -133,9 +165,9 @@ export default function InstructionScene({ isActive }) {
             type="button"
             className="nav-btn instruction-skip-btn"
             onClick={handleSkip}
-            aria-label={videoEnded ? "Start" : "Skip instructions"}
+            aria-label="Skip instructions"
           >
-            {videoEnded ? "Start" : "Skip"}
+            Skip
           </button>
         )}
       </div>

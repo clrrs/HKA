@@ -186,6 +186,8 @@ export function useKeyboardNav() {
             document;
         const noWraparound =
           showSettings ||
+          scene === "home" ||
+          scene === "theme" ||
           container.classList?.contains("artifact-popup") ||
           container.classList?.contains("artifact-popup-transcript");
         const rawFocusables = Array.from(
@@ -255,6 +257,8 @@ export function useKeyboardNav() {
             document;
         const noWraparound =
           showSettings ||
+          scene === "home" ||
+          scene === "theme" ||
           container.classList?.contains("artifact-popup") ||
           container.classList?.contains("artifact-popup-transcript");
         const rawFocusables = Array.from(
