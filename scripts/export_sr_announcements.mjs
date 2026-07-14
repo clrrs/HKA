@@ -69,17 +69,14 @@ function inferProducerScenario(row) {
   if (location === "App" && msg.includes("still there? press any key")) {
     return "Visitor has been inactive for several minutes; the idle warning overlay appears and interrupts with this spoken alert.";
   }
+  if (location === "App" && msg.includes("returning to start in")) {
+    return "After the idle pre-warning, before numbers start ticking, the screen reader announces that the return-to-start countdown is about to begin.";
+  }
   if (location === "App" && message === "Accessibility Settings") {
     return "Visitor opens Accessibility Settings (Settings key); NVDA reads the dialog title.";
   }
   if (location === "App" && notes.includes("test-easter-egg-message")) {
     return "Developer test easter egg only — not part of the public visitor experience.";
-  }
-  if (location === "App" && message === "Still there?" && type === "dialog-title") {
-    return "Part of the idle-warning dialog — NVDA reads this as the dialog heading.";
-  }
-  if (location === "App" && message === "Press any key to stay") {
-    return "Part of the idle-warning dialog — NVDA reads this as the dialog instructions.";
   }
 
   // --- AccessibilityMenu ---
@@ -627,6 +624,8 @@ function extractAnnounceCalls(content, filePath) {
     let trigger = "Live-region announcement";
     if (location === "App" && message.includes("Still there")) {
       trigger = "Idle warning overlay appears";
+    } else if (location === "App" && message.includes("Returning to start")) {
+      trigger = "Idle countdown buffer begins";
     } else if (location === "ThemeScene" && messageKind === "expression") {
       trigger = "First visit to theme — tip or page intro";
     } else if (location === "HomeScene" && messageKind === "expression") {

@@ -48,13 +48,6 @@ function getThemeTipMessage(themeLabel) {
   return `Tip: You are on the ${themeLabel} theme page. Use the arrow keys to navigate between artifacts, and press the select key to learn more. Press the home button to choose a different theme.`;
 }
 
-function getThemePageAnnouncement(theme, speechMode) {
-  if (speechMode) {
-    return `${theme.label}. Use arrow keys to choose an artifact. ${theme.description}`;
-  }
-  return `${theme.label}. ${theme.description}. Use arrow keys to select an artifact.`;
-}
-
 const TIP_PASS_THROUGH_KEYS = new Set(["s", "home", "a"]);
 const TIP_AUTO_DISMISS_MS = 20000;
 
@@ -63,8 +56,8 @@ export default function ThemeScene() {
     scene,
     currentTheme,
     speechMode,
-    visitedThemes,
-    markThemeVisited,
+    hasSeenThemeTip,
+    markThemeTipSeen,
     artifactId,
     openArtifact,
     closeArtifact,
@@ -74,19 +67,41 @@ export default function ThemeScene() {
   const theme = getTheme(currentTheme);
 
   const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [showTip, setShowTip] = useState(false);
+  // tipGate.show is decided during render on theme entry so the tip can take
+  // data-autofocus before useSceneFocus lands on the heading.
+  const [tipGate, setTipGate] = useState({ entryKey: null, show: false });
   const [carouselTransitionEnabled, setCarouselTransitionEnabled] = useState(true);
   const circleRefs = useRef([]);
   const headingRef = useRef(null);
+  const tipRef = useRef(null);
   const carouselRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
-  const showTipRef = useRef(showTip);
+  const showTipRef = useRef(false);
   const prevShowSettingsRef = useRef(showSettings);
   focusedIndexRef.current = focusedIndex;
+
+  const entryKey = scene === "theme" && currentTheme ? currentTheme : null;
+  if (entryKey !== tipGate.entryKey) {
+    setTipGate({
+      entryKey,
+      show: Boolean(entryKey) && !hasSeenThemeTip,
+    });
+  }
+  const showTip = tipGate.show;
   showTipRef.current = showTip;
 
   const artifacts = theme?.artifacts || [];
   const popupOpen = Boolean(artifactId);
+
+  const dismissTip = useCallback(() => {
+    setTipGate((prev) => (prev.show ? { ...prev, show: false } : prev));
+  }, []);
+
+  const restoreThemeEntryFocus = useCallback(() => {
+    requestAnimationFrame(() => {
+      headingRef.current?.focus({ preventScroll: true });
+    });
+  }, []);
 
   useLayoutEffect(() => {
     const wasOpen = prevShowSettingsRef.current;
@@ -109,22 +124,14 @@ export default function ThemeScene() {
   }, [popupOpen]);
 
   useEffect(() => {
-    if (scene !== "theme" || !currentTheme || !theme) {
-      if (scene !== "theme") {
-        setShowTip(false);
-      }
-      return;
-    }
+    if (!showTip) return;
+    markThemeTipSeen();
+  }, [showTip, markThemeTipSeen]);
 
-    if (!visitedThemes[currentTheme]) {
-      markThemeVisited(currentTheme);
-      setShowTip(true);
-    } else {
-      setShowTip(false);
-    }
-    // Only re-check first-visit when the active theme changes, not when visitedThemes updates.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, currentTheme, theme?.id, markThemeVisited]);
+  useLayoutEffect(() => {
+    if (!showTip) return;
+    tipRef.current?.focus({ preventScroll: true });
+  }, [showTip]);
 
   useEffect(() => {
     if (!showTip || !theme) return;
@@ -135,23 +142,11 @@ export default function ThemeScene() {
       dedupeMs: 0,
     });
 
-    const announcePage = () => {
-      requestAnimationFrame(() => {
-        const text = getThemePageAnnouncement(theme, speechMode);
-        announce(text, {
-          politeness: "assertive",
-          source: "theme-tip-dismiss",
-          dedupeMs: 0,
-        });
-        headingRef.current?.focus({ preventScroll: true });
-      });
-    };
-
     const handleKeyDownCapture = (e) => {
       if (!showTipRef.current || e.repeat) return;
 
       const key = e.key.toLowerCase();
-      setShowTip(false);
+      dismissTip();
 
       if (TIP_PASS_THROUGH_KEYS.has(key)) {
         return;
@@ -159,16 +154,16 @@ export default function ThemeScene() {
 
       e.preventDefault();
       e.stopImmediatePropagation();
-      announcePage();
+      restoreThemeEntryFocus();
     };
 
     const handlePointerDownCapture = (e) => {
       if (!showTipRef.current) return;
 
-      setShowTip(false);
+      dismissTip();
       e.preventDefault();
       e.stopImmediatePropagation();
-      announcePage();
+      restoreThemeEntryFocus();
     };
 
     window.addEventListener("keydown", handleKeyDownCapture, true);
@@ -176,7 +171,8 @@ export default function ThemeScene() {
 
     const dismissTimer = setTimeout(() => {
       if (showTipRef.current) {
-        setShowTip(false);
+        dismissTip();
+        restoreThemeEntryFocus();
       }
     }, TIP_AUTO_DISMISS_MS);
 
@@ -185,7 +181,7 @@ export default function ThemeScene() {
       window.removeEventListener("keydown", handleKeyDownCapture, true);
       window.removeEventListener("pointerdown", handlePointerDownCapture, true);
     };
-  }, [showTip, theme, speechMode, announce]);
+  }, [showTip, theme, announce, dismissTip, restoreThemeEntryFocus]);
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");
@@ -306,118 +302,129 @@ export default function ThemeScene() {
     >
       <div className="home-bg" aria-hidden="true" />
 
-      <div className={`theme-heading ${hasFocus ? "theme-heading--hidden" : ""}`}>
-        <div
-          className="theme-heading-inner"
-          ref={headingRef}
-          tabIndex={0}
-          data-autofocus={true}
-          onFocus={handleHeadingFocus}
-          aria-label={speechMode ? `${theme.label}. Use arrow keys to choose an artifact. ${theme.description}` : undefined}
-        >
-          <p
-            className="theme-title"
-            tabIndex={-1}
-            aria-hidden={speechMode ? true : undefined}
+      <div
+        className="theme-scene-main"
+        aria-hidden={showTip ? true : undefined}
+        inert={showTip ? "" : undefined}
+      >
+        <div className={`theme-heading ${hasFocus ? "theme-heading--hidden" : ""}`}>
+          <div
+            className="theme-heading-inner"
+            ref={headingRef}
+            tabIndex={0}
+            data-autofocus={!showTip ? true : undefined}
+            onFocus={handleHeadingFocus}
+            aria-label={speechMode ? `${theme.label}. Use arrow keys to choose an artifact. ${theme.description}` : undefined}
           >
-            {theme.label}
-          </p>
-          <p
-            className="theme-description"
-            tabIndex={-1}
-            aria-hidden={speechMode ? true : undefined}
-          >
-            {theme.description}
-          </p>
-          <h4
-            className="theme-cta"
-            tabIndex={-1}
-            aria-hidden={speechMode ? true : undefined}
-          >
-            Use arrow keys to select an artifact.
-          </h4>
+            <p
+              className="theme-title"
+              tabIndex={-1}
+              aria-hidden={speechMode ? true : undefined}
+            >
+              {theme.label}
+            </p>
+            <p
+              className="theme-description"
+              tabIndex={-1}
+              aria-hidden={speechMode ? true : undefined}
+            >
+              {theme.description}
+            </p>
+            <h4
+              className="theme-cta"
+              tabIndex={-1}
+              aria-hidden={speechMode ? true : undefined}
+            >
+              Use arrow keys to select an artifact.
+            </h4>
+          </div>
         </div>
-      </div>
 
-      <div ref={carouselRef} className="theme-carousel" aria-hidden="true">
-        <div
-          role="list"
-          aria-label="Artifact selection"
-          className={`artifact-circles ${hasFocus || popupOpen ? "artifact-circles--active" : ""}`}
-          style={{
-            transform: `translateX(${getTrackTranslateX(focusedIndex, popupOpen)}px)`,
-            transition: carouselTransitionEnabled ? undefined : "none",
-          }}
-        >
-          {artifacts.map((artifact, i) => {
-            if (popupOpen && i === focusedIndex) {
+        <div ref={carouselRef} className="theme-carousel" aria-hidden="true">
+          <div
+            role="list"
+            aria-label="Artifact selection"
+            className={`artifact-circles ${hasFocus || popupOpen ? "artifact-circles--active" : ""}`}
+            style={{
+              transform: `translateX(${getTrackTranslateX(focusedIndex, popupOpen)}px)`,
+              transition: carouselTransitionEnabled ? undefined : "none",
+            }}
+          >
+            {artifacts.map((artifact, i) => {
+              if (popupOpen && i === focusedIndex) {
+                return (
+                  <div role="listitem" key={artifact.id}>
+                    <div className="artifact-popup-slot" aria-hidden="true" />
+                  </div>
+                );
+              }
+
+              const { src: thumbSrc, fallbackSrc } = getThumbnailSources(artifact);
               return (
                 <div role="listitem" key={artifact.id}>
-                  <div className="artifact-popup-slot" aria-hidden="true" />
+                  <button
+                    ref={(el) => { circleRefs.current[i] = el; }}
+                    className={`artifact-circle ${!popupOpen && focusedIndex === i ? "artifact-circle--focused" : ""}`}
+                    onFocus={() => handleFocus(i)}
+                    onBlur={handleBlur}
+                    onClick={() => openArtifact(artifact.id)}
+                    aria-label={`${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}`}
+                    tabIndex={0}
+                  >
+                    <span className="artifact-circle-inner" aria-hidden="true" />
+                    {thumbSrc && (
+                      <img
+                        className={`artifact-circle-img ${artifact.id === "3A4" ? "artifact-circle-img--full-visible" : ""}`}
+                        src={thumbSrc}
+                        alt=""
+                        aria-hidden="true"
+                        onError={(e) => {
+                          if (!fallbackSrc) return;
+                          if (e.currentTarget.dataset.fallbackApplied === "true") return;
+                          e.currentTarget.dataset.fallbackApplied = "true";
+                          e.currentTarget.src = fallbackSrc;
+                        }}
+                      />
+                    )}
+                    <span className="artifact-circle-labels" aria-hidden="true">
+                      <span className="artifact-label-title">{artifact.displayTitle}</span>
+                      {artifact.year && (
+                        <span className="artifact-label-year">{artifact.year}</span>
+                      )}
+                    </span>
+                  </button>
                 </div>
               );
-            }
-
-            const { src: thumbSrc, fallbackSrc } = getThumbnailSources(artifact);
-            return (
-              <div role="listitem" key={artifact.id}>
-                <button
-                  ref={(el) => { circleRefs.current[i] = el; }}
-                  className={`artifact-circle ${!popupOpen && focusedIndex === i ? "artifact-circle--focused" : ""}`}
-                  onFocus={() => handleFocus(i)}
-                  onBlur={handleBlur}
-                  onClick={() => openArtifact(artifact.id)}
-                  aria-label={`${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}`}
-                  tabIndex={0}
-                >
-                  <span className="artifact-circle-inner" aria-hidden="true" />
-                  {thumbSrc && (
-                    <img
-                      className={`artifact-circle-img ${artifact.id === "3A4" ? "artifact-circle-img--full-visible" : ""}`}
-                      src={thumbSrc}
-                      alt=""
-                      aria-hidden="true"
-                      onError={(e) => {
-                        if (!fallbackSrc) return;
-                        if (e.currentTarget.dataset.fallbackApplied === "true") return;
-                        e.currentTarget.dataset.fallbackApplied = "true";
-                        e.currentTarget.src = fallbackSrc;
-                      }}
-                    />
-                  )}
-                  <span className="artifact-circle-labels" aria-hidden="true">
-                    <span className="artifact-label-title">{artifact.displayTitle}</span>
-                    {artifact.year && (
-                      <span className="artifact-label-year">{artifact.year}</span>
-                    )}
-                  </span>
-                </button>
-              </div>
-            );
-          })}
+            })}
+          </div>
         </div>
+
+        {hasFocus && !popupOpen && (
+          <div className="artifact-indicators" aria-hidden="true">
+            {artifacts.map((artifact, i) => (
+              <span
+                key={artifact.id}
+                className={`artifact-indicator ${focusedIndex === i ? "active" : ""}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
-
-      {hasFocus && !popupOpen && (
-        <div className="artifact-indicators" aria-hidden="true">
-          {artifacts.map((artifact, i) => (
-            <span
-              key={artifact.id}
-              className={`artifact-indicator ${focusedIndex === i ? "active" : ""}`}
-            />
-          ))}
-        </div>
-      )}
 
       {showTip && (
         <div
+          ref={tipRef}
           className="idle-overlay theme-tip-overlay"
-          role="status"
-          aria-live="assertive"
+          role="alertdialog"
+          aria-modal="true"
+          tabIndex={-1}
+          data-autofocus
         >
           <div className="idle-overlay-card">
             <div className="idle-overlay-content">
-              <p className="idle-overlay-line">{getThemeTipMessage(theme.label)}</p>
+              <p id="theme-tip-message" className="idle-overlay-line">
+                {getThemeTipMessage(theme.label)}
+              </p>
             </div>
           </div>
         </div>

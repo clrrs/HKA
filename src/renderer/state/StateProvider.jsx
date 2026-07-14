@@ -143,10 +143,10 @@ export default function StateProvider({ children }) {
     });
   }, []);
 
-  const [visitedThemes, setVisitedThemes] = useState({});
+  const [hasSeenThemeTip, setHasSeenThemeTip] = useState(false);
 
-  const markThemeVisited = useCallback((themeId) => {
-    setVisitedThemes((prev) => (prev[themeId] ? prev : { ...prev, [themeId]: true }));
+  const markThemeTipSeen = useCallback(() => {
+    setHasSeenThemeTip(true);
   }, []);
 
   const [previousScene, setPreviousScene] = useState("home");
@@ -258,8 +258,8 @@ export default function StateProvider({ children }) {
       lastTtsToggleRef,
       isPaused,
       togglePaused,
-      visitedThemes,
-      markThemeVisited,
+      hasSeenThemeTip,
+      markThemeTipSeen,
       resetToStart,
       idleTimeoutDisabled,
       toggleIdleTimeoutDisabled,

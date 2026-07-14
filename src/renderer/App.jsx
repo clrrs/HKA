@@ -12,9 +12,11 @@ const DESIGN_H = 1080;
 const DEFAULT_IDLE_SEC = 200;
 const PARAGRAPH_SPEECH_IDLE_SEC = 400;
 const PRE_COUNTDOWN_SEC = 10;
+const COUNTDOWN_BUFFER_SEC = 3;
 const COUNTDOWN_FROM = 10;
 const COUNTDOWN_TICK_SEC = 2;
-const TOTAL_WARNING_SEC = PRE_COUNTDOWN_SEC + COUNTDOWN_FROM * COUNTDOWN_TICK_SEC;
+const TOTAL_WARNING_SEC =
+  PRE_COUNTDOWN_SEC + COUNTDOWN_BUFFER_SEC + COUNTDOWN_FROM * COUNTDOWN_TICK_SEC;
 const SPEECH_HUD_VISIBLE_MS = 2000;
 const SPEECH_HUD_FADE_MS = 280;
 
@@ -23,7 +25,7 @@ function isParagraphFocus() {
 }
 
 function getIdleDismissAnnouncement(el) {
-  if (!el) return null;
+  if (!el || el === document.body || el === document.documentElement) return null;
   const label = el.getAttribute("aria-label");
   if (label) return label;
   const labelledbyId = el.getAttribute("aria-labelledby");
@@ -58,6 +60,8 @@ export default function App() {
   const prevShowSettingsRef = useRef(false);
   const idleOverlayRef = useRef(null);
   const idleFocusSessionRef = useRef(false);
+  const idleReturnFocusRef = useRef(null);
+  const idleBufferAnnouncedRef = useRef(false);
   const speechHudSeenFirstStateRef = useRef(false);
   const speechHudFadeTimeoutRef = useRef(null);
   const speechHudHideTimeoutRef = useRef(null);
@@ -135,9 +139,19 @@ export default function App() {
     lastActivityRef.current = Date.now();
 
     const handleActivity = () => {
+      const wasWarning = warningVisibleRef.current;
       lastActivityRef.current = Date.now();
       setIdleCountdown(null);
       warningVisibleRef.current = false;
+      if (wasWarning) {
+        const restoreEl = idleReturnFocusRef.current;
+        idleReturnFocusRef.current = null;
+        requestAnimationFrame(() => {
+          if (restoreEl && document.contains(restoreEl)) {
+            restoreEl.focus({ preventScroll: true });
+          }
+        });
+      }
     };
 
     const handlePassiveActivity = (e) => {
@@ -160,8 +174,19 @@ export default function App() {
         e.preventDefault();
         e.stopImmediatePropagation();
         requestAnimationFrame(() => {
+          const restoreEl = idleReturnFocusRef.current;
+          idleReturnFocusRef.current = null;
+          if (restoreEl && document.contains(restoreEl)) {
+            restoreEl.focus({ preventScroll: true });
+          }
           const text = getIdleDismissAnnouncement(document.activeElement);
-          if (text) announce(text, { politeness: "assertive", source: "idle-dismiss", dedupeMs: 0 });
+          if (text) {
+            announce(text, {
+              politeness: "assertive",
+              source: "idle-dismiss",
+              dedupeMs: 0,
+            });
+          }
         });
       }
     };
@@ -189,9 +214,14 @@ export default function App() {
         const warningElapsed = elapsedSeconds - warningStart;
         if (warningElapsed < PRE_COUNTDOWN_SEC) {
           setIdleCountdown("pre");
+        } else if (warningElapsed < PRE_COUNTDOWN_SEC + COUNTDOWN_BUFFER_SEC) {
+          setIdleCountdown("buffer");
         } else {
-          const countdownElapsed = warningElapsed - PRE_COUNTDOWN_SEC;
-          setIdleCountdown(COUNTDOWN_FROM - Math.floor(countdownElapsed / COUNTDOWN_TICK_SEC));
+          const countdownElapsed =
+            warningElapsed - PRE_COUNTDOWN_SEC - COUNTDOWN_BUFFER_SEC;
+          setIdleCountdown(
+            COUNTDOWN_FROM - Math.floor(countdownElapsed / COUNTDOWN_TICK_SEC)
+          );
         }
         warningVisibleRef.current = true;
       } else {
@@ -302,10 +332,15 @@ export default function App() {
   useEffect(() => {
     if (idleCountdown === null) {
       idleFocusSessionRef.current = false;
+      idleBufferAnnouncedRef.current = false;
       return;
     }
     if (idleFocusSessionRef.current) return;
     idleFocusSessionRef.current = true;
+    const active = document.activeElement;
+    if (active && active !== document.body && !active.closest?.(".idle-overlay")) {
+      idleReturnFocusRef.current = active;
+    }
     announce("Still there? Press any key to stay.", {
       politeness: "assertive",
       source: "idle-warning-show",
@@ -315,6 +350,17 @@ export default function App() {
       idleOverlayRef.current?.focus();
     }, 50);
     return () => window.clearTimeout(t);
+  }, [idleCountdown, announce]);
+
+  useEffect(() => {
+    if (idleCountdown !== "buffer") return;
+    if (idleBufferAnnouncedRef.current) return;
+    idleBufferAnnouncedRef.current = true;
+    announce("Returning to start in…", {
+      politeness: "assertive",
+      source: "idle-buffer",
+      dedupeMs: 0,
+    });
   }, [idleCountdown, announce]);
 
   useEffect(() => {
@@ -358,75 +404,83 @@ export default function App() {
     };
   }, []);
 
+  const idleWarningActive = idleCountdown !== null;
+  const showCountdownIntro =
+    idleCountdown === "buffer" || typeof idleCountdown === "number";
+
   return (
     <div className="app">
       <div id="app-scaler" className="app-scaler">
-        <SceneContainer />
-        {showSettings && (
-          <div
-            className="settings-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Accessibility Settings"
-          >
+        <div
+          className="app-main"
+          aria-hidden={idleWarningActive ? true : undefined}
+          inert={idleWarningActive ? "" : undefined}
+        >
+          <SceneContainer />
+          {showSettings && (
             <div
-              className="settings-backdrop"
-              onClick={settingsOnboarding ? dismissSettings : toggleSettings}
-            />
-            <div
-              className="settings-panel"
-              ref={settingsPanelRef}
-              role="document"
-              onKeyDown={handleSettingsKeyDown}
+              className="settings-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Accessibility Settings"
             >
-              <AccessibilityMenu onboarding={settingsOnboarding} />
-            </div>
-          </div>
-        )}
-        {testEasterEgg && (
-          <div
-            className="test-easter-egg-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="test-easter-egg-message"
-            aria-live="assertive"
-          >
-            <div className="test-easter-egg-card">
-              <img
-                className="test-easter-egg-image"
-                src={testEasterEgg.imageSrc}
-                alt=""
+              <div
+                className="settings-backdrop"
+                onClick={settingsOnboarding ? dismissSettings : toggleSettings}
               />
-              <p id="test-easter-egg-message" className="test-easter-egg-message">
-                {testEasterEgg.message}
-              </p>
+              <div
+                className="settings-panel"
+                ref={settingsPanelRef}
+                role="document"
+                onKeyDown={handleSettingsKeyDown}
+              >
+                <AccessibilityMenu onboarding={settingsOnboarding} />
+              </div>
             </div>
-          </div>
-        )}
-        {idleCountdown !== null && (
+          )}
+          {testEasterEgg && (
+            <div
+              className="test-easter-egg-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="test-easter-egg-message"
+              aria-live="assertive"
+            >
+              <div className="test-easter-egg-card">
+                <img
+                  className="test-easter-egg-image"
+                  src={testEasterEgg.imageSrc}
+                  alt=""
+                />
+                <p id="test-easter-egg-message" className="test-easter-egg-message">
+                  {testEasterEgg.message}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+        {idleWarningActive && (
           <div
             ref={idleOverlayRef}
             className="idle-overlay"
             role="alertdialog"
             aria-modal="true"
-            aria-labelledby="idle-warning-title"
-            aria-describedby="idle-warning-stay"
             tabIndex={-1}
           >
             <div className="idle-overlay-card">
               <div className="idle-overlay-content">
-                <h2 id="idle-warning-title" className="idle-overlay-line">
+                <h2 className="idle-overlay-line">
                   Still there?
                 </h2>
-                {typeof idleCountdown === "number" && (
-                  <>
-                    <p className="idle-overlay-line">Returning to start in…</p>
-                    <div className="idle-countdown" aria-hidden="true">
-                      {idleCountdown}
-                    </div>
-                  </>
+                {showCountdownIntro && (
+                  <p className="idle-overlay-line">Returning to start in…</p>
                 )}
-                <p id="idle-warning-stay" className="idle-overlay-line">
+                {typeof idleCountdown === "number" && (
+                  <div className="idle-countdown" aria-hidden="true">
+                    {idleCountdown}
+                  </div>
+                )}
+                <p className="idle-overlay-line">
                   Press any key to stay
                 </p>
               </div>
