@@ -8,8 +8,6 @@ contextBridge.exposeInMainWorld("kioskApi", {
       "volume-up",
       "volume-down",
       "stop-speech",
-      "speech-rate-change",
-      "reset-speech-rate",
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);

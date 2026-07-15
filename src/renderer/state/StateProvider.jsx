@@ -29,7 +29,6 @@ export const DEFAULT_PREFS = {
   textSize: "medium",
   theme: "dark",
   brightness: 1,
-  speechRate: "normal"
 };
 
 const AppState = createContext();
@@ -46,9 +45,10 @@ export default function StateProvider({ children }) {
   
   const [prefs, setPrefs] = useState(() => {
     try {
-      // speechRate always starts at "normal" so a crash can't leave a
-      // previous user's fast/slow setting active for the next user.
-      return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem("prefs")) || {}), speechRate: "normal" };
+      const stored = JSON.parse(localStorage.getItem("prefs")) || {};
+      // Drop removed speechRate key if still present in older saves.
+      delete stored.speechRate;
+      return { ...DEFAULT_PREFS, ...stored };
     } catch {
       return DEFAULT_PREFS;
     }
@@ -132,7 +132,6 @@ export default function StateProvider({ children }) {
 
   const resetPrefs = useCallback(() => {
     setPrefs(DEFAULT_PREFS);
-    window.kioskApi?.send("reset-speech-rate");
     setSpeechMode((prev) => {
       if (!prev) {
         lastTtsToggleRef.current = Date.now();
@@ -195,7 +194,6 @@ export default function StateProvider({ children }) {
     setTestEasterEgg(null);
     setVisitedThemes({});
     setIsPaused(false);
-    window.kioskApi?.send("reset-speech-rate");
     try {
       localStorage.removeItem("prefs");
     } catch {

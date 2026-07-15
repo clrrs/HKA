@@ -71,12 +71,6 @@ export default function App() {
     enabled: true,
   });
 
-  // On every app launch (including after a crash), reset NVDA speech rate to
-  // normal so a previous user's setting doesn't carry over.
-  useEffect(() => {
-    window.kioskApi?.send("reset-speech-rate");
-  }, []);
-
   useEffect(() => {
     if (!testEasterEgg) return;
     const openedAt = Date.now();
