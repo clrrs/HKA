@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
-import { stopNvdaSpeechAggressively } from "../../audio/nvdaSpeechControl";
+import {
+  stopNvdaSpeechAfterBrailleSettle,
+  stopNvdaSpeechAggressively,
+} from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme } from "../../data/artifacts";
 
@@ -24,6 +27,7 @@ export default function QuoteScene() {
   const { currentTheme, goToScene, scene } = useAppState();
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
+  const quoteTextRef = useRef(null);
   const timeoutRef = useRef(null);
 
   useHeadphoneSinkEffect(
@@ -35,17 +39,31 @@ export default function QuoteScene() {
     const audioEl = audioRef.current;
     if (!audioEl) return;
 
-    if (scene === "quote") {
-      audioEl.currentTime = 0;
-      stopNvdaSpeechAggressively();
-      const playPromise = audioEl.play();
-      if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {});
-      }
-    } else {
+    if (scene !== "quote") {
       audioEl.pause();
       audioEl.currentTime = 0;
+      return;
     }
+
+    // Focus quote text so braille gets the quote; do not use aria-live
+    // (its delayed announcement raced past the old immediate Ctrl stops).
+    quoteTextRef.current?.focus({ preventScroll: true });
+    audioEl.currentTime = 0;
+
+    const cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
+      settleMs: 150,
+      followUpMs: 180,
+      onSettled: () => {
+        const playPromise = audioEl.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {});
+        }
+      },
+    });
+
+    return () => {
+      cancelSpeechStops();
+    };
   }, [scene, theme?.id]);
 
   useEffect(() => {
@@ -84,7 +102,12 @@ export default function QuoteScene() {
 
   return (
     <div className="quote-scene" role="region" aria-label={`${theme.label} theme quote`}>
-      <div className="quote-scene-text" tabIndex={0} aria-live="polite">
+      <div
+        ref={quoteTextRef}
+        className="quote-scene-text"
+        tabIndex={0}
+        data-autofocus=""
+      >
         {theme.quote}
       </div>
       <p className="quote-scene-attribution" aria-hidden="true">

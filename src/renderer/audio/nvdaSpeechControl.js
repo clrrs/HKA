@@ -1,5 +1,8 @@
 const MEDIA_STOP_DEBOUNCE_MS = 250;
 
+/** Wait for focus / live-region braille to settle before silencing speech. */
+export const BRAILLE_OUTPUT_SETTLE_MS = 150;
+
 let lastStopAt = 0;
 
 /**
@@ -16,12 +19,44 @@ export function stopNvdaSpeechForMediaStart() {
 }
 
 /**
- * Match the quote playback behavior: send Ctrl twice so active NVDA speech is
- * reliably silenced while leaving the latest live-region text on braille.
+ * Send Ctrl twice so active NVDA speech is reliably silenced while leaving
+ * the latest focus / live-region text on braille.
  */
 export function stopNvdaSpeechAggressively() {
   window.kioskApi?.send("stop-speech");
   window.setTimeout(() => {
     window.kioskApi?.send("stop-speech");
   }, 40);
+}
+
+/**
+ * Quote / media start: wait for a11y output to reach braille, then cut speech
+ * and optionally fire again shortly after play (late focus announcements).
+ */
+export function stopNvdaSpeechAfterBrailleSettle(options = {}) {
+  const {
+    settleMs = BRAILLE_OUTPUT_SETTLE_MS,
+    followUpMs = 120,
+    onSettled,
+  } = options;
+
+  const timers = [];
+
+  timers.push(
+    window.setTimeout(() => {
+      stopNvdaSpeechAggressively();
+      onSettled?.();
+      if (followUpMs > 0) {
+        timers.push(
+          window.setTimeout(() => {
+            stopNvdaSpeechAggressively();
+          }, followUpMs)
+        );
+      }
+    }, settleMs)
+  );
+
+  return () => {
+    for (const id of timers) clearTimeout(id);
+  };
 }

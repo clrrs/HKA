@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
-import { stopNvdaSpeechAggressively } from "../audio/nvdaSpeechControl";
+import {
+  BRAILLE_OUTPUT_SETTLE_MS,
+  stopNvdaSpeechAggressively,
+} from "../audio/nvdaSpeechControl";
 import { getArtifact, getNextArtifact, getPrevArtifact } from "../data/artifacts";
 import { textOrMissing } from "../data/contentPlaceholder";
 
@@ -18,7 +21,6 @@ const AUTO_READ_THEME_END_PROMPT =
 const TRANSCRIPT_DWELL_MS = 6000;
 const NEXT_IMAGE_ADVANCE_MS = 1200;
 const VIDEO_END_DWELL_MS = 1000;
-const BRAILLE_OUTPUT_SETTLE_MS = 150;
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 const EMPTY_IMAGES = [];
 
@@ -56,8 +58,8 @@ function getGuidedTextForImage(artifact, images, imageIndex) {
 function buildAutoplayChunks(artifact, images, isVideo) {
   if (!artifact) return [];
 
+  // Dialog aria-label already announces the title on open; auto-read starts at description.
   const chunks = [
-    { text: artifact.title, imageIndex: 0, section: "title" },
     {
       text: `Artifact description. ${artifact.description}`,
       imageIndex: 0,
@@ -611,7 +613,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
       if (chunk.section === "guided") {
         setBottomPanelMode("guided");
-      } else if (chunk.section === "title" || chunk.section === "description") {
+      } else if (chunk.section === "description") {
         setBottomPanelMode("content");
       } else if (chunk.section === "nextImage") {
         setBottomPanelMode("content");
@@ -1307,10 +1309,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     ? `Guided Description. ${guidedImageSubtitle}. ${guidedBodyText}`
     : `Artifact description. ${artifact.description}`;
   const videoAlt = isVideo ? getVideoAlt(artifact) : "";
-  const dialogAriaLabel =
-    speechMode && isAutoplaying
-      ? "Artifact details"
-      : `${artifact.title}, artifact details`;
+  // Title only — auto-read then announces description (avoids "details" + repeated title).
+  const dialogAriaLabel = artifact.title;
 
   const autoplayBtnClass = (section) =>
     visualActiveSection === section ? " carousel-btn--autoplay-active" : "";
