@@ -19,6 +19,8 @@ Helen Keller Archive
 
 Once NVDA is running in the Electron app, you can toggle speech mode. TTS button (Q): Press **Q** to toggle NVDA speech on or off. When speech is *off,* the app hides the gold focus outline, and on artifact pages the keypad navigation (L/K) moves *only* between buttons and media controls (title and description stay in the DOM for screen-reader order when speech is on). This different focus/nav behavior for speech on vs speech off is controlled by the app, not NVDA.
 
+TO INSTALL PORTABLE COPY: https://drive.google.com/drive/folders/1cL7-yLd4ju27XfZtsAimty8TjefVWa85?usp=sharing
+
 1. Download the pre-configured NVDA settings file: [nvda.ini](nvda.ini)
 2. Copy this onto your clipboard: %APPDATA%\nvda
 3. Paste it into file explorer or the search bar.
