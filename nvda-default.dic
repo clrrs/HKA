@@ -23,7 +23,6 @@
 \bheading [1-6]\b		0	1
 
 # --- interactive control roles ---
-\bbutton\b		0	1
 \blink\b		0	1
 \bedit(able)?( text)?\b		0	1
 \bcombo box\b		0	1

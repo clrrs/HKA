@@ -109,8 +109,28 @@ export default function App() {
 
   useEffect(() => {
     rescale();
+
+    // Catch late-settling fullscreen / DPI size after mount
+    const rafId = requestAnimationFrame(() => {
+      rescale();
+    });
+    const timeoutId = window.setTimeout(rescale, 100);
+
     window.addEventListener("resize", rescale);
-    return () => window.removeEventListener("resize", rescale);
+
+    const parent = document.getElementById("app-scaler")?.parentElement;
+    let ro = null;
+    if (parent && typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => rescale());
+      ro.observe(parent);
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("resize", rescale);
+      ro?.disconnect();
+    };
   }, [rescale]);
 
   useEffect(() => {

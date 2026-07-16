@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
+import { stopNvdaSpeechAggressively } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
 import { getTheme } from "../../data/artifacts";
 
@@ -30,21 +31,13 @@ export default function QuoteScene() {
     scene === "quote" ? currentTheme : scene
   );
 
-  const stopSpeechForQuote = () => {
-    // Quote scene uses an aggressive stop to reliably cut active NVDA speech.
-    window.kioskApi?.send("stop-speech");
-    setTimeout(() => {
-      window.kioskApi?.send("stop-speech");
-    }, 40);
-  };
-
   useEffect(() => {
     const audioEl = audioRef.current;
     if (!audioEl) return;
 
     if (scene === "quote") {
       audioEl.currentTime = 0;
-      stopSpeechForQuote();
+      stopNvdaSpeechAggressively();
       const playPromise = audioEl.play();
       if (playPromise && typeof playPromise.catch === "function") {
         playPromise.catch(() => {});
@@ -101,7 +94,7 @@ export default function QuoteScene() {
         key={theme.id}
         ref={audioRef}
         src={quoteVoSrc(theme.id)}
-        onPlay={stopSpeechForQuote}
+        onPlay={stopNvdaSpeechAggressively}
         preload="auto"
       />
     </div>

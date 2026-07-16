@@ -14,3 +14,14 @@ export function stopNvdaSpeechForMediaStart() {
   lastStopAt = now;
   window.kioskApi?.send("stop-speech");
 }
+
+/**
+ * Match the quote playback behavior: send Ctrl twice so active NVDA speech is
+ * reliably silenced while leaving the latest live-region text on braille.
+ */
+export function stopNvdaSpeechAggressively() {
+  window.kioskApi?.send("stop-speech");
+  window.setTimeout(() => {
+    window.kioskApi?.send("stop-speech");
+  }, 40);
+}

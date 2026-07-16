@@ -179,8 +179,6 @@ export function useKeyboardNav() {
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-popup-transcript") ||
-            document.querySelector(".artifact-video-transcript-modal") ||
-            document.querySelector(".artifact-video-modal") ||
             document.querySelector(".carousel-zoom") ||
             document.querySelector(".artifact-popup") ||
             document;
@@ -228,7 +226,7 @@ export function useKeyboardNav() {
         e.preventDefault();
         const activeContainer =
           document.activeElement?.closest(
-            ".artifact-popup-transcript, .artifact-video-transcript-modal, .artifact-video-modal, .carousel-zoom, .artifact-popup"
+            ".artifact-popup-transcript, .carousel-zoom, .artifact-popup"
           ) || null;
         if (activeContainer) {
           logInputEvent({
@@ -250,8 +248,6 @@ export function useKeyboardNav() {
         const container = showSettings
           ? document.querySelector(".settings-panel") || document
           : document.querySelector(".artifact-popup-transcript") ||
-            document.querySelector(".artifact-video-transcript-modal") ||
-            document.querySelector(".artifact-video-modal") ||
             document.querySelector(".carousel-zoom") ||
             document.querySelector(".artifact-popup") ||
             document;
