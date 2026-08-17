@@ -21,4 +21,4 @@ Display-only fields (`displayTitle`, `year`, `type`, media paths) are not in the
 
 When a new content matrix CSV arrives, diff `description` / `guidedDescription` / `transcriptText` per artifact and update only what changed.
 
-Empty or missing `transcriptText` / `guidedDescription` still show the Transcript and Guided Description actions; the UI placeholder is **MISSING COPY** (see `textOrMissing` in [`contentPlaceholder.js`](../src/renderer/data/contentPlaceholder.js)).
+Empty or missing `transcriptText` still shows the Transcript action; empty `guidedDescription` still appears in the lower panel after the description timeout. The UI placeholder is **MISSING COPY** (see `textOrMissing` in [`contentPlaceholder.js`](../src/renderer/data/contentPlaceholder.js)).

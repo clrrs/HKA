@@ -158,6 +158,13 @@ export default function HomeScene({ isActive = false }) {
     carouselRef.current?.setAttribute("aria-hidden", "true");
   }, []);
 
+  // Snap idle while hidden so re-entry doesn't play leftover carousel CSS.
+  useLayoutEffect(() => {
+    if (isActive) return;
+    setFocusedIndex(-1);
+    hideCarousel();
+  }, [isActive, hideCarousel]);
+
   const handleFocus = useCallback((index) => {
     setFocusedIndex(index);
   }, []);

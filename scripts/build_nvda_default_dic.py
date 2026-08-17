@@ -17,6 +17,8 @@ def main() -> None:
             [
                 # Match the full phrase only; "helen keller" or "helen" alone are still spoken.
                 (r"\bhelen keller archives document\b", ""),
+                # Park copy "menu" so the role strip below does not eat onboarding text.
+                (r"\bthis menu\b", "this hkacopymenu"),
             ],
         ),
         (
@@ -110,6 +112,8 @@ def main() -> None:
             [
                 (r"[ \t]{2,}", " "),
                 (r"^[ ,.;:]+", ""),
+                # Restore exhibit "menu" parked above.
+                (r"\bhkacopymenu\b", "menu"),
             ],
         ),
     ]

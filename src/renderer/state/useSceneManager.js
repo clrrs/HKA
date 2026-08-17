@@ -6,6 +6,26 @@ import {
   logInputEvent,
 } from "./interactionLog";
 
+/** Focus after inert/overlay teardown. Chromium often ignores a single .focus() in that same turn. */
+export function scheduleFocus(el, { stealWindow = false } = {}) {
+  if (!el) return () => {};
+  const apply = () => {
+    if (stealWindow) window.focus();
+    if (!el || !document.contains(el)) return;
+    if (el.closest("[inert]")) return;
+    el.focus({ preventScroll: true });
+  };
+  apply();
+  const raf = requestAnimationFrame(apply);
+  const t1 = window.setTimeout(apply, 50);
+  const t2 = window.setTimeout(apply, 150);
+  return () => {
+    cancelAnimationFrame(raf);
+    window.clearTimeout(t1);
+    window.clearTimeout(t2);
+  };
+}
+
 export function useSceneFocus(sceneId, isActive) {
   const lastFocusedRef = useRef(null);
   
@@ -19,13 +39,11 @@ export function useSceneFocus(sceneId, isActive) {
       sceneEl.querySelector(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
-    
-    if (first) {
-      first.focus({ preventScroll: true });
-    }
-    
-    return () => { 
-      lastFocusedRef.current = document.activeElement; 
+
+    const cancel = first ? scheduleFocus(first) : () => {};
+    return () => {
+      cancel();
+      lastFocusedRef.current = document.activeElement;
     };
   }, [sceneId, isActive]);
 }

@@ -74,6 +74,7 @@ export default function AnnouncerProvider({ children }) {
   const assertiveRef = useRef(null);
   const lastMessageRef = useRef({ text: "", time: 0 });
   const sequenceRef = useRef(0);
+  const announceTimeoutRef = useRef(null);
 
   useEffect(() => {
     // Register debug helpers immediately on app load so operators can clear/export
@@ -86,12 +87,23 @@ export default function AnnouncerProvider({ children }) {
       politeness = "assertive",
       dedupeMs = 0,
       clear = false,
+      append = false,
       source = "unknown",
     } = options;
 
     if (clear) {
-      if (politeRef.current) politeRef.current.textContent = "";
-      if (assertiveRef.current) assertiveRef.current.textContent = "";
+      if (announceTimeoutRef.current !== null) {
+        clearTimeout(announceTimeoutRef.current);
+        announceTimeoutRef.current = null;
+      }
+      if (politeRef.current) {
+        politeRef.current.textContent = "";
+        politeRef.current.setAttribute("aria-atomic", "true");
+      }
+      if (assertiveRef.current) {
+        assertiveRef.current.textContent = "";
+        assertiveRef.current.setAttribute("aria-atomic", "true");
+      }
       lastMessageRef.current = { text: "", time: 0 };
       ensureAnnouncementTools();
       sequenceRef.current += 1;
@@ -138,11 +150,25 @@ export default function AnnouncerProvider({ children }) {
 
     if (!target) return;
 
-    // Clear then set on next tick so the browser treats it as a new announcement
-    target.textContent = "";
-    setTimeout(() => {
-      if (target) target.textContent = message;
-    }, 50);
+    if (announceTimeoutRef.current !== null) {
+      clearTimeout(announceTimeoutRef.current);
+      announceTimeoutRef.current = null;
+    }
+
+    if (append) {
+      // Keep existing live-region text on braille; NVDA speaks only the addition.
+      target.setAttribute("aria-atomic", "false");
+      const existing = (target.textContent || "").trim();
+      target.textContent = existing ? `${existing} ${message}` : message;
+    } else {
+      target.setAttribute("aria-atomic", "true");
+      // Clear then set on next tick so the browser treats it as a new announcement
+      target.textContent = "";
+      announceTimeoutRef.current = setTimeout(() => {
+        announceTimeoutRef.current = null;
+        if (target) target.textContent = message;
+      }, 50);
+    }
 
     ensureAnnouncementTools();
     sequenceRef.current += 1;
@@ -154,7 +180,7 @@ export default function AnnouncerProvider({ children }) {
       politeness,
       dedupeMs,
       source,
-      status: "emitted",
+      status: append ? "appended" : "emitted",
     };
     writeAnnouncementLog(entry);
     if (window.__ANNOUNCE_DIAGNOSTIC__) {

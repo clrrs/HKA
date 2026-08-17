@@ -80,7 +80,7 @@ StartScene → HomeScene → QuoteScene → ThemeScene (artifact popup opens on 
 
 **ThemeScene**: Shows the theme description and artifact list. L/K navigate the list. J selects an artifact to open the artifact popup (`ArtifactPopup.jsx`) on top of the scene, with the bubble list still visible (dimmed) behind it. The Back button (or S for Home) returns to HomeScene.
 
-**ArtifactPopup**: Shows artifact details with media (image/document or video) inside a popup card. L/K navigate between the prev-artifact arrow, title/description (inline guided description and transcript, step-scrollable), next-image button, zoom/play button, and next-artifact arrow — no wraparound at either end. J activates the focused element; selecting the boundary prev/next arrow when there's no adjacent artifact closes the popup instead. S returns to HomeScene.
+**ArtifactPopup**: Shows artifact details with media (image/document or video) inside a popup card. L/K navigate between the prev-artifact arrow, title/description (guided description appears in that panel after the description timeout; Next Image shows that image's guided text), transcript, next-image button, zoom/play button, and next-artifact arrow — no wraparound at either end. J activates the focused element; selecting the boundary prev/next arrow when there's no adjacent artifact closes the popup instead. S returns to HomeScene.
 
 
 # Auto-Update Pipeline (For Development)

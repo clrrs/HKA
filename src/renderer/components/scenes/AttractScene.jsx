@@ -102,15 +102,23 @@ export default function AttractScene({ isActive }) {
     }
   }, [isActive]);
 
-  const handleKeyDown = (e) => {
-    if (e.repeat) return;
-    if (e.key === "Control" || e.ctrlKey) return;
-    if (advancingRef.current) return;
-    advancingRef.current = true;
-    e.preventDefault();
-    e.stopPropagation();
-    goToScene("instruction");
-  };
+  // Window listener so any key still advances if DOM focus was lost (idle timeout).
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleKeyDown = (e) => {
+      if (e.repeat) return;
+      if (e.key === "Control" || e.ctrlKey) return;
+      if (advancingRef.current) return;
+      advancingRef.current = true;
+      e.preventDefault();
+      e.stopPropagation();
+      goToScene("instruction");
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [isActive, goToScene]);
 
   const handleClick = () => {
     if (advancingRef.current) return;
@@ -121,7 +129,6 @@ export default function AttractScene({ isActive }) {
   return (
     <div
       className="attract-scene"
-      onKeyDown={handleKeyDown}
       onClick={handleClick}
       role="button"
       tabIndex={0}

@@ -1810,6 +1810,7 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-popup-nav-arrow:hover,
+.artifact-popup-nav-arrow:focus,
 .artifact-popup-nav-arrow:focus-visible {
   outline: none;
 }
@@ -1830,6 +1831,7 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-popup-nav-arrow:hover::before,
+.artifact-popup-nav-arrow:focus::before,
 .artifact-popup-nav-arrow:focus-visible::before {
   transform: scale(1.3);
 }
@@ -1843,11 +1845,13 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-popup-nav-arrow--prev:hover::before,
+.artifact-popup-nav-arrow--prev:focus::before,
 .artifact-popup-nav-arrow--prev:focus-visible::before {
   border-right-color: var(--accent);
 }
 
 .artifact-popup-nav-arrow--next:hover::before,
+.artifact-popup-nav-arrow--next:focus::before,
 .artifact-popup-nav-arrow--next:focus-visible::before {
   border-left-color: var(--accent);
 }
@@ -1995,7 +1999,7 @@ h1[tabindex]:focus-visible {
 .artifact-popup-text--autoplay-active,
 .artifact-popup-text:focus,
 .artifact-popup-text:focus-visible,
-.artifact-popup:not(.artifact-popup--video-active):has(> .artifact-popup-autoplay-anchor:focus) .artifact-popup-text {
+.artifact-popup--autoplaying:not(.artifact-popup--video-active):has(> .artifact-popup-autoplay-anchor:focus) .artifact-popup-text {
   border-color: var(--accent);
 }
 

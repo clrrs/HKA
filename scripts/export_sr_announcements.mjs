@@ -178,19 +178,13 @@ function inferProducerScenario(row) {
       return "While auto-read is running, each chunk of the artifact description is spoken in sequence.";
     }
     if (msg.includes("image") && msg.includes("of")) {
-      return "Visitor moves to the next image in a multi-image artifact; NVDA announces the image number and alt text.";
+      return "Visitor moves to the next image in a multi-image artifact; NVDA announces the image number and that image's guided description.";
     }
     if (message === "Transcript closed.") {
       return "Visitor closes the transcript panel inside the artifact popup.";
     }
     if (message === "Transcript opened.") {
       return "Visitor opens the transcript panel inside the artifact popup.";
-    }
-    if (message === "Guided description opened.") {
-      return "Visitor opens the guided description panel inside the artifact popup.";
-    }
-    if (message === "Guided description closed.") {
-      return "Visitor closes the guided description panel inside the artifact popup.";
     }
     if (message.includes("Zoom mode")) {
       return "Visitor enters zoom mode on an artifact image; NVDA explains how to scroll the image.";
@@ -235,9 +229,6 @@ function inferProducerScenario(row) {
     if (message === "Transcript" && line === "868") {
       return "Visitor tabs to the Transcript button in the artifact toolbar.";
     }
-    if (message === "Guided description" && line === "880") {
-      return "Visitor tabs to the Guided Description button in the artifact toolbar.";
-    }
     if (notes.includes("Play video")) {
       return "Visitor tabs to the Play/Zoom button; label switches between Play video and Zoom.";
     }
@@ -248,10 +239,7 @@ function inferProducerScenario(row) {
       return "Transcript panel is open; visitor focuses the panel.";
     }
     if (message === "Close transcript") {
-      return "Visitor tabs to Close inside the transcript or guided-description panel.";
-    }
-    if (message === "Guided description" && line === "959") {
-      return "Guided description panel is open; visitor focuses the panel.";
+      return "Visitor tabs to Close inside the transcript panel.";
     }
     if (message === "Image zoom view") {
       return "Visitor enters zoom mode; NVDA reads the zoom dialog label.";

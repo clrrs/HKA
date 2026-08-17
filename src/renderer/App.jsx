@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from "react";
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
-import { useKeyboardNav } from "./state/useSceneManager";
+import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
 import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
@@ -22,6 +22,17 @@ const SPEECH_HUD_FADE_MS = 280;
 
 function isParagraphFocus() {
   return document.activeElement?.tagName === "P";
+}
+
+function getActiveSceneFocusTarget() {
+  const sceneEl = document.querySelector(".scene-active");
+  if (!sceneEl) return null;
+  return (
+    sceneEl.querySelector("[data-autofocus]") ||
+    sceneEl.querySelector(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+  );
 }
 
 function getIdleDismissAnnouncement(el) {
@@ -153,19 +164,9 @@ export default function App() {
     lastActivityRef.current = Date.now();
 
     const handleActivity = () => {
-      const wasWarning = warningVisibleRef.current;
       lastActivityRef.current = Date.now();
       setIdleCountdown(null);
       warningVisibleRef.current = false;
-      if (wasWarning) {
-        const restoreEl = idleReturnFocusRef.current;
-        idleReturnFocusRef.current = null;
-        requestAnimationFrame(() => {
-          if (restoreEl && document.contains(restoreEl)) {
-            restoreEl.focus({ preventScroll: true });
-          }
-        });
-      }
     };
 
     const handlePassiveActivity = (e) => {
@@ -188,11 +189,6 @@ export default function App() {
         e.preventDefault();
         e.stopImmediatePropagation();
         requestAnimationFrame(() => {
-          const restoreEl = idleReturnFocusRef.current;
-          idleReturnFocusRef.current = null;
-          if (restoreEl && document.contains(restoreEl)) {
-            restoreEl.focus({ preventScroll: true });
-          }
           const text = getIdleDismissAnnouncement(document.activeElement);
           if (text) {
             announce(text, {
@@ -342,6 +338,18 @@ export default function App() {
       window.clearTimeout(t2);
     };
   }, [showSettings, settingsOnboarding]);
+
+  useLayoutEffect(() => {
+    if (idleCountdown !== null) return;
+    if (!idleFocusSessionRef.current) return;
+    const restoreEl = idleReturnFocusRef.current;
+    idleReturnFocusRef.current = null;
+    const usable =
+      restoreEl && document.contains(restoreEl) && !restoreEl.closest("[inert]");
+    return scheduleFocus(usable ? restoreEl : getActiveSceneFocusTarget(), {
+      stealWindow: true,
+    });
+  }, [idleCountdown]);
 
   useEffect(() => {
     if (idleCountdown === null) {

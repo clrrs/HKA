@@ -191,6 +191,15 @@ export default function ThemeScene() {
     carouselRef.current?.setAttribute("aria-hidden", "true");
   }, []);
 
+  // Snap idle while hidden so re-entry doesn't play leftover carousel CSS.
+  // Heading autofocus / hideCarousel on entry still run as before.
+  const isActive = scene === "theme";
+  useLayoutEffect(() => {
+    if (isActive) return;
+    setFocusedIndex(-1);
+    hideCarousel();
+  }, [isActive, hideCarousel]);
+
   // While the artifact popup is open, keep the background bubble carousel's
   // visual focus in sync with whichever artifact the popup is showing (it
   // changes as the user navigates prev/next inside the popup).
