@@ -519,20 +519,11 @@ h1[tabindex]:focus-visible {
   min-width: 80px;
 }
 
-/* Hover / keyboard focus: solid white fill (matches Accessibility Settings) */
+/* Hover / keyboard focus / selected / autoplay: gold fill */
 .carousel-btn:hover,
-.carousel-btn:focus-visible {
-  background-color: var(--btn-focus-bg);
-  border-color: var(--btn-focus-border);
-  color: var(--btn-focus-text);
-  outline: none;
-  box-shadow: none;
-}
-
-/* Selected / activated: gold fill (matches .setting-btn.active) */
+.carousel-btn:focus-visible,
 .carousel-btn.is-selected,
-.carousel-btn.is-selected:hover,
-.carousel-btn.is-selected:focus-visible {
+.carousel-btn.carousel-btn--autoplay-active {
   background-color: var(--accent);
   border-color: var(--accent);
   color: var(--color-black);
@@ -560,12 +551,10 @@ h1[tabindex]:focus-visible {
 }
 
 .carousel-btn.carousel-btn-icon:hover img,
-.carousel-btn.carousel-btn-icon:focus-visible img {
-  filter: var(--icon-focus-filter);
-}
-
-.carousel-btn.carousel-btn-icon.is-selected img {
-  /* Force black icon on gold selected fill (both themes) */
+.carousel-btn.carousel-btn-icon:focus-visible img,
+.carousel-btn.carousel-btn-icon.is-selected img,
+.carousel-btn.carousel-btn-icon.carousel-btn--autoplay-active img {
+  /* Force black icon on gold fill (both themes) */
   filter: none;
 }
 
@@ -1949,12 +1938,6 @@ h1[tabindex]:focus-visible {
   font-weight: 300;
 }
 
-.carousel-btn--autoplay-active {
-  outline: 3px solid var(--accent);
-  outline-offset: 3px;
-  opacity: 1;
-}
-
 .artifact-popup-zoom-btn {
   width: 40px;
   min-width: 40px;
@@ -1970,12 +1953,9 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-popup-zoom-btn:hover img,
-.artifact-popup-zoom-btn:focus-visible img {
-  filter: var(--icon-focus-filter);
-}
-
+.artifact-popup-zoom-btn:focus-visible img,
 .artifact-popup-zoom-btn.is-selected img {
-  /* Force black icon on gold selected fill (both themes) */
+  /* Force black icon on gold fill (both themes) */
   filter: none;
 }
 

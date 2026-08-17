@@ -156,12 +156,19 @@ export default function AnnouncerProvider({ children }) {
     }
 
     if (append) {
-      // Keep existing live-region text on braille; NVDA speaks only the addition.
+      // Keep existing live-region text on braille. Assigning textContent would
+      // replace the whole node, so NVDA re-reads from the top — append a node
+      // instead so only the addition is spoken (aria-atomic=false).
       target.setAttribute("aria-atomic", "false");
-      const existing = (target.textContent || "").trim();
-      target.textContent = existing ? `${existing} ${message}` : message;
+      target.setAttribute("aria-relevant", "additions");
+      if (!(target.textContent || "").trim()) {
+        target.textContent = message;
+      } else {
+        target.appendChild(document.createTextNode(` ${message}`));
+      }
     } else {
       target.setAttribute("aria-atomic", "true");
+      target.removeAttribute("aria-relevant");
       // Clear then set on next tick so the browser treats it as a new announcement
       target.textContent = "";
       announceTimeoutRef.current = setTimeout(() => {
@@ -203,7 +210,6 @@ export default function AnnouncerProvider({ children }) {
         className="sr-only"
         aria-live="assertive"
         aria-atomic="true"
-        role="alert"
       />
     </AnnouncerContext.Provider>
   );
