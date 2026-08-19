@@ -142,6 +142,11 @@ export default function StateProvider({ children }) {
 
   const [videoOverlayOpen, setVideoOverlayOpen] = useState(false);
 
+  // Auto-read plays entirely on timers and live-region updates, so it fires none of
+  // the events the inactivity timer counts as activity. Without this the timer runs
+  // down while the app is actively reading to the visitor.
+  const [autoReadActive, setAutoReadActive] = useState(false);
+
   const [speechMode, setSpeechMode] = useState(true);
   const toggleSpeechMode = () => setSpeechMode((prev) => !prev);
   const lastTtsToggleRef = useRef(0);
@@ -224,6 +229,7 @@ export default function StateProvider({ children }) {
     setTestEasterEgg(null);
     setVisitedThemes({});
     setIsPaused(false);
+    setAutoReadActive(false);
     try {
       localStorage.removeItem("prefs");
     } catch {
@@ -280,6 +286,8 @@ export default function StateProvider({ children }) {
       dismissSettings,
       videoOverlayOpen,
       setVideoOverlayOpen,
+      autoReadActive,
+      setAutoReadActive,
       speechMode,
       toggleSpeechMode,
       setSpeechModeWithTts,

@@ -57,6 +57,7 @@ export default function App() {
     dismissSettings,
     resetToStart,
     videoOverlayOpen,
+    autoReadActive,
     speechMode,
     idleTimeoutDisabled,
     testEasterEgg,
@@ -145,8 +146,14 @@ export default function App() {
   }, [rescale]);
 
   useEffect(() => {
-    // Disable inactivity timer whenever a video is playing (attract, instruction, or start popup)
-    if (scene === "attract" || scene === "instruction" || videoOverlayOpen) {
+    // Disable inactivity timer whenever a video is playing (attract, instruction, or
+    // start popup) or auto-read is reading an artifact aloud.
+    if (
+      scene === "attract" ||
+      scene === "instruction" ||
+      videoOverlayOpen ||
+      autoReadActive
+    ) {
       setIdleCountdown(null);
       warningVisibleRef.current = false;
       lastActivityRef.current = Date.now();
@@ -247,7 +254,15 @@ export default function App() {
       window.removeEventListener("keydown", handleKeydownCapture, true);
       clearInterval(intervalId);
     };
-  }, [resetToStart, scene, videoOverlayOpen, speechMode, announce, idleTimeoutDisabled]);
+  }, [
+    resetToStart,
+    scene,
+    videoOverlayOpen,
+    autoReadActive,
+    speechMode,
+    announce,
+    idleTimeoutDisabled,
+  ]);
 
   const handleSettingsKeyDown = (e) => {
     if (e.repeat) return;

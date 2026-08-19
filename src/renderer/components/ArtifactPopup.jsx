@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
+import { scheduleFocus } from "../state/useSceneManager";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import {
   BRAILLE_OUTPUT_SETTLE_MS,
@@ -26,7 +27,6 @@ import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 const SCROLL_STEP_RATIO = 0.75;
 const WORDS_PER_SEC = 2.4;
 const CHUNK_BUFFER_MS = 6000;
-const AUTO_READ_END_PROMPT = "Press Select for next Artifact description";
 const TRANSCRIPT_AUTOPLAY_PROMPT =
   "Transcript. Press Select for the full transcript of this artifact.";
 const AUTO_READ_THEME_END_PROMPT =
@@ -390,7 +390,8 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
 }
 
 export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }) {
-  const { speechMode, isPaused, setVideoOverlayOpen, showSettings } = useAppState();
+  const { speechMode, isPaused, setVideoOverlayOpen, setAutoReadActive, showSettings } =
+    useAppState();
   const globalAnnounce = useAnnounce();
   const announce = useCallback(
     (message, options = {}) => globalAnnounce(message, { source: "ArtifactPopup", ...options }),
@@ -438,7 +439,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const transcriptDwellTimeoutRef = useRef(null);
   const transcriptDwellDeadlineRef = useRef(null);
   const transcriptDwellRemainingRef = useRef(null);
-  const transcriptDwellHasNextRef = useRef(false);
   const transcriptDwellActiveRef = useRef(false);
   const videoStartTimeoutRef = useRef(null);
   const videoAutoplayRef = useRef(false);
@@ -722,40 +722,33 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setVisualSection(null);
   }, [cancelAutoplay, clearTranscriptDwell, setVisualSection]);
 
-  const landOnNextArrowEnd = useCallback(
-    (hasNext) => {
-      clearTranscriptDwell();
-      setVisualSection(null);
-      requestAnimationFrame(() => {
-        nextArrowRef.current?.focus({ preventScroll: true });
-      });
-      announce(hasNext ? AUTO_READ_END_PROMPT : AUTO_READ_THEME_END_PROMPT, {
-        politeness: "assertive",
-      });
-    },
-    [announce, clearTranscriptDwell, setVisualSection]
-  );
+  // Landing focus on the arrow is the whole announcement: its aria-label already
+  // carries the "press select" prompt for both the next-artifact and end-of-theme
+  // cases, so anything announced here would be spoken on top of it.
+  const landOnNextArrowEnd = useCallback(() => {
+    clearTranscriptDwell();
+    setVisualSection(null);
+    // Retry the landing: a single focus() in this turn can be dropped, and the
+    // arrow is unreachable for a beat if an overlay still holds the popup inert.
+    scheduleFocus(nextArrowRef.current);
+  }, [clearTranscriptDwell, setVisualSection]);
 
-  const startTranscriptDwell = useCallback(
-    (hasNext) => {
-      setVisualSection("transcript");
-      transcriptBtnRef.current?.focus({ preventScroll: true });
-      announce(TRANSCRIPT_AUTOPLAY_PROMPT, { politeness: "assertive" });
+  const startTranscriptDwell = useCallback(() => {
+    setVisualSection("transcript");
+    transcriptBtnRef.current?.focus({ preventScroll: true });
+    announce(TRANSCRIPT_AUTOPLAY_PROMPT, { politeness: "assertive" });
 
-      clearTranscriptDwell();
-      transcriptDwellActiveRef.current = true;
-      transcriptDwellHasNextRef.current = hasNext;
-      transcriptDwellDeadlineRef.current = Date.now() + TRANSCRIPT_DWELL_MS;
-      transcriptDwellTimeoutRef.current = setTimeout(() => {
-        transcriptDwellTimeoutRef.current = null;
-        transcriptDwellDeadlineRef.current = null;
-        transcriptDwellRemainingRef.current = null;
-        transcriptDwellActiveRef.current = false;
-        landOnNextArrowEnd(hasNext);
-      }, TRANSCRIPT_DWELL_MS);
-    },
-    [announce, clearTranscriptDwell, setVisualSection, landOnNextArrowEnd]
-  );
+    clearTranscriptDwell();
+    transcriptDwellActiveRef.current = true;
+    transcriptDwellDeadlineRef.current = Date.now() + TRANSCRIPT_DWELL_MS;
+    transcriptDwellTimeoutRef.current = setTimeout(() => {
+      transcriptDwellTimeoutRef.current = null;
+      transcriptDwellDeadlineRef.current = null;
+      transcriptDwellRemainingRef.current = null;
+      transcriptDwellActiveRef.current = false;
+      landOnNextArrowEnd();
+    }, TRANSCRIPT_DWELL_MS);
+  }, [announce, clearTranscriptDwell, setVisualSection, landOnNextArrowEnd]);
 
   const flashSelected = useCallback((ref) => {
     const el = ref.current;
@@ -845,9 +838,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       autoplayDoneRef.current = true;
       autoplayingRef.current = false;
       setIsAutoplaying(false);
-      landOnNextArrowEnd(Boolean(nextArtifact));
+      landOnNextArrowEnd();
     }, VIDEO_END_DWELL_MS);
-  }, [landOnNextArrowEnd, nextArtifact, setVideoOverlayOpen, setVisualSection]);
+  }, [landOnNextArrowEnd, setVideoOverlayOpen, setVisualSection]);
 
   const rememberMainFocus = useCallback(() => {
     const el = document.activeElement;
@@ -943,6 +936,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     clearTranscriptDwell();
   }, [artifactId, clearTranscriptDwell]);
 
+  // Hold the inactivity timer while auto-read is reading. Pausing counts as idle
+  // again, so a paused read cannot keep the timer suppressed indefinitely.
+  useEffect(() => {
+    setAutoReadActive(isAutoplaying && !isPaused);
+  }, [isAutoplaying, isPaused, setAutoReadActive]);
+
+  useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
+
   useEffect(() => {
     if (artifact && !speechMode) {
       announce(`${artifact.title} opened.`, { politeness: "assertive" });
@@ -974,7 +975,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
     const hasTranscriptLocal =
       typeof artifact.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
-    const hasNext = Boolean(nextArtifact);
 
     let chunkIndex = 0;
     autoplayingRef.current = true;
@@ -1002,9 +1002,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         setIsAutoplaying(false);
 
         if (hasTranscriptLocal && transcriptBtnRef.current) {
-          startTranscriptDwell(hasNext);
+          startTranscriptDwell();
         } else {
-          landOnNextArrowEnd(hasNext);
+          landOnNextArrowEnd();
         }
         return;
       }
@@ -1066,7 +1066,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     artifactId,
     isVideo,
     textBlocks,
-    nextArtifact,
     zoomOpen,
     transcriptOpen,
     announce,
@@ -1150,14 +1149,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       transcriptDwellRemainingRef.current !== null
     ) {
       const delay = transcriptDwellRemainingRef.current;
-      const hasNext = transcriptDwellHasNextRef.current;
       transcriptDwellRemainingRef.current = null;
       transcriptDwellDeadlineRef.current = Date.now() + delay;
       transcriptDwellTimeoutRef.current = setTimeout(() => {
         transcriptDwellTimeoutRef.current = null;
         transcriptDwellDeadlineRef.current = null;
         transcriptDwellActiveRef.current = false;
-        landOnNextArrowEnd(hasNext);
+        landOnNextArrowEnd();
       }, delay);
     }
   }, [isPaused, tickTextAutoScroll, landOnNextArrowEnd]);

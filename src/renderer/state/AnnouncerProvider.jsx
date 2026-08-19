@@ -157,15 +157,18 @@ export default function AnnouncerProvider({ children }) {
 
     if (append) {
       // Keep existing live-region text on braille. Assigning textContent would
-      // replace the whole node, so NVDA re-reads from the top — append a node
-      // instead so only the addition is spoken (aria-atomic=false).
+      // replace the whole node, so NVDA re-reads from the top — append instead so
+      // only the addition is spoken (aria-atomic=false).
+      //
+      // The addition has to be an element and "text" has to stay in aria-relevant:
+      // a bare text node is a text change rather than an addition, so narrowing
+      // aria-relevant to "additions" alone leaves the append silent.
       target.setAttribute("aria-atomic", "false");
-      target.setAttribute("aria-relevant", "additions");
-      if (!(target.textContent || "").trim()) {
-        target.textContent = message;
-      } else {
-        target.appendChild(document.createTextNode(` ${message}`));
-      }
+      target.setAttribute("aria-relevant", "additions text");
+      const hasText = (target.textContent || "").trim().length > 0;
+      const part = document.createElement("span");
+      part.textContent = hasText ? ` ${message}` : message;
+      target.appendChild(part);
     } else {
       target.setAttribute("aria-atomic", "true");
       target.removeAttribute("aria-relevant");
