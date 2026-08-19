@@ -321,7 +321,7 @@ export default function ThemeScene() {
             tabIndex={0}
             data-autofocus={!showTip ? true : undefined}
             onFocus={handleHeadingFocus}
-            aria-label={speechMode ? `${theme.label}. Use arrow keys to choose an artifact. ${theme.description}` : undefined}
+            aria-label={speechMode ? `${theme.label}. Use arrow keys to select an artifact. ${theme.description} Use arrow keys to select an artifact.` : undefined}
           >
             <p
               className="theme-title"

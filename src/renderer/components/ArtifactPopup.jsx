@@ -1262,7 +1262,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     rememberMainFocus();
     markAutoplayEnded();
     setTranscriptOpen(true);
-    announce("Transcript opened.", { politeness: "assertive" });
+    announce("Transcript window opened.", { politeness: "assertive" });
   }, [announce, markAutoplayEnded, rememberMainFocus]);
 
   const openZoom = useCallback(() => {
@@ -1586,7 +1586,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           onClick={handlePrevArrow}
           aria-label={
             prevArtifact
-              ? `Previous artifact: ${prevArtifact.displayTitle}`
+              ? `Previous artifact: ${prevArtifact.displayTitle}. Press select key to enter this artifact.`
               : "Back to theme"
           }
         />
@@ -1795,7 +1795,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           onClick={handleNextArrow}
           aria-label={
             nextArtifact
-              ? `Next artifact: ${nextArtifact.displayTitle}`
+              ? `Next artifact: ${nextArtifact.displayTitle}. Press select key to enter this artifact.`
               : AUTO_READ_THEME_END_PROMPT
           }
         />
