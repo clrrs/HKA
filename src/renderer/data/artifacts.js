@@ -7,6 +7,9 @@
 export const DESCRIPTION_MODE_COMBINED = "combined";
 export const DESCRIPTION_MODE_SECTIONS = "sections";
 
+/** Per-letter guided sections (e.g. student letters); each entry is one letter. */
+export const GUIDED_DESCRIPTION_MODE_LETTERS = "letters";
+
 export const themes = {
   change: {
     id: "change",
@@ -208,8 +211,24 @@ export const themes = {
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
-        guidedDescription:
-          "Each of these twenty-four letters are written on half-sheets of blue-lined paper. Elementary students wrote in cursive ink with the date location in the top right corner. The skill, length, ink color, and neatness of each letter varies greatly from student to student."
+        guidedDescriptionMode: GUIDED_DESCRIPTION_MODE_LETTERS,
+        letterSections: [
+          { imageIndices: [0] },
+          { imageIndices: [1] },
+          { imageIndices: [2] },
+          { imageIndices: [3] },
+          { imageIndices: [4] },
+          { imageIndices: [5] },
+          { imageIndices: [6] },
+          { imageIndices: [7] },
+          { imageIndices: [8] },
+          { imageIndices: [9] },
+          { imageIndices: [10] },
+          { imageIndices: [11] },
+          { imageIndices: [12] },
+          { imageIndices: [13] },
+          { imageIndices: [14] },
+        ],
       },
       {
         id: "2A5",
@@ -247,7 +266,7 @@ export const themes = {
     id: "adventure",
     number: 3,
     label: "Adventure",
-    descriptionMode: DESCRIPTION_MODE_COMBINED,
+    descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CLife is either a daring adventure or nothing at all.\u201D",
     description: "Whether exploring one of the 39 different countries she traveled to, or piloting an airplane over Europe, Helen\u2019s lust for adventure was an inspiration to the world. Each of her travels left a lasting impression on the people and nations that she visited.",
     screenReaderBlurb: "Helen Keller traveled to 39 countries and even piloted a plane, inspiring people everywhere she went.",
@@ -259,9 +278,6 @@ export const themes = {
         year: "1919",
         description:
           "In this clip from her 1919 silent movie “Deliverance,” Helen puts on a leather flight jacket and crash helmet, and rides in the open cockpit of a biplane. Anne Sullivan and Polly Thomson, Helen's teacher and assistant, respectively, help Helen gear up. Helen’s brother Phillips Brooks Keller, an Army pilot in WWI, keeps a watchful eye on his sister during her flight.",
-        paragraphs: [
-          "In this grainy, black-and-white clip from her 1919 silent movie “Deliverance,” Helen puts on a leather flight jacket and crash helmet, and rides in the open cockpit of a biplane. Anne Sullivan and Polly Thomson, Helen's teacher and assistant, respectively, help Helen gear up, while Helen's mother and brother watch. Helen’s brother Phillips Brooks Keller, a US Army WWI aviator, wears his military uniform. Anne and Polly help Helen board the open front cockpit of a biplane, while the pilot sits in the rear cockpit. Groundcrew spins the propeller to start the engine, and the biplane makes a wobbly takeoff from a dusty field. The biplane is shown high in the sky, followed by a shot of Helen's friends and family watching from the ground. A smooth landing on grass is shown, and Helen is assisted out of the biplane and gives Anne a hug."
-        ],
         type: "video",
         videoSrc: "3A1Biplane.mp4",
         posterSrc: "3A1Biplane_frame.png",
@@ -283,9 +299,6 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         year: "1948",
         description:
           "Kazuo Honma, the founder of the Japanese Braille Library, gifted Helen a New Year's luncheon set in 1948. The black lacquer set has gold symbols and carved abalone inlays, all set in a carrying stand with a brass handle. It contains six drawers, six trays, and a pair of cylindrical flasks.",
-        paragraphs: [
-          "Kazuo Honma, the founder of the Japanese Braille Library, gifted Helen a black lacquer New Year's luncheon set in 1948. The set features gold decorations showing plants, symbols, and designs. Golden and carved abalone inlays showing birds facing each other in a triangular pattern. An outer carrying stand with brass top handle holds six drawers, each with a red interior. One medium sized tray, five smaller trays, a removable bottle holder, and a pair of pewter cylinder bottles all fit into the carrying stand."
-        ],
         type: "object",
         images: [
           {
@@ -308,9 +321,6 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         year: "1951",
         description:
           "In this photograph, Helen and her assistant Polly Thomson pose with a Bantu Chieftain and his wife in South Africa on April 11, 1951. Helen was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. The Bantu couple seen here are wearing traditional beaded garments. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes.",
-        paragraphs: [
-          "Helen traveled to East London, South Africa to open the Duncan Village Community Center for Bantu People on April 11, 1951. In this black-and-white photograph, Helen and her assistant Polly Thomson pose with a Bantu Chieftain and his wife. The Bantu couple seen here are wearing traditional beaded garments. The chief wears a skull cap, a collar of beaded necklaces, beaded belts across his waist and chest, and bands around his shoulders and upper arms. The chief holds a spear while Helen's hand feels the spearhead. The chief’s wife wears similar belts over a light-colored dress, a large cloth hat, and has light-colored dots of paint contrasting with the dark skin of her forehead, chin, and cheeks. She holds some textiles and a light-colored cloth bag. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes. Helen and Polly both wear similar dresses textured with horizontal stripes, belts at the waist, broaches on their left chests, pearl necklaces, and small hats. The photo is glued to a white board with notes typed and written on it, and yellowed glue is showing near the bottom."
-        ],
         type: "photograph",
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
@@ -333,10 +343,6 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         year: "1948\u201349",
         description:
           "From March of 1948 to April 1949, Helen embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
-        paragraphs: [
-          "From March of 1948 to April 1949, Helen embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
-          "Two sheets of paper show staple holes and the indentation of a triangular paper clip in the top left corner, but are otherwise in excellent condition. The text has been typed in black ink. There is light fading of the typing towards the top of each page, which may show that this was a printed copy of the original typed agenda."
-        ],
         type: "document",
         images: [
           { src: "3A4_TentativeShedKeller.jpeg", alt: "Helen Keller's global travel schedule from 1948-49" }
@@ -386,10 +392,6 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         year: "1946",
         description:
           "In this photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind. Although he may have served with the Axis during the war, their warm embrace is apparent, signaling a global fatigue with the war and a desire for peace.",
-        paragraphs: [
-          "In this black-and-white photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind. Although the veteran may have served with the Axis during the war, their warm embrace is apparent, signaling a global fatigue with the war and a desire for peace.",
-          "The veteran is wearing his wartime San Marco Marine uniform jumper with an insignia patch on his left chest, which shows a winged lion with sword standing on an open book. Polly Thomson spells into Helen's right hand while it is being held by the veteran's left. Several people in civilian clothes watch in the background. The smile on the face of the veteran shows missing teeth, possibly a result of the wounds that blinded him. The text logo of an Italian Ministry partially appears in the bottom left corner of the photo. The rear shows information in a purple-ink stamp in Italian, and in black typing and handwritten notes."
-        ],
         type: "photograph",
         images: [
           { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
@@ -405,9 +407,6 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         year: "1952",
         description:
           "Helen meets with future Prime Minister of Israel Golda Meir in 1952. In this photograph, Helen “listens” to her companion Polly Thomson by placing her thumb on Polly's throat and fingers on her lips.",
-        paragraphs: [
-          "Helen meets with future Prime Minister of Israel Golda Meir in 1952. In this black-and-white photograph, Helen is sitting on a sofa beside Polly Thomson, while Helen “listens” to her companion by placing her thumb on Polly's throat and fingers on her lips. Golda Meir and Zipporah Sharett sit on the other side of a round coffee table filled with several items, including ash trays. Keller and Thomson wear colorful dresses and hats, while Meir and Sharett dress in darker clothing. The back of the photos has a purple stamp of the State of Israel in Hebrew and English, and handwritten notes in pencil."
-        ],
         type: "photograph",
         images: [
           { src: "3A6Israel1.jpeg", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
@@ -428,9 +427,6 @@ Transcript: Black-and-white photograph showing Helen Keller seated on a sofa bes
         year: "1952",
         description:
           "Helen traveled to the Middle East in 1952, spending 5 days in Syria. The handwriting on the top of the page indicates that these days were packed between her travels to other countries in the region, including Egypt, Lebanon, and Jordan.",
-        paragraphs: [
-          "Helen traveled to the Middle East in 1952, spending 5 days in Syria. The handwriting on the top of the typed travel itinerary page indicates that these days were packed between her travels to other countries in the region, including Egypt, Lebanon, and Jordan. Times of the day appear in the left column, and underlined dates appear in a heading of the right column. A brief table of contents for Helen's entire trip to the Middle East is written in bright blue ink in the top left corner, with the word \"Syria\" circled in red both in that table, and in the underlined heading on the top of the page."
-        ],
         type: "document",
         images: [
           { src: "3A7Syria1.jpeg", alt: "Helen Keller's Syria travel itinerary from 1952" }

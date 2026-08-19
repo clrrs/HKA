@@ -59,7 +59,6 @@ export function useKeyboardNav() {
     speechMode,
     togglePaused,
     lastTtsToggleRef,
-    toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
   } = useAppState();
   const klEggRef = useRef({ step: 0, lastTs: 0 });
@@ -156,11 +155,6 @@ export function useKeyboardNav() {
         if (key === "3") {
           e.preventDefault();
           goToScene("quote", { theme: "adventure" });
-          return;
-        }
-        if (key === "0") {
-          e.preventDefault();
-          toggleIdleTimeoutDisabled();
           return;
         }
       }
@@ -335,7 +329,6 @@ export function useKeyboardNav() {
     speechMode,
     togglePaused,
     lastTtsToggleRef,
-    toggleIdleTimeoutDisabled,
     triggerTestEasterEgg,
   ]);
 }

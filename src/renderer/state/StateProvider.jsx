@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useLayoutEffect,
   useCallback,
   useRef,
 } from "react";
@@ -32,6 +33,27 @@ export const DEFAULT_PREFS = {
 };
 
 const AppState = createContext();
+
+// Test shortcut 0 (freeze the inactivity timer) has to beat every scene-level
+// capture handler — attract, instruction, theme tip toast and the idle warning all
+// swallow unrecognized keys. Registering at module load puts this listener first in
+// window/capture order, ahead of anything a component effect can attach.
+const idleTimeoutToggleRef = { current: null };
+
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.repeat) return;
+      if (e.key !== "0" && e.code !== "Digit0" && e.code !== "Numpad0") return;
+      if (!idleTimeoutToggleRef.current) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      idleTimeoutToggleRef.current();
+    },
+    true
+  );
+}
 
 export function useAppState() { 
   return useContext(AppState); 
@@ -151,8 +173,16 @@ export default function StateProvider({ children }) {
   const [previousScene, setPreviousScene] = useState("home");
 
   const [idleTimeoutDisabled, setIdleTimeoutDisabled] = useState(false);
-  const toggleIdleTimeoutDisabled = () =>
-    setIdleTimeoutDisabled((prev) => !prev);
+
+  useLayoutEffect(() => {
+    const toggle = () => setIdleTimeoutDisabled((prev) => !prev);
+    idleTimeoutToggleRef.current = toggle;
+    return () => {
+      if (idleTimeoutToggleRef.current === toggle) {
+        idleTimeoutToggleRef.current = null;
+      }
+    };
+  }, []);
 
   const [testEasterEgg, setTestEasterEgg] = useState(null);
 
@@ -260,7 +290,6 @@ export default function StateProvider({ children }) {
       markThemeTipSeen,
       resetToStart,
       idleTimeoutDisabled,
-      toggleIdleTimeoutDisabled,
       testEasterEgg,
       triggerTestEasterEgg,
       dismissTestEasterEgg

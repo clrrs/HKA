@@ -472,6 +472,8 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 .theme-heading-inner:focus-visible,
 .artifact-popup-text:focus,
 .artifact-popup-text:focus-visible,
+.artifact-popup-text-body:focus,
+.artifact-popup-text-body:focus-visible,
 .artifact-popup-transcript-body:focus,
 .artifact-popup-transcript-body:focus-visible,
 .artifact-document-transcript-text:focus,
@@ -794,6 +796,23 @@ h1[tabindex]:focus-visible {
   color: var(--text-primary);
 }
 
+/* Test shortcut 0 indicator (visual only) */
+.idle-disabled-badge {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 2550;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(8, 8, 8, 0.55);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 /* Speech mode toggle HUD (visual only) */
 .speech-mode-hud {
   position: absolute;
@@ -863,11 +882,12 @@ h1[tabindex]:focus-visible {
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
+/* Hover / keyboard focus: gold fill (highlight) */
 .setting-section-trigger:hover,
 .setting-section-trigger:focus-visible {
-  background-color: var(--btn-focus-bg);
-  border-color: var(--btn-focus-border);
-  color: var(--btn-focus-text);
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--color-black);
   outline: none;
 }
 
@@ -905,16 +925,22 @@ h1[tabindex]:focus-visible {
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.setting-btn:focus-visible {
+/* Current configuration: solid inverse fill (white on dark, black on light) */
+.setting-btn.active {
   background-color: var(--btn-focus-bg);
   border-color: var(--btn-focus-border);
   color: var(--btn-focus-text);
-  outline: none;
 }
 
-.setting-btn.active {
+/* Hover / keyboard focus: gold fill (highlight) — wins over the selected fill */
+.setting-btn:not(:disabled):hover,
+.setting-btn:focus-visible,
+.setting-btn.active:not(:disabled):hover,
+.setting-btn.active:focus-visible {
   background-color: var(--accent);
+  border-color: var(--accent);
   color: var(--color-black);
+  outline: none;
 }
 
 .settings-footer {
@@ -1798,6 +1824,18 @@ h1[tabindex]:focus-visible {
   box-sizing: border-box;
 }
 
+/* Silent landing spot when speech is off: focusable, but nothing to see */
+.artifact-popup-focus-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  outline: none;
+}
+
 .artifact-popup-nav-arrow {
   flex-shrink: 0;
   width: 80px;
@@ -1984,7 +2022,27 @@ h1[tabindex]:focus-visible {
   height: 310px;
   max-height: 310px;
   box-sizing: border-box;
-  border: 3px solid transparent;
+  /* Sits inside the panel so lighting it up never shifts the copy */
+  border: 4px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+/* Navigated to: the whole section reads as the selected control */
+.artifact-popup-text:focus,
+.artifact-popup-text:focus-within {
+  border-color: var(--accent);
+}
+
+/* Once inside the section — or while auto-read drives it — the indicators
+   carry the state on their own and the border drops away. */
+.artifact-popup-text.is-entered,
+.artifact-popup-text.is-entered:focus,
+.artifact-popup-text.is-entered:focus-within,
+.artifact-popup-text.is-reading,
+.artifact-popup-text.is-reading:focus,
+.artifact-popup-text.is-reading:focus-within {
+  border-color: transparent;
 }
 
 .artifact-popup-text-header {
@@ -2004,41 +2062,16 @@ h1[tabindex]:focus-visible {
   padding: 0 100px 40px;
   overflow-y: hidden;
   box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  scrollbar-width: none;
 }
 
 .artifact-popup-text-body.artifact-popup-text--scrollable {
   overflow-y: auto;
 }
 
-.artifact-popup-text--autoplay-active,
-.artifact-popup-text:focus,
-.artifact-popup-text:focus-visible,
-.artifact-popup-text:focus-within {
-  border-color: var(--accent);
-}
-
-.artifact-popup-text-body.is-scrolling {
-  scrollbar-color: var(--accent) transparent;
-}
-
 .artifact-popup-text-body::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
-}
-
-.artifact-popup-text-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.artifact-popup-text-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 4px;
-}
-
-.artifact-popup-text-body.is-scrolling::-webkit-scrollbar-thumb {
-  background: var(--accent);
+  display: none;
+  width: 0;
 }
 
 .artifact-popup-title {
@@ -2092,7 +2125,7 @@ h1[tabindex]:focus-visible {
 }
 
 /* ============================================
-   Text panel scroll markers (one line per readable block)
+   Text panel section indicators (one line per readable block)
    ============================================ */
 
 .artifact-popup-text-wrap {
@@ -2100,6 +2133,7 @@ h1[tabindex]:focus-visible {
   flex-shrink: 0;
 }
 
+/* Only shown once the section is hovered / navigated to, or while auto-read runs */
 .artifact-popup-scroll-markers {
   position: absolute;
   top: 0;
@@ -2107,6 +2141,15 @@ h1[tabindex]:focus-visible {
   right: 22px;
   width: 14px;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.artifact-popup-text:focus .artifact-popup-scroll-markers,
+.artifact-popup-text:focus-within .artifact-popup-scroll-markers,
+.artifact-popup-text.is-entered .artifact-popup-scroll-markers,
+.artifact-popup-text.is-reading .artifact-popup-scroll-markers {
+  opacity: 1;
 }
 
 .artifact-popup-scroll-marker {

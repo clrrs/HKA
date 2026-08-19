@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useAppState, DEFAULT_PREFS } from "../state/StateProvider";
+import { useAnnounce } from "../state/AnnouncerProvider";
 
 const textSizeOptions = [
   { value: "small", label: "Small" },
@@ -23,6 +24,15 @@ const screenReaderOptions = [
   { value: true, label: "On" },
   { value: false, label: "Off" },
 ];
+
+// Focus stays on the section trigger when a section opens, so the live region is
+// what tells a screen reader user the options appeared.
+const SECTION_OPEN_SR_LABELS = {
+  screenReader: "Screen reader options below.",
+  textSize: "Text size options below.",
+  theme: "Contrast options below.",
+  brightness: "Brightness options below.",
+};
 
 const ONBOARDING_BLURB =
   "By default, the screen reader is on. Press Skip to continue, or use the arrow keys to customize. Press the settings key to access this menu at any time.";
@@ -49,27 +59,18 @@ export default function AccessibilityMenu({ onboarding = false }) {
     setSpeechModeWithTts,
     lastTtsToggleRef,
   } = useAppState();
+  const announce = useAnnounce();
   const [expandedSection, setExpandedSection] = useState(null);
   const introRef = useRef(null);
-  const screenReaderFirstRef = useRef(null);
-  const textSizeFirstRef = useRef(null);
-  const themeFirstRef = useRef(null);
-  const brightnessFirstRef = useRef(null);
 
-  useEffect(() => {
-    if (expandedSection === "screenReader" && screenReaderFirstRef.current) {
-      screenReaderFirstRef.current.focus();
-    } else if (expandedSection === "textSize" && textSizeFirstRef.current) {
-      textSizeFirstRef.current.focus();
-    } else if (expandedSection === "theme" && themeFirstRef.current) {
-      themeFirstRef.current.focus();
-    } else if (expandedSection === "brightness" && brightnessFirstRef.current) {
-      brightnessFirstRef.current.focus();
-    }
-  }, [expandedSection]);
-
+  // Open the options but leave focus on the trigger so the operator can hear which
+  // section they are in before stepping into it.
   const openSection = (section) => {
     setExpandedSection(section);
+    const label = SECTION_OPEN_SR_LABELS[section];
+    if (label) {
+      announce(label, { politeness: "assertive", source: "settings-section-open" });
+    }
   };
 
   const handleOptionsBlur = (e) => {
@@ -161,10 +162,9 @@ export default function AccessibilityMenu({ onboarding = false }) {
             aria-labelledby="access-screen-reader-trigger"
             onBlur={handleOptionsBlur}
           >
-            {screenReaderOptions.map((option, i) => (
+            {screenReaderOptions.map((option) => (
               <button
                 key={String(option.value)}
-                ref={i === 0 ? screenReaderFirstRef : null}
                 className={`setting-btn ${speechMode === option.value ? "active" : ""}`}
                 onClick={() => handleScreenReader(option.value)}
                 aria-pressed={speechMode === option.value}
@@ -196,10 +196,9 @@ export default function AccessibilityMenu({ onboarding = false }) {
             aria-labelledby="access-text-size-trigger"
             onBlur={handleOptionsBlur}
           >
-            {textSizeOptions.map((option, i) => (
+            {textSizeOptions.map((option) => (
               <button
                 key={option.value}
-                ref={i === 0 ? textSizeFirstRef : null}
                 className={`setting-btn ${prefs.textSize === option.value ? "active" : ""}`}
                 onClick={() => setPref("textSize", option.value)}
                 aria-pressed={prefs.textSize === option.value}
@@ -231,10 +230,9 @@ export default function AccessibilityMenu({ onboarding = false }) {
             aria-labelledby="access-theme-trigger"
             onBlur={handleOptionsBlur}
           >
-            {themeOptions.map((option, i) => (
+            {themeOptions.map((option) => (
               <button
                 key={option.value}
-                ref={i === 0 ? themeFirstRef : null}
                 className={`setting-btn ${prefs.theme === option.value ? "active" : ""}`}
                 onClick={() => setPref("theme", option.value)}
                 aria-pressed={prefs.theme === option.value}
@@ -266,10 +264,9 @@ export default function AccessibilityMenu({ onboarding = false }) {
             aria-labelledby="access-brightness-trigger"
             onBlur={handleOptionsBlur}
           >
-            {brightnessOptions.map((option, i) => (
+            {brightnessOptions.map((option) => (
               <button
                 key={option.value}
-                ref={i === 0 ? brightnessFirstRef : null}
                 className={`setting-btn ${prefs.brightness === option.value ? "active" : ""}`}
                 onClick={() => setPref("brightness", option.value)}
                 aria-pressed={prefs.brightness === option.value}

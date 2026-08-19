@@ -516,6 +516,11 @@ export default function App() {
             </div>
           </div>
         )}
+        {idleTimeoutDisabled && (
+          <div className="idle-disabled-badge" aria-hidden="true">
+            Idle timer off
+          </div>
+        )}
         {speechHud.visible && (
           <div
             className={`speech-mode-hud ${speechHud.closing ? "speech-mode-hud--closing" : ""}`}
