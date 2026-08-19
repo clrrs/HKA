@@ -1960,19 +1960,40 @@ h1[tabindex]:focus-visible {
 }
 
 .artifact-popup-text {
-  padding: 0 100px 40px;
-  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
   min-height: 0;
   flex-shrink: 0;
   height: 310px;
   max-height: 310px;
   box-sizing: border-box;
   border: 3px solid transparent;
+}
+
+.artifact-popup-text-header {
+  flex-shrink: 0;
+  padding: 0 100px 12px;
+  background: var(--bg-container);
+}
+
+.artifact-popup-text-body-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.artifact-popup-text-body {
+  height: 100%;
+  padding: 0 100px 40px;
+  overflow-y: hidden;
+  box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
 
-.artifact-popup-text.artifact-popup-text--scrollable {
+.artifact-popup-text-body.artifact-popup-text--scrollable {
   overflow-y: auto;
 }
 
@@ -1983,32 +2004,32 @@ h1[tabindex]:focus-visible {
   border-color: var(--accent);
 }
 
-.artifact-popup-text.is-scrolling {
+.artifact-popup-text-body.is-scrolling {
   scrollbar-color: var(--accent) transparent;
 }
 
-.artifact-popup-text::-webkit-scrollbar {
+.artifact-popup-text-body::-webkit-scrollbar {
   width: 8px;
   background: transparent;
 }
 
-.artifact-popup-text::-webkit-scrollbar-track {
+.artifact-popup-text-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.artifact-popup-text::-webkit-scrollbar-thumb {
+.artifact-popup-text-body::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.35);
   border-radius: 4px;
 }
 
-.artifact-popup-text.is-scrolling::-webkit-scrollbar-thumb {
+.artifact-popup-text-body.is-scrolling::-webkit-scrollbar-thumb {
   background: var(--accent);
 }
 
 .artifact-popup-title {
   font-weight: 700;
   font-size: calc(38px * var(--text-scale));
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .artifact-popup-description {
@@ -2023,6 +2044,70 @@ h1[tabindex]:focus-visible {
   font-size: calc(20px * var(--text-scale));
   opacity: 0.8;
   color: var(--text-primary);
+}
+
+.artifact-popup-guided-heading {
+  font-weight: 700;
+  font-size: calc(28px * var(--text-scale));
+  margin-bottom: 10px;
+}
+
+/* Space between stacked body paragraphs and guided description sections */
+.artifact-popup-text-body > * + .artifact-popup-description,
+.artifact-popup-text-body > * + .artifact-popup-guided-section {
+  margin-top: 28px;
+}
+
+.artifact-popup-guided-section,
+.artifact-popup-text-body > .artifact-popup-description {
+  position: relative;
+}
+
+/* Gold bar marks the block the auto-read is currently on */
+.artifact-popup-guided-section.is-active::before,
+.artifact-popup-text-body > .artifact-popup-description.is-active::before {
+  content: "";
+  position: absolute;
+  left: -28px;
+  top: 2px;
+  bottom: 2px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* ============================================
+   Text panel scroll markers (one line per readable block)
+   ============================================ */
+
+.artifact-popup-text-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.artifact-popup-scroll-markers {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 22px;
+  width: 14px;
+  pointer-events: none;
+}
+
+.artifact-popup-scroll-marker {
+  position: absolute;
+  right: 0;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  transition: background-color 0.2s, width 0.2s;
+}
+
+.artifact-popup-scroll-marker.is-active {
+  width: 14px;
+  height: 3px;
+  background: var(--accent);
 }
 
 .artifact-popup-transcript {

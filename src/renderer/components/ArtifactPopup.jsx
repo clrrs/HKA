@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
@@ -6,23 +13,40 @@ import {
   BRAILLE_OUTPUT_SETTLE_MS,
   stopNvdaSpeechAggressively,
 } from "../audio/nvdaSpeechControl";
-import { getArtifact, getNextArtifact, getPrevArtifact } from "../data/artifacts";
-import { textOrMissing } from "../data/contentPlaceholder";
+import {
+  DESCRIPTION_MODE_COMBINED,
+  getArtifact,
+  getNextArtifact,
+  getPrevArtifact,
+} from "../data/artifacts";
+import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 
 const SCROLL_STEP_RATIO = 0.75;
 const WORDS_PER_SEC = 2.4;
 const CHUNK_BUFFER_MS = 6000;
-const MISSING_GUIDED_DESCRIPTION = "[MISSING GUIDED DESCRIPTION]";
 const AUTO_READ_END_PROMPT = "Press Select for next Artifact description";
 const TRANSCRIPT_AUTOPLAY_PROMPT =
   "Transcript. Press Select for the full transcript of this artifact.";
 const AUTO_READ_THEME_END_PROMPT =
   "End of artifacts in this theme. Press Select to return to the start of the theme.";
 const TRANSCRIPT_DWELL_MS = 6000;
-const NEXT_IMAGE_ADVANCE_MS = 1200;
 const VIDEO_END_DWELL_MS = 1000;
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 const EMPTY_IMAGES = [];
+
+const GUIDED_HEADINGS = {
+  photograph: "Photograph Description",
+  document: "Document Description",
+  object: "Object Description",
+  video: "Video Description",
+};
+const GUIDED_HEADING_FALLBACK = "Guided Description";
+
+/**
+ * When true, images with no guided copy of their own are left out of the stacked
+ * text panel instead of each rendering a "MISSING COPY" section.
+ */
+const HIDE_MISSING_GUIDED_SECTIONS = false;
 
 function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -52,58 +76,89 @@ function getGuidedTextForImage(artifact, images, imageIndex) {
     const fromArtifact = artifact?.guidedDescription?.trim();
     if (fromArtifact) return fromArtifact;
   }
-  return MISSING_GUIDED_DESCRIPTION;
+  return MISSING_COPY;
 }
 
-function buildAutoplayChunks(artifact, images, isVideo) {
+function getBodyParagraphs(artifact) {
+  const paragraphs = Array.isArray(artifact?.paragraphs)
+    ? artifact.paragraphs.map((p) => String(p).trim()).filter(Boolean)
+    : [];
+  if (paragraphs.length > 0) return paragraphs;
+  return [textOrMissing(artifact?.description)];
+}
+
+/**
+ * Blocks are the shared unit behind the text panel, the auto-read chunks, and the
+ * scroll markers, so all three stay aligned.
+ *
+ * Combined mode yields body paragraphs only — the guided copy is already folded
+ * into them. Sections mode yields the context paragraph followed by one guided
+ * section per image.
+ */
+function buildTextBlocks(artifact, images, isCombined) {
   if (!artifact) return [];
 
-  // Dialog aria-label already announces the title on open; auto-read starts at description.
-  const chunks = [
-    {
-      text: `Artifact description. ${artifact.description}`,
-      imageIndex: 0,
-      section: "description",
-    },
-  ];
+  const bodyText = isCombined
+    ? getBodyParagraphs(artifact)
+    : [textOrMissing(artifact.description)];
+  const blocks = bodyText.map((text, i) => ({
+    key: `body-${i}`,
+    kind: "body",
+    imageIndex: 0,
+    text,
+  }));
 
-  if (isVideo) {
-    chunks.push({
-      text: VIDEO_AUTOPLAY_PROMPT,
-      imageIndex: 0,
-      section: "videoPrompt",
-    });
-    return chunks;
-  }
+  if (isCombined) return blocks;
 
-  if (images.length === 0) {
-    const guided = getGuidedTextForImage(artifact, images, 0);
-    chunks.push({
-      text: `Image 1 of 1: Guided Description. ${guided}`,
-      imageIndex: 0,
-      section: "guided",
-    });
-    return chunks;
-  }
-
-  const count = images.length;
-  for (let i = 0; i < count; i++) {
-    if (i > 0) {
-      chunks.push({
-        text: `Image ${i + 1} of ${count}.`,
-        imageIndex: i,
-        section: "nextImage",
-      });
-    }
-    const guided = getGuidedTextForImage(artifact, images, i);
-    chunks.push({
-      text: `Image ${i + 1} of ${count}: Guided Description. ${guided}`,
+  const heading = GUIDED_HEADINGS[artifact.type] ?? GUIDED_HEADING_FALLBACK;
+  const total = images.length > 0 ? images.length : 1;
+  for (let i = 0; i < total; i++) {
+    const text = getGuidedTextForImage(artifact, images, i);
+    if (HIDE_MISSING_GUIDED_SECTIONS && text === MISSING_COPY) continue;
+    blocks.push({
+      key: `guided-${i}`,
+      kind: "guided",
       imageIndex: i,
-      section: "guided",
+      heading,
+      // A single image needs no position cue.
+      tagline: total > 1 ? `Image ${i + 1} of ${total}` : null,
+      text,
     });
   }
 
-  return chunks;
+  return blocks;
+}
+
+function getBlockSpeech(block, isFirst) {
+  if (block.kind === "guided") {
+    return [block.heading, block.tagline, block.text].filter(Boolean).join(". ");
+  }
+  // Dialog aria-label already announces the title on open.
+  return isFirst ? `Artifact description. ${block.text}` : block.text;
+}
+
+function buildAutoplayChunks(artifact, blocks, isVideo) {
+  if (!artifact) return [];
+
+  const chunks = blocks.map((block, i) => ({
+    text: getBlockSpeech(block, i === 0),
+    imageIndex: block.imageIndex,
+    section: block.kind === "guided" ? "guided" : "description",
+    blockKey: block.key,
+  }));
+
+  if (!isVideo) return chunks;
+
+  // Video artifacts hand off to playback rather than stepping through images;
+  // beginInlineVideo speaks the guided copy just before the video starts.
+  const spoken = chunks.filter((chunk) => chunk.section === "description");
+  spoken.push({
+    text: VIDEO_AUTOPLAY_PROMPT,
+    imageIndex: 0,
+    section: "videoPrompt",
+    blockKey: null,
+  });
+  return spoken;
 }
 
 function useFocusTrap(containerRef, isActive, options = {}) {
@@ -221,14 +276,22 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const isVideo = artifact?.type === "video";
   const images = !isVideo ? artifact?.images || EMPTY_IMAGES : EMPTY_IMAGES;
   const hasMultipleImages = images.length > 1;
+  const isCombined = theme?.descriptionMode === DESCRIPTION_MODE_COMBINED;
+
+  const textBlocks = useMemo(
+    () => buildTextBlocks(artifact, images, isCombined),
+    [artifact, images, isCombined]
+  );
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [isAutoplaying, setIsAutoplaying] = useState(false);
-  const [guidedUnlocked, setGuidedUnlocked] = useState(false);
   const [visualActiveSection, setVisualActiveSection] = useState(null);
+  const [activeBlockKey, setActiveBlockKey] = useState(null);
+  const [isTextScrollable, setIsTextScrollable] = useState(false);
+  const [scrollMarkers, setScrollMarkers] = useState([]);
 
   const popupRef = useRef(null);
   const autoplayAnchorRef = useRef(null);
@@ -241,6 +304,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const textAutoScrollStateRef = useRef(null);
   const textAutoScrollRemainingRef = useRef(null);
   const autoAdvanceTimeoutRef = useRef(null);
+  const transcriptDwellTimeoutRef = useRef(null);
+  const transcriptDwellDeadlineRef = useRef(null);
+  const transcriptDwellRemainingRef = useRef(null);
+  const transcriptDwellHasNextRef = useRef(false);
+  const transcriptDwellActiveRef = useRef(false);
   const videoStartTimeoutRef = useRef(null);
   const videoAutoplayRef = useRef(false);
   const videoWasPlayingBeforePauseRef = useRef(false);
@@ -257,6 +325,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const prevArrowRef = useRef(null);
   const videoRef = useRef(null);
   const textRef = useRef(null);
+  const textBodyRef = useRef(null);
   const nextImageRef = useRef(null);
   const transcriptBtnRef = useRef(null);
   const zoomOrPlayRef = useRef(null);
@@ -316,9 +385,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     return () => window.clearTimeout(t);
   }, [showSettings]);
 
-  const setVisualSection = useCallback((section) => {
+  const setVisualSection = useCallback((section, blockKey = null) => {
     visualActiveSectionRef.current = section;
     setVisualActiveSection(section);
+    setActiveBlockKey(
+      section === "description" || section === "guided" ? blockKey : null
+    );
   }, []);
 
   const clearTextAutoScroll = useCallback(() => {
@@ -330,18 +402,56 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     textAutoScrollRemainingRef.current = null;
   }, []);
 
+  /** Scroll offset of a block from the top of the text body (stable while scrolling). */
+  const getBlockOffsetTop = useCallback((blockKey) => {
+    const panel = textBodyRef.current;
+    if (!panel || !blockKey) return 0;
+    const block = panel.querySelector(`[data-block-key="${blockKey}"]`);
+    if (!block) return 0;
+
+    let top = 0;
+    let node = block;
+    while (node && node !== panel) {
+      top += node.offsetTop;
+      node = node.parentElement;
+    }
+    return Math.max(0, top);
+  }, []);
+
+  const getBlockHeight = useCallback((blockKey) => {
+    const panel = textBodyRef.current;
+    if (!panel || !blockKey) return 0;
+    const block = panel.querySelector(`[data-block-key="${blockKey}"]`);
+    return block ? block.offsetHeight : 0;
+  }, []);
+
+  const scrollBlockToTop = useCallback(
+    (blockKey, { behavior = "auto" } = {}) => {
+      const el = textBodyRef.current;
+      if (!el || !blockKey) return;
+
+      clearTextAutoScroll();
+      const scrollLimit = Math.max(0, el.scrollHeight - el.clientHeight);
+      el.scrollTo({
+        top: Math.min(getBlockOffsetTop(blockKey), scrollLimit),
+        behavior,
+      });
+    },
+    [clearTextAutoScroll, getBlockOffsetTop]
+  );
+
   const tickTextAutoScroll = useCallback(() => {
     textAutoScrollTimeoutRef.current = null;
     const state = textAutoScrollStateRef.current;
     if (!state || !autoplayingRef.current || isPausedRef.current) return;
 
-    const el = textRef.current;
+    const el = textBodyRef.current;
     if (!el) {
       textAutoScrollStateRef.current = null;
       return;
     }
 
-    const maxScroll = el.scrollHeight - el.clientHeight;
+    const maxScroll = Math.min(state.maxTop, el.scrollHeight - el.clientHeight);
     if (maxScroll <= SCROLL_OVERFLOW_THRESHOLD_PX) {
       textAutoScrollStateRef.current = null;
       return;
@@ -362,17 +472,29 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, []);
 
   const startTextAutoScroll = useCallback(
-    (durationMs) => {
+    (durationMs, blockKey) => {
       clearTextAutoScroll();
       if (!(durationMs > 0)) return;
 
       const schedule = () => {
         if (!autoplayingRef.current || isPausedRef.current) return;
-        const el = textRef.current;
+        const el = textBodyRef.current;
         if (!el) return;
 
-        el.scrollTop = 0;
-        const overflow = getScrollOverflowPx(el);
+        const scrollLimit = Math.max(0, el.scrollHeight - el.clientHeight);
+        const blockTop = blockKey ? getBlockOffsetTop(blockKey) : 0;
+        const blockHeight = blockKey ? getBlockHeight(blockKey) : el.scrollHeight;
+
+        // Bring the block being read to the top of the panel, then scroll only
+        // far enough to reveal the rest of that block.
+        const startTop = Math.min(blockTop, scrollLimit);
+        el.scrollTop = startTop;
+
+        const maxTop = Math.min(
+          scrollLimit,
+          Math.max(0, blockTop + blockHeight - el.clientHeight)
+        );
+        const overflow = maxTop - startTop;
         if (overflow <= SCROLL_OVERFLOW_THRESHOLD_PX) return;
 
         const stepPx = Math.floor(el.clientHeight * SCROLL_STEP_RATIO) || el.clientHeight;
@@ -384,6 +506,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
         textAutoScrollStateRef.current = {
           stepPx,
+          maxTop,
           stepsLeft: steps,
           intervalMs,
           nextDeadline: Date.now() + intervalMs,
@@ -395,8 +518,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         requestAnimationFrame(schedule);
       });
     },
-    [clearTextAutoScroll, tickTextAutoScroll]
+    [clearTextAutoScroll, tickTextAutoScroll, getBlockOffsetTop, getBlockHeight]
   );
+
+  const clearTranscriptDwell = useCallback(() => {
+    transcriptDwellActiveRef.current = false;
+    if (transcriptDwellTimeoutRef.current !== null) {
+      clearTimeout(transcriptDwellTimeoutRef.current);
+      transcriptDwellTimeoutRef.current = null;
+    }
+    transcriptDwellDeadlineRef.current = null;
+    transcriptDwellRemainingRef.current = null;
+  }, []);
 
   const cancelAutoplay = useCallback(() => {
     autoplayingRef.current = false;
@@ -426,20 +559,24 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const markAutoplayEnded = useCallback(() => {
     cancelAutoplay();
+    clearTranscriptDwell();
     autoplayDoneRef.current = true;
     setIsAutoplaying(false);
     setVisualSection(null);
-  }, [cancelAutoplay, setVisualSection]);
+  }, [cancelAutoplay, clearTranscriptDwell, setVisualSection]);
 
   const landOnNextArrowEnd = useCallback(
     (hasNext) => {
+      clearTranscriptDwell();
       setVisualSection(null);
-      nextArrowRef.current?.focus({ preventScroll: true });
+      requestAnimationFrame(() => {
+        nextArrowRef.current?.focus({ preventScroll: true });
+      });
       announce(hasNext ? AUTO_READ_END_PROMPT : AUTO_READ_THEME_END_PROMPT, {
         politeness: "assertive",
       });
     },
-    [announce, setVisualSection]
+    [announce, clearTranscriptDwell, setVisualSection]
   );
 
   const startTranscriptDwell = useCallback(
@@ -448,15 +585,19 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       transcriptBtnRef.current?.focus({ preventScroll: true });
       announce(TRANSCRIPT_AUTOPLAY_PROMPT, { politeness: "assertive" });
 
-      if (autoAdvanceTimeoutRef.current !== null) {
-        clearTimeout(autoAdvanceTimeoutRef.current);
-      }
-      autoAdvanceTimeoutRef.current = setTimeout(() => {
-        autoAdvanceTimeoutRef.current = null;
+      clearTranscriptDwell();
+      transcriptDwellActiveRef.current = true;
+      transcriptDwellHasNextRef.current = hasNext;
+      transcriptDwellDeadlineRef.current = Date.now() + TRANSCRIPT_DWELL_MS;
+      transcriptDwellTimeoutRef.current = setTimeout(() => {
+        transcriptDwellTimeoutRef.current = null;
+        transcriptDwellDeadlineRef.current = null;
+        transcriptDwellRemainingRef.current = null;
+        transcriptDwellActiveRef.current = false;
         landOnNextArrowEnd(hasNext);
       }, TRANSCRIPT_DWELL_MS);
     },
-    [announce, setVisualSection, landOnNextArrowEnd]
+    [announce, clearTranscriptDwell, setVisualSection, landOnNextArrowEnd]
   );
 
   const flashSelected = useCallback((ref) => {
@@ -484,12 +625,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
       // A live-region update reaches NVDA braille first. Speech is then cut
       // aggressively before media starts, matching quote playback behavior.
-      const guided = getGuidedTextForImage(artifact, images, 0);
-      setGuidedUnlocked(true);
-      announce(`Guided Description. ${guided}`, {
-        politeness: "assertive",
-        dedupeMs: 0,
-      });
+      const describing = isCombined
+        ? textBlocks
+        : textBlocks.filter((block) => block.kind === "guided");
+      const spoken = describing.map((block) => getBlockSpeech(block, false)).join(" ");
+      if (spoken) {
+        scrollBlockToTop(describing[0]?.key);
+        announce(spoken, { politeness: "assertive", dedupeMs: 0 });
+      }
 
       if (videoStartTimeoutRef.current !== null) {
         clearTimeout(videoStartTimeoutRef.current);
@@ -511,7 +654,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         }
       }, BRAILLE_OUTPUT_SETTLE_MS);
     },
-    [announce, artifact, flashSelected, images, isVideo, setVideoOverlayOpen, setVisualSection]
+    [
+      announce,
+      artifact,
+      flashSelected,
+      isCombined,
+      isVideo,
+      scrollBlockToTop,
+      setVideoOverlayOpen,
+      setVisualSection,
+      textBlocks,
+    ]
   );
 
   const handleVideoEnded = useCallback(() => {
@@ -569,9 +722,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const getPopupFocusables = useCallback(() => {
     const hasTranscriptLocal =
       typeof artifact?.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
-    const showingGuidedNow = guidedUnlocked || currentImageIndex > 0;
-    const textFocusable =
-      speechMode || showingGuidedNow ? textRef.current : null;
+    const textFocusable = speechMode || isTextScrollable ? textRef.current : null;
     if (isVideo) {
       return [
         prevArrowRef.current,
@@ -589,7 +740,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       zoomOrPlayRef.current,
       nextArrowRef.current,
     ].filter(Boolean);
-  }, [speechMode, hasMultipleImages, artifact, isVideo, guidedUnlocked, currentImageIndex]);
+  }, [speechMode, hasMultipleImages, artifact, isVideo, isTextScrollable]);
 
   const getFirstControlRef = useCallback(() => {
     if (isVideo) return zoomOrPlayRef.current;
@@ -607,12 +758,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         nextImageRef.current.focus({ preventScroll: true });
         return;
       }
-      if (section === "guided") {
-        setGuidedUnlocked(true);
-        if (textRef.current) {
-          textRef.current.focus({ preventScroll: true });
-          return;
-        }
+      if (section === "guided" && textRef.current) {
+        textRef.current.focus({ preventScroll: true });
+        return;
       }
       if (section === "transcript" && transcriptBtnRef.current) {
         transcriptBtnRef.current.focus({ preventScroll: true });
@@ -633,7 +781,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => {
     autoplayDoneRef.current = false;
-  }, [artifactId]);
+    clearTranscriptDwell();
+  }, [artifactId, clearTranscriptDwell]);
 
   useEffect(() => {
     if (artifact && !speechMode) {
@@ -643,10 +792,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, []);
 
   useEffect(() => {
+    return () => {
+      clearTranscriptDwell();
+    };
+  }, [clearTranscriptDwell]);
+
+  useEffect(() => {
     if (!speechMode || !artifact) return;
     if (isPausedRef.current) return;
     if (zoomOpen || transcriptOpen) {
       cancelAutoplay();
+      clearTranscriptDwell();
       setIsAutoplaying(false);
       setVisualSection(null);
       autoplayDoneRef.current = true;
@@ -654,7 +810,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     }
     if (autoplayDoneRef.current) return;
 
-    const chunks = buildAutoplayChunks(artifact, images, isVideo);
+    const chunks = buildAutoplayChunks(artifact, textBlocks, isVideo);
     if (chunks.length === 0) return;
 
     const hasTranscriptLocal =
@@ -689,15 +845,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
       const chunk = chunks[chunkIndex];
       setCurrentImageIndex(chunk.imageIndex);
-      setVisualSection(chunk.section === "videoPrompt" ? "play" : chunk.section);
-
-      if (
-        chunk.section === "guided" ||
-        chunk.section === "nextImage" ||
-        chunk.section === "videoPrompt"
-      ) {
-        setGuidedUnlocked(true);
-      }
+      setVisualSection(
+        chunk.section === "videoPrompt" ? "play" : chunk.section,
+        chunk.blockKey
+      );
 
       const isFirstGuided = chunk.section === "guided" && chunk.imageIndex === 0;
       announce(chunk.text, {
@@ -721,12 +872,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         return;
       }
 
-      const delay =
-        chunk.section === "nextImage"
-          ? NEXT_IMAGE_ADVANCE_MS
-          : estimateChunkDurationMs(chunk.text);
+      const delay = estimateChunkDurationMs(chunk.text);
       if (chunk.section === "description" || chunk.section === "guided") {
-        startTextAutoScroll(delay);
+        scrollBlockToTop(chunk.blockKey);
+        startTextAutoScroll(delay, chunk.blockKey);
       } else {
         clearTextAutoScroll();
       }
@@ -739,69 +888,72 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayDeadlineRef.current = Date.now() + 100;
     autoplayTimeoutRef.current = setTimeout(playNext, 100);
 
-    return () => cancelAutoplay();
+    return () => {
+      if (autoplayingRef.current) {
+        cancelAutoplay();
+      }
+    };
   }, [
     speechMode,
     artifact,
     artifactId,
     isVideo,
-    images,
+    textBlocks,
     nextArtifact,
     zoomOpen,
     transcriptOpen,
     announce,
     cancelAutoplay,
+    clearTranscriptDwell,
     setVisualSection,
     startTranscriptDwell,
     landOnNextArrowEnd,
     startTextAutoScroll,
     clearTextAutoScroll,
+    scrollBlockToTop,
     beginInlineVideo,
   ]);
 
   useEffect(() => {
-    if (!artifact) return;
-    if (guidedUnlocked) return;
-    if (zoomOpen || transcriptOpen || isPaused) return;
-
-    const delay = estimateChunkDurationMs(`Artifact description. ${artifact.description}`);
-    const timeoutId = window.setTimeout(() => {
-      setGuidedUnlocked(true);
-    }, delay);
-    return () => window.clearTimeout(timeoutId);
-  }, [
-    artifact,
-    artifactId,
-    guidedUnlocked,
-    zoomOpen,
-    transcriptOpen,
-    isPaused,
-  ]);
-
-  useEffect(() => {
-    if (!autoplayingRef.current) return;
+    if (!autoplayingRef.current && !transcriptDwellActiveRef.current) return;
 
     if (isPaused) {
-      if (autoplayTimeoutRef.current !== null && autoplayDeadlineRef.current !== null) {
-        autoplayRemainingRef.current = Math.max(
-          0,
-          autoplayDeadlineRef.current - Date.now()
-        );
-        clearTimeout(autoplayTimeoutRef.current);
-        autoplayTimeoutRef.current = null;
+      if (autoplayingRef.current) {
+        if (autoplayTimeoutRef.current !== null && autoplayDeadlineRef.current !== null) {
+          autoplayRemainingRef.current = Math.max(
+            0,
+            autoplayDeadlineRef.current - Date.now()
+          );
+          clearTimeout(autoplayTimeoutRef.current);
+          autoplayTimeoutRef.current = null;
+        }
+        if (textAutoScrollTimeoutRef.current !== null && textAutoScrollStateRef.current) {
+          textAutoScrollRemainingRef.current = Math.max(
+            0,
+            textAutoScrollStateRef.current.nextDeadline - Date.now()
+          );
+          clearTimeout(textAutoScrollTimeoutRef.current);
+          textAutoScrollTimeoutRef.current = null;
+        }
       }
-      if (textAutoScrollTimeoutRef.current !== null && textAutoScrollStateRef.current) {
-        textAutoScrollRemainingRef.current = Math.max(
+
+      if (
+        transcriptDwellActiveRef.current &&
+        transcriptDwellTimeoutRef.current !== null &&
+        transcriptDwellDeadlineRef.current !== null
+      ) {
+        transcriptDwellRemainingRef.current = Math.max(
           0,
-          textAutoScrollStateRef.current.nextDeadline - Date.now()
+          transcriptDwellDeadlineRef.current - Date.now()
         );
-        clearTimeout(textAutoScrollTimeoutRef.current);
-        textAutoScrollTimeoutRef.current = null;
+        clearTimeout(transcriptDwellTimeoutRef.current);
+        transcriptDwellTimeoutRef.current = null;
       }
       return;
     }
 
     if (
+      autoplayingRef.current &&
       autoplayTimeoutRef.current === null &&
       autoplayRemainingRef.current !== null &&
       autoplayPlayNextRef.current
@@ -814,6 +966,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     }
 
     if (
+      autoplayingRef.current &&
       textAutoScrollTimeoutRef.current === null &&
       textAutoScrollRemainingRef.current !== null &&
       textAutoScrollStateRef.current
@@ -823,7 +976,24 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       textAutoScrollStateRef.current.nextDeadline = Date.now() + delay;
       textAutoScrollTimeoutRef.current = setTimeout(tickTextAutoScroll, delay);
     }
-  }, [isPaused, tickTextAutoScroll]);
+
+    if (
+      transcriptDwellActiveRef.current &&
+      transcriptDwellTimeoutRef.current === null &&
+      transcriptDwellRemainingRef.current !== null
+    ) {
+      const delay = transcriptDwellRemainingRef.current;
+      const hasNext = transcriptDwellHasNextRef.current;
+      transcriptDwellRemainingRef.current = null;
+      transcriptDwellDeadlineRef.current = Date.now() + delay;
+      transcriptDwellTimeoutRef.current = setTimeout(() => {
+        transcriptDwellTimeoutRef.current = null;
+        transcriptDwellDeadlineRef.current = null;
+        transcriptDwellActiveRef.current = false;
+        landOnNextArrowEnd(hasNext);
+      }, delay);
+    }
+  }, [isPaused, tickTextAutoScroll, landOnNextArrowEnd]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -859,28 +1029,60 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, [setVideoOverlayOpen]);
 
   useEffect(() => {
-    if (textRef.current) {
-      textRef.current.scrollTop = 0;
+    if (textBodyRef.current) {
+      textBodyRef.current.scrollTop = 0;
     }
-  }, [guidedUnlocked, currentImageIndex]);
+  }, [artifactId]);
 
-  // Only enable scrolling / scrollbar when the text panel actually overflows
+  // Only enable scrolling / scrollbar when the text panel actually overflows,
+  // and place a marker on the track for each block the panel can scroll to.
   useEffect(() => {
-    const el = textRef.current;
+    const el = textBodyRef.current;
     if (!el) return;
 
-    const updateScrollable = () => {
+    const measure = () => {
       const needsScroll = hasScrollOverflow(el);
-      el.classList.toggle("artifact-popup-text--scrollable", needsScroll);
-      if (!needsScroll) el.scrollTop = 0;
+      // Only touch layout when something actually changed; toggling the class
+      // changes overflow, which would otherwise retrigger the ResizeObserver.
+      if (el.classList.contains("artifact-popup-text--scrollable") !== needsScroll) {
+        el.classList.toggle("artifact-popup-text--scrollable", needsScroll);
+      }
+      if (!needsScroll && el.scrollTop !== 0) el.scrollTop = 0;
+      setIsTextScrollable(needsScroll);
+
+      if (!needsScroll || textBlocks.length < 2) {
+        setScrollMarkers([]);
+        return;
+      }
+
+      const panelTop = el.getBoundingClientRect().top;
+      const total = el.scrollHeight;
+      const next = [];
+      for (const block of textBlocks) {
+        const node = el.querySelector(`[data-block-key="${block.key}"]`);
+        if (!node) continue;
+        const offset = node.getBoundingClientRect().top - panelTop + el.scrollTop;
+        next.push({
+          key: block.key,
+          topPct: Math.min(100, Math.max(0, (offset / total) * 100)),
+        });
+      }
+      setScrollMarkers((prev) => {
+        const same =
+          prev.length === next.length &&
+          prev.every(
+            (m, i) => m.key === next[i].key && Math.abs(m.topPct - next[i].topPct) < 0.1
+          );
+        return same ? prev : next;
+      });
     };
 
-    updateScrollable();
-    const rafId = requestAnimationFrame(updateScrollable);
+    measure();
+    const rafId = requestAnimationFrame(measure);
 
     let ro = null;
     if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(updateScrollable);
+      ro = new ResizeObserver(measure);
       ro.observe(el);
     }
 
@@ -889,7 +1091,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       ro?.disconnect();
       el.classList.remove("artifact-popup-text--scrollable");
     };
-  }, [guidedUnlocked, currentImageIndex, artifactId]);
+  }, [textBlocks, artifactId]);
 
   // Yellow scrollbar while snap-scrolling text / transcript panels
   useEffect(() => {
@@ -912,13 +1114,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       };
     };
 
-    const cleanupText = attachScrollHighlight(textRef.current);
+    const cleanupText = attachScrollHighlight(textBodyRef.current);
     const cleanupTranscript = attachScrollHighlight(transcriptBodyRef.current);
     return () => {
       cleanupText();
       cleanupTranscript();
     };
-  }, [transcriptOpen, guidedUnlocked]);
+  }, [transcriptOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -1020,17 +1222,35 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const handleNextImage = useCallback(() => {
     if (images.length <= 1) return;
     flashSelected(nextImageRef);
-    setGuidedUnlocked(true);
-    setCurrentImageIndex((prev) => {
-      const next = (prev + 1) % images.length;
-      const guided = getGuidedTextForImage(artifact, images, next);
-      announce(
-        `Image ${next + 1} of ${images.length}. Guided Description. ${guided}`,
-        { dedupeMs: 200 }
-      );
-      return next;
+
+    const next = (currentImageIndex + 1) % images.length;
+    setCurrentImageIndex(next);
+
+    // Combined mode describes every image in one body of text, so there is no
+    // per-image section to jump to.
+    const block = isCombined
+      ? null
+      : textBlocks.find((b) => b.kind === "guided" && b.imageIndex === next);
+    if (block) {
+      setActiveBlockKey(block.key);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollBlockToTop(block.key));
+      });
+    }
+
+    const position = `Image ${next + 1} of ${images.length}.`;
+    announce(block ? `${position} ${getBlockSpeech(block, false)}` : position, {
+      dedupeMs: 200,
     });
-  }, [images, announce, flashSelected, artifact]);
+  }, [
+    images,
+    currentImageIndex,
+    announce,
+    flashSelected,
+    isCombined,
+    textBlocks,
+    scrollBlockToTop,
+  ]);
 
   const closeTranscript = useCallback(() => {
     setTranscriptOpen(false);
@@ -1105,9 +1325,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (!isNext && !isBack && !isSelect) return;
 
       // Any intentional nav/select during transcript dwell cancels auto-advance
-      if (autoAdvanceTimeoutRef.current !== null) {
-        clearTimeout(autoAdvanceTimeoutRef.current);
-        autoAdvanceTimeoutRef.current = null;
+      if (transcriptDwellActiveRef.current) {
+        clearTranscriptDwell();
         setVisualSection(null);
       }
 
@@ -1166,11 +1385,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       openTranscript,
       handlePrimaryAction,
       setVisualSection,
+      clearTranscriptDwell,
     ]
   );
 
   const handleTextKeyDown = useCallback((e) => {
-    stepScrollKeyDown(e, textRef);
+    stepScrollKeyDown(e, textBodyRef);
   }, []);
 
   const handleTranscriptKeyDown = useCallback((e) => {
@@ -1324,18 +1544,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const hasTranscript =
     typeof artifact.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
-  const guidedImageTotal = images.length > 0 ? images.length : 1;
-  const guidedImageIndex = Math.min(guidedImageTotal, Math.max(1, currentImageIndex + 1));
-  const guidedImageSubtitle = `Image ${guidedImageIndex} of ${guidedImageTotal}`;
-  const guidedBodyText = getGuidedTextForImage(artifact, images, currentImageIndex);
-  const showingGuided = guidedUnlocked || currentImageIndex > 0;
   const highlightTextPanel =
     visualActiveSection === "title" ||
     visualActiveSection === "description" ||
     visualActiveSection === "guided";
-  const speechLabel = showingGuided
-    ? `Guided Description. ${guidedImageSubtitle}. ${guidedBodyText}`
-    : `Artifact description. ${artifact.description}`;
+  // The whole panel is readable at once, so the label covers every block.
+  const speechLabel = textBlocks
+    .map((block, i) => getBlockSpeech(block, i === 0))
+    .join(" ");
   const videoAlt = isVideo ? getVideoAlt(artifact) : "";
   // Title only — auto-read then announces description (avoids "details" + repeated title).
   const dialogAriaLabel = artifact.title;
@@ -1471,37 +1687,72 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             )}
           </div>
 
-          <div
-            className={`artifact-popup-text${
-              highlightTextPanel ? " artifact-popup-text--autoplay-active" : ""
-            }`}
-            ref={textRef}
-            tabIndex={speechMode || showingGuided ? 0 : -1}
-            onKeyDown={handleTextKeyDown}
-            aria-label={speechMode ? speechLabel : undefined}
-          >
-            {showingGuided ? (
-              <>
-                <h2 className="artifact-popup-title" aria-hidden={speechMode ? true : undefined}>
-                  Guided Description
-                  <span className="artifact-popup-guided-subtitle-inline">
-                    {guidedImageSubtitle}
-                  </span>
-                </h2>
-                <p className="artifact-popup-description" aria-hidden={speechMode ? true : undefined}>
-                  {guidedBodyText}
-                </p>
-              </>
-            ) : (
-              <>
+          <div className="artifact-popup-text-wrap">
+            <div
+              className={`artifact-popup-text${
+                highlightTextPanel ? " artifact-popup-text--autoplay-active" : ""
+              }`}
+              ref={textRef}
+              tabIndex={speechMode || isTextScrollable ? 0 : -1}
+              onKeyDown={handleTextKeyDown}
+              aria-label={speechMode ? speechLabel : undefined}
+            >
+              <div className="artifact-popup-text-header">
                 <h2 className="artifact-popup-title" aria-hidden={speechMode ? true : undefined}>
                   {artifact.title}
                 </h2>
-                <p className="artifact-popup-description" aria-hidden={speechMode ? true : undefined}>
-                  {artifact.description}
-                </p>
-              </>
-            )}
+              </div>
+              <div className="artifact-popup-text-body-wrap">
+                <div className="artifact-popup-text-body" ref={textBodyRef}>
+                  {textBlocks.map((block) =>
+                    block.kind === "guided" ? (
+                      <section
+                        key={block.key}
+                        data-block-key={block.key}
+                        className={`artifact-popup-guided-section${
+                          activeBlockKey === block.key ? " is-active" : ""
+                        }`}
+                        aria-hidden={speechMode ? true : undefined}
+                      >
+                        <h3 className="artifact-popup-guided-heading">
+                          {block.heading}
+                          {block.tagline && (
+                            <span className="artifact-popup-guided-subtitle-inline">
+                              {block.tagline}
+                            </span>
+                          )}
+                        </h3>
+                        <p className="artifact-popup-description">{block.text}</p>
+                      </section>
+                    ) : (
+                      <p
+                        key={block.key}
+                        data-block-key={block.key}
+                        className={`artifact-popup-description${
+                          activeBlockKey === block.key ? " is-active" : ""
+                        }`}
+                        aria-hidden={speechMode ? true : undefined}
+                      >
+                        {block.text}
+                      </p>
+                    )
+                  )}
+                </div>
+                {scrollMarkers.length > 1 && (
+                  <div className="artifact-popup-scroll-markers" aria-hidden="true">
+                    {scrollMarkers.map((marker) => (
+                      <span
+                        key={marker.key}
+                        className={`artifact-popup-scroll-marker${
+                          activeBlockKey === marker.key ? " is-active" : ""
+                        }`}
+                        style={{ top: `${marker.topPct}%` }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {transcriptOpen && transcriptText && (
