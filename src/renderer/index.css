@@ -514,9 +514,14 @@ h1[tabindex]:focus-visible {
   font-family: 'APHb2', Arial, sans-serif;
   font-weight: 400;
   font-size: calc(var(--font-size-body) * var(--text-scale));
+  line-height: 1.2;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
   min-width: 80px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Hover / keyboard focus / selected / autoplay: gold fill */
@@ -615,10 +620,15 @@ h1[tabindex]:focus-visible {
   font-family: 'APHb2', Arial, sans-serif;
   font-weight: 400;
   font-size: calc(var(--font-size-body) * var(--text-scale));
+  line-height: 1.2;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   min-width: 50px;
   min-height: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .zoom-btn:focus-visible,
@@ -1526,6 +1536,11 @@ h1[tabindex]:focus-visible {
   z-index: 5;
 }
 
+.theme-tip-overlay .idle-overlay-line {
+  font-weight: 300;
+  font-size: calc(var(--font-size-body) * 0.92 * var(--text-scale));
+}
+
 .artifact-popup-slot {
   width: 1200px;
   height: 600px;
@@ -2129,6 +2144,15 @@ h1[tabindex]:focus-visible {
   position: absolute;
   top: 24px;
   right: 24px;
+}
+
+.artifact-popup-transcript-exit:hover,
+.artifact-popup-transcript-exit:focus-visible {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--color-black);
+  outline: none;
+  box-shadow: none;
 }
 
 .artifact-popup-transcript-heading {
