@@ -2,7 +2,7 @@ import React from "react";
 import { useSceneFocus } from "../state/useSceneManager";
 
 export default function Scene({ id, children, isActive }) {
-  useSceneFocus(id, isActive);
+  useSceneFocus(id, isActive && id !== "quote");
   
   return (
     <div 

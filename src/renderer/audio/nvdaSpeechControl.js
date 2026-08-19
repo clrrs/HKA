@@ -60,3 +60,53 @@ export function stopNvdaSpeechAfterBrailleSettle(options = {}) {
     for (const id of timers) clearTimeout(id);
   };
 }
+
+const SPEECH_GUARD_INTERVAL_MS = 400;
+
+/**
+ * Keep NVDA speech silenced while media plays; braille from focus is unchanged.
+ * Returns a cleanup function (remove listeners + clear interval).
+ */
+export function guardNvdaSpeechSilenceWhilePlaying(audioEl) {
+  if (!audioEl) return () => {};
+
+  let intervalId = null;
+
+  const clearGuard = () => {
+    if (intervalId !== null) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
+  const startGuard = () => {
+    stopNvdaSpeechAggressively();
+    if (intervalId !== null) return;
+    intervalId = window.setInterval(() => {
+      if (audioEl.paused || audioEl.ended) {
+        clearGuard();
+        return;
+      }
+      stopNvdaSpeechAggressively();
+    }, SPEECH_GUARD_INTERVAL_MS);
+  };
+
+  const onPlaying = () => startGuard();
+  const onPause = () => clearGuard();
+  const onEnded = () => clearGuard();
+
+  audioEl.addEventListener("playing", onPlaying);
+  audioEl.addEventListener("pause", onPause);
+  audioEl.addEventListener("ended", onEnded);
+
+  if (!audioEl.paused && !audioEl.ended) {
+    startGuard();
+  }
+
+  return () => {
+    clearGuard();
+    audioEl.removeEventListener("playing", onPlaying);
+    audioEl.removeEventListener("pause", onPause);
+    audioEl.removeEventListener("ended", onEnded);
+  };
+}

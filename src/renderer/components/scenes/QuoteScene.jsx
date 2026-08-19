@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
+  guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechAfterBrailleSettle,
   stopNvdaSpeechAggressively,
 } from "../../audio/nvdaSpeechControl";
@@ -67,6 +68,13 @@ export default function QuoteScene() {
   }, [scene, theme?.id]);
 
   useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl || scene !== "quote") return () => {};
+
+    return guardNvdaSpeechSilenceWhilePlaying(audioEl);
+  }, [scene, theme?.id]);
+
+  useEffect(() => {
     if (scene !== "quote" || !theme) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -106,7 +114,6 @@ export default function QuoteScene() {
         ref={quoteTextRef}
         className="quote-scene-text"
         tabIndex={0}
-        data-autofocus=""
       >
         {theme.quote}
       </div>

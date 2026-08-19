@@ -33,7 +33,8 @@
     "productName": "HKA Kiosk",
     "files": [
       "dist/renderer/**/*",
-      "src/main/**/*"
+      "src/main/**/*",
+      "scripts/volume-step.ps1"
     ],
     "win": {
       "target": "nsis"
