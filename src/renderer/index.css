@@ -2014,8 +2014,7 @@ h1[tabindex]:focus-visible {
 
 .artifact-popup-text--autoplay-active,
 .artifact-popup-text:focus,
-.artifact-popup-text:focus-visible,
-.artifact-popup--autoplaying:not(.artifact-popup--video-active):has(> .artifact-popup-autoplay-anchor:focus) .artifact-popup-text {
+.artifact-popup-text:focus-visible {
   border-color: var(--accent);
 }
 

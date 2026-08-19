@@ -11,6 +11,7 @@ import { useAnnounce } from "../state/AnnouncerProvider";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import {
   BRAILLE_OUTPUT_SETTLE_MS,
+  stopNvdaSpeechAfterBrailleSettle,
   stopNvdaSpeechAggressively,
 } from "../audio/nvdaSpeechControl";
 import {
@@ -294,7 +295,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const [scrollMarkers, setScrollMarkers] = useState([]);
 
   const popupRef = useRef(null);
-  const autoplayAnchorRef = useRef(null);
   const autoplayingRef = useRef(false);
   const autoplayTimeoutRef = useRef(null);
   const autoplayDeadlineRef = useRef(null);
@@ -694,11 +694,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const rememberMainFocus = useCallback(() => {
     const el = document.activeElement;
-    if (
-      el &&
-      popupRef.current?.contains(el) &&
-      el !== autoplayAnchorRef.current
-    ) {
+    if (el && popupRef.current?.contains(el)) {
       lastMainFocusRef.current = el;
     }
   }, []);
@@ -707,11 +703,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     skipNextTrapAutofocusRef.current = true;
     requestAnimationFrame(() => {
       const target = lastMainFocusRef.current;
-      if (
-        target &&
-        popupRef.current?.contains(target) &&
-        target !== autoplayAnchorRef.current
-      ) {
+      if (target && popupRef.current?.contains(target)) {
         target.focus({ preventScroll: true });
       } else {
         fallbackRef?.current?.focus({ preventScroll: true });
@@ -821,7 +813,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayingRef.current = true;
     setIsAutoplaying(true);
     setVisualSection(null);
-    autoplayAnchorRef.current?.focus({ preventScroll: true });
+    // Quote-style: braille reads from focused text panel; live region drives speech only.
+    textRef.current?.focus({ preventScroll: true });
+    const cancelSpeechStop = stopNvdaSpeechAfterBrailleSettle({
+      settleMs: BRAILLE_OUTPUT_SETTLE_MS,
+      followUpMs: 180,
+    });
 
     const playNext = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
@@ -889,6 +886,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayTimeoutRef.current = setTimeout(playNext, 100);
 
     return () => {
+      cancelSpeechStop();
       if (autoplayingRef.current) {
         cancelAutoplay();
       }
@@ -1149,8 +1147,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (showSettings) return;
       if (!autoplayingRef.current) return;
       const active = document.activeElement;
-      if (active === autoplayAnchorRef.current) return;
-      autoplayAnchorRef.current?.focus({ preventScroll: true });
+      if (active === textRef.current) return;
+      textRef.current?.focus({ preventScroll: true });
     });
   }, [isAutoplaying, speechMode, mainPopupActive, showSettings]);
 
@@ -1179,7 +1177,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (!focusInPopup) {
         if (speechMode) {
           if (autoplayingRef.current) {
-            autoplayAnchorRef.current?.focus({ preventScroll: true });
+            textRef.current?.focus({ preventScroll: true });
           } else {
             prevArrowRef.current?.focus({ preventScroll: true });
           }
@@ -1571,14 +1569,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         aria-label={dialogAriaLabel}
         onKeyDown={handlePopupKeyDown}
       >
-        <div
-          ref={autoplayAnchorRef}
-          tabIndex={-1}
-          className="sr-only artifact-popup-autoplay-anchor"
-          data-autofocus={speechMode && mainPopupActive && isAutoplaying ? "" : undefined}
-          aria-hidden="true"
-        />
-
         <button
           type="button"
           ref={prevArrowRef}
@@ -1695,7 +1685,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               ref={textRef}
               tabIndex={speechMode || isTextScrollable ? 0 : -1}
               onKeyDown={handleTextKeyDown}
-              aria-label={speechMode ? speechLabel : undefined}
+              ariaBrailleLabel={speechMode ? speechLabel : undefined}
             >
               <div className="artifact-popup-text-header">
                 <h2 className="artifact-popup-title" aria-hidden={speechMode ? true : undefined}>

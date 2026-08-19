@@ -647,6 +647,12 @@ export function getThemeFocusAnnouncement(themeId) {
   return `${blurb} Press select key to view the artifacts in this theme.`;
 }
 
+export function getThemeBrailleLabel(themeId, themeLabel, index, total) {
+  const position = `${themeLabel}, ${index + 1} of ${total}`;
+  const blurb = getThemeFocusAnnouncement(themeId);
+  return blurb ? `${position}. ${blurb}` : position;
+}
+
 export function getThemeArtifacts(themeId) {
   return themes[themeId]?.artifacts || [];
 }

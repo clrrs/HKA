@@ -2,7 +2,7 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
-import { getThemeFocusAnnouncement } from "../../data/artifacts";
+import { getThemeBrailleLabel, getThemeFocusAnnouncement } from "../../data/artifacts";
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 
@@ -305,6 +305,11 @@ export default function HomeScene({ isActive = false }) {
                 onBlur={handleBlur}
                 onClick={() => { if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
                 aria-label={`${theme.label}, ${i + 1} of ${themes.length}`}
+                ariaBrailleLabel={
+                  speechMode && !theme.disabledForTesting
+                    ? getThemeBrailleLabel(theme.id, theme.label, i, themes.length)
+                    : undefined
+                }
                 aria-disabled={theme.disabledForTesting ? true : undefined}
                 tabIndex={0}
               >
