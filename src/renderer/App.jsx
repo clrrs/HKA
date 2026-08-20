@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
-import { useAppState } from "./state/StateProvider";
+import { useAppState, volumeAnnounceRef } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
 import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 
@@ -65,6 +65,18 @@ export default function App() {
     dismissTestEasterEgg,
   } = useAppState();
   const announce = useAnnounce();
+  useLayoutEffect(() => {
+    volumeAnnounceRef.current = (message) => {
+      announce(message, {
+        politeness: "assertive",
+        source: "volume",
+        dedupeMs: 0,
+      });
+    };
+    return () => {
+      if (volumeAnnounceRef.current) volumeAnnounceRef.current = null;
+    };
+  }, [announce]);
   const [idleCountdown, setIdleCountdown] = useState(null);
   const lastActivityRef = useRef(Date.now());
   const warningVisibleRef = useRef(false);

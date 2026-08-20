@@ -40,6 +40,7 @@ const AppState = createContext();
 // window/capture order, ahead of anything a component effect can attach.
 const idleTimeoutToggleRef = { current: null };
 const autoReadFastToggleRef = { current: null };
+export const volumeAnnounceRef = { current: null };
 
 if (typeof window !== "undefined") {
   window.addEventListener(
@@ -58,6 +59,15 @@ if (typeof window !== "undefined") {
         e.preventDefault();
         e.stopImmediatePropagation();
         autoReadFastToggleRef.current();
+        return;
+      }
+      const key = e.key.toLowerCase();
+      if (key === "w" || key === "i") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const isUp = key === "w";
+        window.kioskApi?.send(isUp ? "volume-up" : "volume-down");
+        volumeAnnounceRef.current?.(isUp ? "volume up" : "volume down");
       }
     },
     true

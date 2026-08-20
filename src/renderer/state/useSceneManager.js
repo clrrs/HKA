@@ -301,20 +301,6 @@ export function useKeyboardNav() {
         }
         return;
       }
-
-      // Vol Up (W)
-      if (key === "w") {
-        e.preventDefault();
-        window.kioskApi?.send("volume-up");
-        return;
-      }
-
-      // Vol Down (I)
-      if (key === "i") {
-        e.preventDefault();
-        window.kioskApi?.send("volume-down");
-        return;
-      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
