@@ -39,17 +39,26 @@ const AppState = createContext();
 // swallow unrecognized keys. Registering at module load puts this listener first in
 // window/capture order, ahead of anything a component effect can attach.
 const idleTimeoutToggleRef = { current: null };
+const autoReadFastToggleRef = { current: null };
 
 if (typeof window !== "undefined") {
   window.addEventListener(
     "keydown",
     (e) => {
       if (e.repeat) return;
-      if (e.key !== "0" && e.code !== "Digit0" && e.code !== "Numpad0") return;
-      if (!idleTimeoutToggleRef.current) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      idleTimeoutToggleRef.current();
+      if (e.key === "0" || e.code === "Digit0" || e.code === "Numpad0") {
+        if (!idleTimeoutToggleRef.current) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        idleTimeoutToggleRef.current();
+        return;
+      }
+      if (e.key === "9" || e.code === "Digit9" || e.code === "Numpad9") {
+        if (!autoReadFastToggleRef.current) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        autoReadFastToggleRef.current();
+      }
     },
     true
   );
@@ -178,6 +187,7 @@ export default function StateProvider({ children }) {
   const [previousScene, setPreviousScene] = useState("home");
 
   const [idleTimeoutDisabled, setIdleTimeoutDisabled] = useState(false);
+  const [autoReadFast, setAutoReadFast] = useState(false);
 
   useLayoutEffect(() => {
     const toggle = () => setIdleTimeoutDisabled((prev) => !prev);
@@ -185,6 +195,16 @@ export default function StateProvider({ children }) {
     return () => {
       if (idleTimeoutToggleRef.current === toggle) {
         idleTimeoutToggleRef.current = null;
+      }
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const toggle = () => setAutoReadFast((prev) => !prev);
+    autoReadFastToggleRef.current = toggle;
+    return () => {
+      if (autoReadFastToggleRef.current === toggle) {
+        autoReadFastToggleRef.current = null;
       }
     };
   }, []);
@@ -298,6 +318,7 @@ export default function StateProvider({ children }) {
       markThemeTipSeen,
       resetToStart,
       idleTimeoutDisabled,
+      autoReadFast,
       testEasterEgg,
       triggerTestEasterEgg,
       dismissTestEasterEgg

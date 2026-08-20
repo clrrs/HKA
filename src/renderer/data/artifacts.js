@@ -326,8 +326,15 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         type: "photograph",
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
-          { src: "3A3Bantu2.jpeg", alt: "Another view of Helen Keller's meeting with the Bantu Chief" }
-          ],
+          {
+            src: "3A3Bantu2.jpeg",
+            alt: "Another view of Helen Keller's meeting with the Bantu Chief",
+            guidedDescription: `[Stamped: "WYNDON PHOTOS" S.A.N.L.A.M. BLDGS., FOR REPRINT QUOTE (followed by a blank line) EAST LONDON. PHONE 2633]
+
+[Handwritten note, top left corner: "Amer Fnd fr Blind" written above "2-5+7 (illegible)"]
+[Handwritten note, top center: "Helen Keller opened the Community Center for Bantu people. East London, Cape Province. Her picture was taken with a tribal chieftan and his wife"] [Handwritten note in left margin: "Chief and Wife (ineligible) April"] [Handwritten center note in red: "14 1/2 Picas" with arrows marking the dimension] [Handwritten center note in blue: "R3288"] [Handwritten center note: Please return to American Foundation] [Handwritten note: HK07.01.B058.F07.001] [Handwritten lower center note in red: "(ineligible) BP - 4482"] [Handwritten note in bottom right corner: "33.3"]`
+          }
+        ],
           transcriptTitle: "Transcript",
           transcriptText: `Taken outdoors in the sunshine during Helen Keller's visit to South Africa. Photographed standing left to right are a Bantu Chieftan, Keller, the Bantu Chieftan's wife and Polly Thomson. Keller was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. They are standing in front of a wall. Keller has her hand on the tip of the sword the chieftan is holding. The Bantu couple are wearing traditional beaded garments and head pieces. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes. [Typed caption: Helen Keller opened the Duncan Village Community Center for the Bantu people, East London, Cape Province. Her picture was taken with a tribal chief and his wife.]
 

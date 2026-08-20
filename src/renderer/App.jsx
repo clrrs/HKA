@@ -60,6 +60,7 @@ export default function App() {
     autoReadActive,
     speechMode,
     idleTimeoutDisabled,
+    autoReadFast,
     testEasterEgg,
     dismissTestEasterEgg,
   } = useAppState();
@@ -537,9 +538,14 @@ export default function App() {
             </div>
           </div>
         )}
-        {idleTimeoutDisabled && (
-          <div className="idle-disabled-badge" aria-hidden="true">
-            Idle timer off
+        {(idleTimeoutDisabled || autoReadFast) && (
+          <div className="test-shortcut-badges" aria-hidden="true">
+            {idleTimeoutDisabled && (
+              <div className="idle-disabled-badge">Idle timer off</div>
+            )}
+            {autoReadFast && (
+              <div className="idle-disabled-badge">Auto-read 6x</div>
+            )}
           </div>
         )}
         {speechHud.visible && (
