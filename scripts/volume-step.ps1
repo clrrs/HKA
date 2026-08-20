@@ -58,7 +58,7 @@ namespace HkaVolume {
       return (IAudioEndpointVolume)obj;
     }
 
-    public static void Step(string direction) {
+    public static int Step(string direction) {
       var vol = GetEndpointVolume();
       float level;
       Marshal.ThrowExceptionForHR(vol.GetMasterVolumeLevelScalar(out level));
@@ -66,13 +66,15 @@ namespace HkaVolume {
       float next = Math.Max(0f, Math.Min(1f, level + delta));
       Guid ctx = EventContext;
       Marshal.ThrowExceptionForHR(vol.SetMasterVolumeLevelScalar(next, ref ctx));
+      return (int)Math.Round(next * 100);
     }
   }
 }
 '@
 
 try {
-  [HkaVolume.Volume]::Step($Direction)
+  $pct = [HkaVolume.Volume]::Step($Direction)
+  Write-Output $pct
   exit 0
 }
 catch {

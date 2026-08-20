@@ -404,7 +404,17 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         type: "photograph",
         images: [
           { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
-          { src: "3A5ItalyVet2.jpeg", alt: "Another view of Helen Keller with the Italian veteran" }
+          {
+            src: "3A5ItalyVet2.jpeg",
+            alt: "Another view of Helen Keller with the Italian veteran",
+            guidedDescription: `[Typed note: Rome, 25 Novembre 1946 Helen Adams Keller in visita (remaining text illegible)]
+
+[Stamped: MINISTERO deila GU (ineligible) GABINETTO Ufficio Collegamento Esercito Paese]
+
+[Stamped overprint: Original in Helen Keller (Archives). American Foundation (for the Blind), New York. Not to be reproduced or quoted without permission.]
+
+[Handwritten upside down: "17" (circled)]`
+          }
         ],
         guidedDescription:
           "A black-and-white photo shows Helen dancing in the embrace of a blinded Italian veteran. He is still wearing his wartime San Marco Marine uniform jumper with an insignia patch on his left chest, which shows a winged lion with sword standing on an open book. Polly Thomson spells into Helen's right hand while it is being held by the veteran's left. Several people in civilian clothes watch in the background. The smile on the face of the veteran shows missing teeth, possibly also a result of the wounds that blinded him. The text logo of an Italian Ministry partially appears in the bottom left corner of the photo. The rear shows information in a purple -ink stamp in Italian, and in black typing and handwritten notes."

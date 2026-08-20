@@ -82,6 +82,42 @@ function hasScrollOverflow(el) {
   return getScrollOverflowPx(el) > SCROLL_OVERFLOW_THRESHOLD_PX;
 }
 
+function getNodeOffsetTop(panel, node) {
+  let top = 0;
+  let current = node;
+  while (current && current !== panel) {
+    top += current.offsetTop;
+    current = current.parentElement;
+  }
+  return Math.max(0, top);
+}
+
+/**
+ * Same stop positions auto-read uses: section top, then every 75% of the
+ * viewport until the rest of that section is visible.
+ */
+function getBlockScrollStops(panel, blockKey, offset, height) {
+  const stepPx = Math.floor(panel.clientHeight * SCROLL_STEP_RATIO) || panel.clientHeight;
+  const scrollLimit = Math.max(0, panel.scrollHeight - panel.clientHeight);
+  const startTop = Math.min(offset, scrollLimit);
+  const maxTop = Math.min(
+    scrollLimit,
+    Math.max(0, offset + height - panel.clientHeight)
+  );
+  const snaps = [{ blockKey, scrollTop: startTop }];
+  const overflow = maxTop - startTop;
+  if (overflow <= SCROLL_OVERFLOW_THRESHOLD_PX) return snaps;
+
+  const steps = Math.max(1, Math.ceil(overflow / stepPx));
+  for (let i = 1; i <= steps; i++) {
+    snaps.push({
+      blockKey,
+      scrollTop: Math.min(maxTop, startTop + i * stepPx),
+    });
+  }
+  return snaps;
+}
+
 /**
  * Snap stops + indicator positions for the description panel. Measured live off
  * the DOM: cached offsets go stale once the web fonts swap in and the copy reflows.
@@ -91,47 +127,21 @@ function buildTextSnapsAndMarkers(panel, textBlocks) {
     return { snaps: [], markers: [] };
   }
 
-  const step = Math.floor(panel.clientHeight * SCROLL_STEP_RATIO) || panel.clientHeight;
-  const scrollLimit = Math.max(0, panel.scrollHeight - panel.clientHeight);
   const total = panel.scrollHeight || 1;
-  const panelTop = panel.getBoundingClientRect().top;
-
-  const placed = [];
-  for (const block of textBlocks) {
-    const node = panel.querySelector(`[data-block-key="${block.key}"]`);
-    if (!node) continue;
-    placed.push({
-      key: block.key,
-      offset: node.getBoundingClientRect().top - panelTop + panel.scrollTop,
-      height: node.offsetHeight,
-    });
-  }
-
   const snaps = [];
   const markers = [];
 
-  placed.forEach(({ key, offset, height }, i) => {
+  for (const block of textBlocks) {
+    const node = panel.querySelector(`[data-block-key="${block.key}"]`);
+    if (!node) continue;
+    const offset = getNodeOffsetTop(panel, node);
+    const height = node.offsetHeight;
     markers.push({
-      key,
+      key: block.key,
       topPct: Math.min(100, Math.max(0, (offset / total) * 100)),
     });
-
-    const start = Math.min(Math.max(0, offset), scrollLimit);
-    snaps.push({ blockKey: key, scrollTop: start });
-
-    // The last block runs to the end of the scrollable content so its tail —
-    // and the panel's bottom padding — can still be reached.
-    const blockEnd = i === placed.length - 1 ? panel.scrollHeight : offset + height;
-    const maxTop = Math.min(scrollLimit, Math.max(0, blockEnd - panel.clientHeight));
-    if (maxTop - start <= SCROLL_OVERFLOW_THRESHOLD_PX) return;
-
-    let pos = start + step;
-    while (pos < maxTop - SCROLL_OVERFLOW_THRESHOLD_PX) {
-      snaps.push({ blockKey: key, scrollTop: pos });
-      pos += step;
-    }
-    snaps.push({ blockKey: key, scrollTop: maxTop });
-  });
+    snaps.push(...getBlockScrollStops(panel, block.key, offset, height));
+  }
 
   return { snaps, markers };
 }
@@ -552,14 +562,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (!panel || !blockKey) return 0;
     const block = panel.querySelector(`[data-block-key="${blockKey}"]`);
     if (!block) return 0;
-
-    let top = 0;
-    let node = block;
-    while (node && node !== panel) {
-      top += node.offsetTop;
-      node = node.parentElement;
-    }
-    return Math.max(0, top);
+    return getNodeOffsetTop(panel, block);
   }, []);
 
   const getBlockHeight = useCallback((blockKey) => {
@@ -1562,6 +1565,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
       const el = textBodyRef.current;
       if (el) {
+        clearTextAutoScroll();
         el.scrollTo({ top: snap.scrollTop, behavior: "smooth" });
       }
 
@@ -1577,7 +1581,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         }
       }
     },
-    [speechMode, textBlocks, announce]
+    [speechMode, textBlocks, announce, clearTextAutoScroll]
   );
 
   const exitTextNav = useCallback(
@@ -1620,30 +1624,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         return;
       }
       const index = Math.min(textSnapIndexRef.current, snaps.length - 1);
-      const currentKey = snaps[index]?.blockKey;
       if (direction === "next") {
-        const nextIndex = snaps.findIndex(
-          (s, i) => i > index && s.blockKey !== currentKey
-        );
-        if (nextIndex >= 0) {
-          applyTextSnap(nextIndex, { announceBlock: true });
+        if (index + 1 < snaps.length) {
+          applyTextSnap(index + 1, { announceBlock: true });
         } else {
           exitTextNav("next");
         }
+      } else if (index > 0) {
+        applyTextSnap(index - 1, { announceBlock: true });
       } else {
-        let prevBlockKey = null;
-        for (let i = index - 1; i >= 0; i--) {
-          if (snaps[i].blockKey !== currentKey) {
-            prevBlockKey = snaps[i].blockKey;
-            break;
-          }
-        }
-        if (prevBlockKey) {
-          const prevIndex = snaps.findIndex((s) => s.blockKey === prevBlockKey);
-          applyTextSnap(prevIndex, { announceBlock: true });
-        } else {
-          exitTextNav("back");
-        }
+        exitTextNav("back");
       }
     },
     [applyTextSnap, exitTextNav, refreshTextSnaps]

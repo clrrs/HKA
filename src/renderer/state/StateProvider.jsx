@@ -41,6 +41,7 @@ const AppState = createContext();
 const idleTimeoutToggleRef = { current: null };
 const autoReadFastToggleRef = { current: null };
 export const volumeAnnounceRef = { current: null };
+export const volumeHudRef = { current: null };
 
 if (typeof window !== "undefined") {
   window.addEventListener(
@@ -66,8 +67,17 @@ if (typeof window !== "undefined") {
         e.preventDefault();
         e.stopImmediatePropagation();
         const isUp = key === "w";
-        window.kioskApi?.send(isUp ? "volume-up" : "volume-down");
-        volumeAnnounceRef.current?.(isUp ? "volume up" : "volume down");
+        const channel = isUp ? "volume-up" : "volume-down";
+        const label = isUp ? "Volume Up" : "Volume Down";
+        volumeAnnounceRef.current?.(label);
+        if (typeof window.kioskApi?.invoke === "function") {
+          window.kioskApi.invoke(channel).then((pct) => {
+            volumeHudRef.current?.(label, pct);
+          });
+        } else {
+          window.kioskApi?.send(channel);
+          volumeHudRef.current?.(label, null);
+        }
       }
     },
     true

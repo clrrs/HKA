@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
-import { useAppState, volumeAnnounceRef } from "./state/StateProvider";
+import { useAppState, volumeAnnounceRef, volumeHudRef } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
 import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 
@@ -65,18 +65,6 @@ export default function App() {
     dismissTestEasterEgg,
   } = useAppState();
   const announce = useAnnounce();
-  useLayoutEffect(() => {
-    volumeAnnounceRef.current = (message) => {
-      announce(message, {
-        politeness: "assertive",
-        source: "volume",
-        dedupeMs: 0,
-      });
-    };
-    return () => {
-      if (volumeAnnounceRef.current) volumeAnnounceRef.current = null;
-    };
-  }, [announce]);
   const [idleCountdown, setIdleCountdown] = useState(null);
   const lastActivityRef = useRef(Date.now());
   const warningVisibleRef = useRef(false);
@@ -91,11 +79,56 @@ export default function App() {
   const speechHudSeenFirstStateRef = useRef(false);
   const speechHudFadeTimeoutRef = useRef(null);
   const speechHudHideTimeoutRef = useRef(null);
+  const volumeHudFadeTimeoutRef = useRef(null);
+  const volumeHudHideTimeoutRef = useRef(null);
   const [speechHud, setSpeechHud] = useState({
     visible: false,
     closing: false,
     enabled: true,
   });
+  const [volumeHud, setVolumeHud] = useState({
+    visible: false,
+    closing: false,
+    label: "",
+  });
+
+  const showVolumeHud = useCallback((message, percent) => {
+    const label =
+      typeof percent === "number" ? `${message}  ${percent}%` : message;
+    if (volumeHudFadeTimeoutRef.current) {
+      window.clearTimeout(volumeHudFadeTimeoutRef.current);
+      volumeHudFadeTimeoutRef.current = null;
+    }
+    if (volumeHudHideTimeoutRef.current) {
+      window.clearTimeout(volumeHudHideTimeoutRef.current);
+      volumeHudHideTimeoutRef.current = null;
+    }
+    setVolumeHud({ visible: true, closing: false, label });
+    volumeHudFadeTimeoutRef.current = window.setTimeout(() => {
+      setVolumeHud((prev) => ({ ...prev, closing: true }));
+    }, SPEECH_HUD_VISIBLE_MS - SPEECH_HUD_FADE_MS);
+    volumeHudHideTimeoutRef.current = window.setTimeout(() => {
+      setVolumeHud((prev) => ({ ...prev, visible: false, closing: false }));
+    }, SPEECH_HUD_VISIBLE_MS);
+  }, []);
+
+  useLayoutEffect(() => {
+    volumeAnnounceRef.current = (message) => {
+      announce(message, {
+        politeness: "assertive",
+        source: "volume",
+        dedupeMs: 0,
+      });
+      showVolumeHud(message, null);
+    };
+    volumeHudRef.current = (message, percent) => {
+      showVolumeHud(message, percent);
+    };
+    return () => {
+      if (volumeAnnounceRef.current) volumeAnnounceRef.current = null;
+      if (volumeHudRef.current) volumeHudRef.current = null;
+    };
+  }, [announce, showVolumeHud]);
 
   useEffect(() => {
     if (!testEasterEgg) return;
@@ -452,6 +485,12 @@ export default function App() {
       if (speechHudHideTimeoutRef.current) {
         window.clearTimeout(speechHudHideTimeoutRef.current);
       }
+      if (volumeHudFadeTimeoutRef.current) {
+        window.clearTimeout(volumeHudFadeTimeoutRef.current);
+      }
+      if (volumeHudHideTimeoutRef.current) {
+        window.clearTimeout(volumeHudHideTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -558,6 +597,14 @@ export default function App() {
             {autoReadFast && (
               <div className="idle-disabled-badge">Auto-read 6x</div>
             )}
+          </div>
+        )}
+        {volumeHud.visible && (
+          <div
+            className={`speech-mode-hud ${volumeHud.closing ? "speech-mode-hud--closing" : ""}`}
+            aria-hidden="true"
+          >
+            <span className="speech-mode-hud-label">{volumeHud.label}</span>
           </div>
         )}
         {speechHud.visible && (

@@ -68,18 +68,28 @@ function sendKeys(script) {
 }
 
 function adjustVolume(direction) {
-  if (!IS_WIN) return;
+  if (!IS_WIN) return Promise.resolve(null);
   const arg = direction === "Up" ? "up" : "down";
-  const child = spawn(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", VOLUME_STEP_SCRIPT, arg],
-    { windowsHide: true, stdio: ["ignore", "ignore", "pipe"] }
-  );
-  child.stderr.on("data", (d) => console.error("volume-step:", d.toString()));
-  child.on("exit", (code) => {
-    if (code !== 0) {
-      console.error(`volume-step: exited with code ${code}`);
-    }
+  return new Promise((resolve) => {
+    const child = spawn(
+      "powershell.exe",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", VOLUME_STEP_SCRIPT, arg],
+      { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }
+    );
+    let out = "";
+    child.stdout.on("data", (d) => {
+      out += d.toString();
+    });
+    child.stderr.on("data", (d) => console.error("volume-step:", d.toString()));
+    child.on("exit", (code) => {
+      if (code !== 0) {
+        console.error(`volume-step: exited with code ${code}`);
+        resolve(null);
+        return;
+      }
+      const pct = parseInt(String(out).trim(), 10);
+      resolve(Number.isFinite(pct) ? pct : null);
+    });
   });
 }
 
@@ -94,10 +104,11 @@ ipcMain.on("toggle-tts", () => {
 });
 
 // Volume Up/Down — one-shot Core Audio step (no VK_VOLUME_*; those cut NVDA speech)
+ipcMain.handle("volume-up", () => adjustVolume("Up"));
+ipcMain.handle("volume-down", () => adjustVolume("Down"));
 ipcMain.on("volume-up", () => {
   adjustVolume("Up");
 });
-
 ipcMain.on("volume-down", () => {
   adjustVolume("Down");
 });
