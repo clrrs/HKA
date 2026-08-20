@@ -12,7 +12,7 @@ import { scheduleFocus } from "../state/useSceneManager";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import {
   BRAILLE_OUTPUT_SETTLE_MS,
-  stopNvdaSpeechAfterBrailleSettle,
+  guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechAggressively,
 } from "../audio/nvdaSpeechControl";
 import {
@@ -34,6 +34,10 @@ const AUTO_READ_THEME_END_PROMPT =
 const TRANSCRIPT_DWELL_MS = 6000;
 const VIDEO_END_DWELL_MS = 1000;
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
+/** Covers NVDA's "dialog" role preamble before it reaches the popup title. */
+const DIALOG_TITLE_PREAMBLE_MS = 500;
+const TEXT_PANEL_SUMMARY =
+  "Artifact description. Press Select to read by section.";
 const EMPTY_IMAGES = [];
 
 const GUIDED_HEADINGS = {
@@ -54,9 +58,12 @@ function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+function estimateSpeechDurationMs(text) {
+  return Math.round((countWords(text) / WORDS_PER_SEC) * 1000);
+}
+
 function estimateChunkDurationMs(text) {
-  const words = countWords(text);
-  return Math.round((words / WORDS_PER_SEC) * 1000) + CHUNK_BUFFER_MS;
+  return estimateSpeechDurationMs(text) + CHUNK_BUFFER_MS;
 }
 
 /** Treat sub-pixel / padding noise as "no overflow" so short panels don't trap or show a scrollbar. */
@@ -342,13 +349,6 @@ function useFocusTrap(containerRef, isActive, options = {}) {
 
     return () => container.removeEventListener("keydown", handleKeyDown);
   }, [isActive, containerRef, autofocusOnActivate, skipAutofocusRef, initialFocusDoneRef]);
-}
-
-function getVideoAlt(artifact) {
-  if (!artifact) return "";
-  if (artifact.id === "3A1") return "Helen Keller rides a biplane, 1919";
-  const base = artifact.displayTitle || artifact.title || "Video preview";
-  return artifact.year ? `${base} (${artifact.year})` : base;
 }
 
 function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
@@ -866,6 +866,27 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     [speechMode]
   );
 
+  const getTextBlockEl = useCallback((blockKey) => {
+    if (!blockKey || !textBodyRef.current) return null;
+    return textBodyRef.current.querySelector(`[data-block-key="${blockKey}"]`);
+  }, []);
+
+  const isOnTextPanel = useCallback((el) => {
+    if (!el) return false;
+    if (el === textRef.current || el === textBodyRef.current) return true;
+    return Boolean(textBodyRef.current?.contains(el));
+  }, []);
+
+  const handleTextPanelFocus = useCallback(() => {
+    if (!speechMode) return;
+    if (autoplayingRef.current || textNavActiveRef.current) return;
+    announce(TEXT_PANEL_SUMMARY, {
+      politeness: "assertive",
+      source: "artifact-text-panel",
+      dedupeMs: 400,
+    });
+  }, [speechMode, announce]);
+
   const getPopupFocusables = useCallback(() => {
     const hasTranscriptLocal =
       typeof artifact?.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
@@ -982,12 +1003,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     textNavActiveRef.current = false;
     setTextNavActive(false);
     setVisualSection(null);
-    // Quote-style: braille reads from focused text panel; live region drives speech only.
-    getTextPanelFocusEl()?.focus({ preventScroll: true });
-    const cancelSpeechStop = stopNvdaSpeechAfterBrailleSettle({
-      settleMs: BRAILLE_OUTPUT_SETTLE_MS,
-      followUpMs: 180,
-    });
 
     const playNext = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
@@ -1016,11 +1031,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         chunk.blockKey
       );
 
-      const isFirstGuided = chunk.section === "guided" && chunk.imageIndex === 0;
-      announce(chunk.text, {
-        politeness: "assertive",
-        append: isFirstGuided,
-      });
+      announce(chunk.text, { politeness: "assertive" });
       chunkIndex += 1;
 
       if (chunk.section === "videoPrompt") {
@@ -1050,12 +1061,19 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       autoplayTimeoutRef.current = setTimeout(playNext, delay);
     };
 
-    autoplayPlayNextRef.current = playNext;
-    autoplayDeadlineRef.current = Date.now() + 100;
-    autoplayTimeoutRef.current = setTimeout(playNext, 100);
+    // Let NVDA finish the dialog title before focusing the panel or starting
+    // chunk 0 — focusing the panel immediately would steal speech from the title.
+    const firstChunkDelay =
+      estimateSpeechDurationMs(artifact.title) + DIALOG_TITLE_PREAMBLE_MS;
+    const startAutoRead = () => {
+      getTextPanelFocusEl()?.focus({ preventScroll: true });
+      playNext();
+    };
+    autoplayPlayNextRef.current = startAutoRead;
+    autoplayDeadlineRef.current = Date.now() + firstChunkDelay;
+    autoplayTimeoutRef.current = setTimeout(startAutoRead, firstChunkDelay);
 
     return () => {
-      cancelSpeechStop();
       if (autoplayingRef.current) {
         cancelAutoplay();
       }
@@ -1078,6 +1096,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     clearTextAutoScroll,
     scrollBlockToTop,
     beginInlineVideo,
+    getTextPanelFocusEl,
   ]);
 
   useEffect(() => {
@@ -1182,6 +1201,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       setVideoOverlayOpen(true);
     }
   }, [isPaused, isVideo, setVideoOverlayOpen]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!isVideo || !video) return undefined;
+    return guardNvdaSpeechSilenceWhilePlaying(video);
+  }, [isVideo, artifactId]);
+
+  useEffect(() => {
+    if (!isVideoPlaying) return;
+    zoomOrPlayRef.current?.focus({ preventScroll: true });
+  }, [isVideoPlaying]);
 
   useEffect(() => {
     return () => {
@@ -1333,8 +1363,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
       const active = document.activeElement;
       const focusInPopup = active && popup.contains(active);
-      const onText =
-        active === textRef.current || active === textBodyRef.current;
+      const onText = isOnTextPanel(active);
 
       if (!speechMode && (onText || textNavActiveRef.current)) {
         resetTextScroll();
@@ -1343,7 +1372,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }
 
       if (speechMode && textNavActiveRef.current) {
-        textBodyRef.current?.focus({ preventScroll: true });
+        const blockEl = getTextBlockEl(activeBlockKeyRef.current);
+        (blockEl || textBodyRef.current)?.focus({ preventScroll: true });
         return;
       }
 
@@ -1365,6 +1395,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     getFirstControlRef,
     showSettings,
     getTextPanelFocusEl,
+    getTextBlockEl,
+    isOnTextPanel,
     resetTextScroll,
     clearFocusAnchor,
   ]);
@@ -1528,6 +1560,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         el.scrollTo({ top: snap.scrollTop, behavior: "smooth" });
       }
 
+      if (speechMode && textNavActiveRef.current) {
+        getTextBlockEl(snap.blockKey)?.focus({ preventScroll: true });
+      }
+
       if (
         speechMode &&
         announceBlock &&
@@ -1540,7 +1576,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         }
       }
     },
-    [speechMode, textBlocks, announce]
+    [speechMode, textBlocks, announce, getTextBlockEl]
   );
 
   const exitTextNav = useCallback(
@@ -1573,9 +1609,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (found >= 0) index = found;
     }
     applyTextSnap(index, { announceBlock: true, forceAnnounce: true });
-
-    getTextPanelFocusEl()?.focus({ preventScroll: true });
-  }, [applyTextSnap, getTextPanelFocusEl, refreshTextSnaps]);
+  }, [applyTextSnap, refreshTextSnaps]);
 
   const stepTextNav = useCallback(
     (direction) => {
@@ -1668,7 +1702,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         else if (active === nextImageRef.current) handleNextImage();
         else if (active === transcriptBtnRef.current) openTranscript();
         else if (active === zoomOrPlayRef.current) handlePrimaryAction();
-        else if (active === textRef.current || active === textBodyRef.current) {
+        else if (isOnTextPanel(active)) {
           enterTextNav();
         }
         return;
@@ -1720,6 +1754,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       stepTextNav,
       clearFocusAnchor,
       getTextPanelFocusEl,
+      isOnTextPanel,
     ]
   );
 
@@ -1874,7 +1909,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const hasTranscript =
     typeof artifact.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
-  const videoAlt = isVideo ? getVideoAlt(artifact) : "";
+  const videoBrailleText = hasTranscript
+    ? `Video playing. Video transcript. ${transcriptText}`
+    : "Video playing.";
   // Title only — auto-read then announces description (avoids "details" + repeated title).
   const dialogAriaLabel = artifact.title;
 
@@ -1923,7 +1960,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 poster={artifact.posterSrc}
                 preload="metadata"
                 tabIndex={-1}
-                aria-label={videoAlt || "Artifact video"}
+                aria-hidden="true"
                 onPlay={() => {
                   stopNvdaSpeechAggressively();
                   setIsVideoPlaying(true);
@@ -1954,7 +1991,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={zoomOrPlayRef}
                 className={`carousel-btn${autoplayBtnClass("play")}`}
                 onClick={handlePrimaryAction}
-                aria-label={isVideoPlaying ? "Pause video" : "Play video"}
+                aria-label={isVideoPlaying ? videoBrailleText : "Play video"}
               >
                 {isVideoPlaying ? "Pause" : "Play Video"}
               </button>
@@ -2020,13 +2057,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   className="artifact-popup-text-body"
                   ref={textBodyRef}
                   tabIndex={speechMode ? 0 : -1}
-                  role={speechMode ? "document" : undefined}
+                  onFocus={speechMode ? handleTextPanelFocus : undefined}
                 >
                   {textBlocks.map((block) =>
                     block.kind === "guided" ? (
                       <section
                         key={block.key}
                         data-block-key={block.key}
+                        tabIndex={-1}
                         className={`artifact-popup-guided-section${
                           activeBlockKey === block.key ? " is-active" : ""
                         }`}
@@ -2045,6 +2083,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                       <p
                         key={block.key}
                         data-block-key={block.key}
+                        tabIndex={-1}
                         className={`artifact-popup-description${
                           activeBlockKey === block.key ? " is-active" : ""
                         }`}

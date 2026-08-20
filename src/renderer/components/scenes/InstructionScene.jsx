@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
-import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
+import {
+  guardNvdaSpeechSilenceWhilePlaying,
+  stopNvdaSpeechForMediaStart,
+} from "../../audio/nvdaSpeechControl";
+import { instructionalVideoTranscript } from "../../data/artifacts";
+import { textOrMissing } from "../../data/contentPlaceholder";
 import { useAppState } from "../../state/StateProvider";
 
 const SKIP_DELAY_SECONDS = 1;
@@ -57,19 +62,20 @@ export default function InstructionScene({ isActive }) {
   // Start playback only when scene is active; pause when leaving so audio stops
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video) return undefined;
     if (isActive) {
       advancingRef.current = false;
       stopNvdaSpeechForMediaStart();
       video.currentTime = 0;
       video.play().catch(() => {});
-    } else {
-      video.pause();
-      setShowSkip(false);
-      setVideoEnded(false);
-      clearAutoContinueTimer();
-      advancingRef.current = false;
+      return guardNvdaSpeechSilenceWhilePlaying(video);
     }
+    video.pause();
+    setShowSkip(false);
+    setVideoEnded(false);
+    clearAutoContinueTimer();
+    advancingRef.current = false;
+    return undefined;
   }, [isActive]);
 
   useEffect(() => clearAutoContinueTimer, []);
@@ -152,13 +158,14 @@ export default function InstructionScene({ isActive }) {
           tabIndex={-1}
           aria-hidden="true"
         />
-        <span
+        <div
           ref={emptyFocusRef}
           tabIndex={0}
           data-autofocus={true}
           className="instruction-focus-anchor"
-          aria-hidden="true"
-        />
+        >
+          {textOrMissing(instructionalVideoTranscript)}
+        </div>
         {showSkip && (
           <button
             ref={skipButtonRef}

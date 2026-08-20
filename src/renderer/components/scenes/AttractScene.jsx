@@ -2,11 +2,10 @@ import React, { useRef, useEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { useAudioRouting } from "../../audio/AudioRoutingProvider";
 import { setMediaSink } from "../../audio/audioRoutingCore";
-import { stopNvdaSpeechForMediaStart } from "../../audio/nvdaSpeechControl";
-
-// Test: aria-braillelabel (React: ariaBrailleLabel) — braille-specific string vs aria-label for speech.
-const ATTRACT_BRAILLE_LABEL_TEST =
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
+import {
+  guardNvdaSpeechSilenceWhilePlaying,
+  stopNvdaSpeechForMediaStart,
+} from "../../audio/nvdaSpeechControl";
 
 const ATTRACT_SRC = "3HK7_Attract_v03-260501.mp4";
 
@@ -95,6 +94,12 @@ export default function AttractScene({ isActive }) {
     };
   }, [isActive, ready, applyHeadphoneSink, speakerSinkId]);
 
+  useEffect(() => {
+    const master = videoRef.current;
+    if (!master || !isActive) return undefined;
+    return guardNvdaSpeechSilenceWhilePlaying(master);
+  }, [isActive]);
+
   // Allow activation each time we (re)enter the attract scene
   useEffect(() => {
     if (isActive) {
@@ -133,8 +138,7 @@ export default function AttractScene({ isActive }) {
       role="button"
       tabIndex={0}
       data-autofocus={true}
-      aria-label="The Helen Keller Archives. Press any key to continue. Headphones are located to the right."
-      ariaBrailleLabel={ATTRACT_BRAILLE_LABEL_TEST}
+      aria-label="Press any button to begin. Headphones are located to the right."
     >
       <video
         ref={videoRef}

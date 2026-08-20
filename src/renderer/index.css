@@ -474,6 +474,10 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 .artifact-popup-text:focus-visible,
 .artifact-popup-text-body:focus,
 .artifact-popup-text-body:focus-visible,
+.artifact-popup-guided-section:focus,
+.artifact-popup-guided-section:focus-visible,
+.artifact-popup-text-body > .artifact-popup-description:focus,
+.artifact-popup-text-body > .artifact-popup-description:focus-visible,
 .artifact-popup-transcript-body:focus,
 .artifact-popup-transcript-body:focus-visible,
 .artifact-document-transcript-text:focus,
@@ -1087,7 +1091,7 @@ h1[tabindex]:focus-visible {
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+  white-space: pre-wrap;
   border: 0;
   z-index: 10;
 }

@@ -633,6 +633,9 @@ by Dr. Taher Muradi, M.D. cancer specialist.
 
 export const themeOrder = ["change", "together", "adventure", "work"];
 
+/** Placeholder until the instructional video has a real transcript. */
+export const instructionalVideoTranscript = "";
+
 export function getTheme(themeId) {
   return themes[themeId] || null;
 }
@@ -643,7 +646,7 @@ export function getThemeFocusAnnouncement(themeId) {
   return `${blurb} Press select key to view the artifacts in this theme.`;
 }
 
-export function getThemeBrailleLabel(themeId, themeLabel, index, total) {
+export function getThemeCarouselLabel(themeId, themeLabel, index, total) {
   const position = `${themeLabel}, ${index + 1} of ${total}`;
   const blurb = getThemeFocusAnnouncement(themeId);
   return blurb ? `${position}. ${blurb}` : position;

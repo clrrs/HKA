@@ -71,6 +71,7 @@ export default function App() {
   const settingsReturnFocusRef = useRef(null);
   const prevShowSettingsRef = useRef(false);
   const idleOverlayRef = useRef(null);
+  const idleBrailleRef = useRef(null);
   const idleFocusSessionRef = useRef(false);
   const idleReturnFocusRef = useRef(null);
   const idleBufferAnnouncedRef = useRef(false);
@@ -384,7 +385,7 @@ export default function App() {
       dedupeMs: 0,
     });
     const t = window.setTimeout(() => {
-      idleOverlayRef.current?.focus();
+      idleBrailleRef.current?.focus();
     }, 50);
     return () => window.clearTimeout(t);
   }, [idleCountdown, announce]);
@@ -504,7 +505,7 @@ export default function App() {
             aria-modal="true"
             tabIndex={-1}
           >
-            <div className="idle-overlay-card">
+            <div className="idle-overlay-card" aria-hidden="true">
               <div className="idle-overlay-content">
                 <h2 className="idle-overlay-line">
                   Still there?
@@ -528,6 +529,11 @@ export default function App() {
               aria-atomic="true"
             >
               {typeof idleCountdown === "number" ? idleCountdown : ""}
+            </div>
+            <div ref={idleBrailleRef} className="sr-only" tabIndex={-1}>
+              Still there? Press any key to stay.
+              {showCountdownIntro ? " Returning to start in…" : ""}
+              {typeof idleCountdown === "number" ? ` ${idleCountdown}` : ""}
             </div>
           </div>
         )}

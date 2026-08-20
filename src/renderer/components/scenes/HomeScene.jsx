@@ -2,13 +2,11 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
-  BRAILLE_OUTPUT_SETTLE_MS,
-  stopNvdaSpeechAfterBrailleSettle,
+  guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
-import { getThemeBrailleLabel, getThemeFocusAnnouncement } from "../../data/artifacts";
+import { getThemeCarouselLabel } from "../../data/artifacts";
 import { useAppState } from "../../state/StateProvider";
-import { useAnnounce } from "../../state/AnnouncerProvider";
 
 const TESTING_ADVENTURE_ONLY = false;
 
@@ -32,7 +30,6 @@ const GAP = 77;
 const ITEM_STEP = ITEM_WIDTH + GAP;
 const SCREEN_CENTER = 960;
 const IDLE_OFFSET = 800;
-const THEME_FOCUS_ANNOUNCE_DELAY_MS = 3000;
 
 function getTrackTranslateX(focusedIndex) {
   if (focusedIndex < 0) return IDLE_OFFSET;
@@ -45,12 +42,10 @@ const HOME_HEADING_LABEL =
 
 export default function HomeScene({ isActive = false }) {
   const { goToScene, setVideoOverlayOpen, speechMode, showSettings } = useAppState();
-  const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
   const [announceHomeArrival, setAnnounceHomeArrival] = useState(false);
   const circleRefs = useRef([]);
-  const themeBrailleRef = useRef(null);
   const headingRef = useRef(null);
   const carouselRef = useRef(null);
   const helpButtonRef = useRef(null);
@@ -78,44 +73,13 @@ export default function HomeScene({ isActive = false }) {
 
   useHeadphoneSinkEffect(videoRef, showVideo);
 
-  useLayoutEffect(() => {
-    if (!speechMode || showVideo || showSettings || focusedIndex < 0) return;
-
-    const theme = themes[focusedIndex];
-    if (!theme || theme.disabledForTesting) return;
-
-    // Quote-style: braille reads focused document text; button label is speech-only.
-    themeBrailleRef.current?.focus({ preventScroll: true });
-    return stopNvdaSpeechAfterBrailleSettle({
-      settleMs: BRAILLE_OUTPUT_SETTLE_MS,
-      followUpMs: 180,
-    });
-  }, [focusedIndex, speechMode, showVideo, showSettings]);
-
-  useEffect(() => {
-    if (!speechMode || showVideo || focusedIndex < 0) return;
-
-    const theme = themes[focusedIndex];
-    if (!theme || theme.disabledForTesting) return;
-
-    const timer = setTimeout(() => {
-      const message = getThemeFocusAnnouncement(theme.id);
-      if (!message) return;
-      announce(message, {
-        politeness: "polite",
-        source: "HomeScene-theme-focus",
-      });
-    }, THEME_FOCUS_ANNOUNCE_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [focusedIndex, speechMode, showVideo, announce]);
-
   useEffect(() => {
     if (!showVideo) return;
     const video = videoRef.current;
     if (!video) return;
     stopNvdaSpeechForMediaStart();
     video.play().catch(() => {});
+    return guardNvdaSpeechSilenceWhilePlaying(video);
   }, [showVideo]);
 
   useEffect(() => {
@@ -265,12 +229,6 @@ export default function HomeScene({ isActive = false }) {
   }, [goToScene, showCarousel, showVideo]);
 
   const hasFocus = focusedIndex >= 0;
-  const focusedTheme = focusedIndex >= 0 ? themes[focusedIndex] : null;
-  const showThemeBraille =
-    speechMode &&
-    focusedTheme &&
-    !focusedTheme.disabledForTesting &&
-    !showVideo;
 
   return (
     <div className="home-scene" onKeyDown={handleSceneKeyDown}>
@@ -329,7 +287,11 @@ export default function HomeScene({ isActive = false }) {
                 onFocus={() => handleFocus(i)}
                 onBlur={handleBlur}
                 onClick={() => { if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
-                aria-label={`${theme.label}, ${i + 1} of ${themes.length}`}
+                aria-label={
+                  speechMode && !theme.disabledForTesting
+                    ? getThemeCarouselLabel(theme.id, theme.label, i, themes.length)
+                    : `${theme.label}, ${i + 1} of ${themes.length}`
+                }
                 aria-disabled={theme.disabledForTesting ? true : undefined}
                 tabIndex={0}
               >
@@ -341,21 +303,6 @@ export default function HomeScene({ isActive = false }) {
           ))}
         </div>
       </div>
-
-      {showThemeBraille && (
-        <div
-          ref={themeBrailleRef}
-          className="sr-only home-theme-braille-text"
-          tabIndex={-1}
-        >
-          {getThemeBrailleLabel(
-            focusedTheme.id,
-            focusedTheme.label,
-            focusedIndex,
-            themes.length
-          )}
-        </div>
-      )}
 
       {hasFocus && (
         <div className="theme-indicators" aria-hidden="true">

@@ -37,7 +37,8 @@ function ensureAnnouncementTools() {
       const lines = (window[ANNOUNCE_LOG_KEY] || [])
         .map(
           (entry) =>
-            `${entry.seq}. +${entry.sinceStartMs}ms [${entry.politeness}] [${entry.source}] ${entry.message}`
+            `${entry.seq}. +${entry.sinceStartMs}ms [${entry.politeness}] [${entry.source}]` +
+            `${entry.supersededPrevious ? " [CUT OFF PREVIOUS]" : ""} ${entry.message}`
         )
         .join("\n");
       return lines || "[no announcement logs recorded yet]";
@@ -72,9 +73,15 @@ export function useAnnounce() {
 export default function AnnouncerProvider({ children }) {
   const politeRef = useRef(null);
   const assertiveRef = useRef(null);
-  const lastMessageRef = useRef({ text: "", time: 0 });
   const sequenceRef = useRef(0);
-  const announceTimeoutRef = useRef(null);
+  // The two live regions are independent outputs, so pending writes and dedupe
+  // state are tracked per region. Sharing either lets an announcement on one
+  // region silently swallow an unrelated announcement on the other.
+  const pendingRef = useRef({ polite: null, assertive: null });
+  const lastMessageRef = useRef({
+    polite: { text: "", time: 0 },
+    assertive: { text: "", time: 0 },
+  });
 
   useEffect(() => {
     // Register debug helpers immediately on app load so operators can clear/export
@@ -87,24 +94,24 @@ export default function AnnouncerProvider({ children }) {
       politeness = "assertive",
       dedupeMs = 0,
       clear = false,
-      append = false,
       source = "unknown",
     } = options;
 
+    const channel = politeness === "assertive" ? "assertive" : "polite";
+
     if (clear) {
-      if (announceTimeoutRef.current !== null) {
-        clearTimeout(announceTimeoutRef.current);
-        announceTimeoutRef.current = null;
+      for (const key of ["polite", "assertive"]) {
+        if (pendingRef.current[key] !== null) {
+          clearTimeout(pendingRef.current[key]);
+          pendingRef.current[key] = null;
+        }
       }
-      if (politeRef.current) {
-        politeRef.current.textContent = "";
-        politeRef.current.setAttribute("aria-atomic", "true");
-      }
-      if (assertiveRef.current) {
-        assertiveRef.current.textContent = "";
-        assertiveRef.current.setAttribute("aria-atomic", "true");
-      }
-      lastMessageRef.current = { text: "", time: 0 };
+      if (politeRef.current) politeRef.current.textContent = "";
+      if (assertiveRef.current) assertiveRef.current.textContent = "";
+      lastMessageRef.current = {
+        polite: { text: "", time: 0 },
+        assertive: { text: "", time: 0 },
+      };
       ensureAnnouncementTools();
       sequenceRef.current += 1;
       writeAnnouncementLog({
@@ -123,11 +130,8 @@ export default function AnnouncerProvider({ children }) {
     if (!message) return;
 
     const now = Date.now();
-    if (
-      dedupeMs > 0 &&
-      message === lastMessageRef.current.text &&
-      now - lastMessageRef.current.time < dedupeMs
-    ) {
+    const last = lastMessageRef.current[channel];
+    if (dedupeMs > 0 && message === last.text && now - last.time < dedupeMs) {
       ensureAnnouncementTools();
       sequenceRef.current += 1;
       writeAnnouncementLog({
@@ -143,42 +147,28 @@ export default function AnnouncerProvider({ children }) {
       return;
     }
 
-    lastMessageRef.current = { text: message, time: now };
-
-    const target =
-      politeness === "assertive" ? assertiveRef.current : politeRef.current;
+    const target = channel === "assertive" ? assertiveRef.current : politeRef.current;
 
     if (!target) return;
 
-    if (announceTimeoutRef.current !== null) {
-      clearTimeout(announceTimeoutRef.current);
-      announceTimeoutRef.current = null;
+    lastMessageRef.current[channel] = { text: message, time: now };
+
+    // Only this region's pending write is dropped: it would have been overwritten
+    // by this message anyway. Cancelling the other region's write would blank it
+    // permanently, since its text was already cleared.
+    let superseded = false;
+    if (pendingRef.current[channel] !== null) {
+      clearTimeout(pendingRef.current[channel]);
+      pendingRef.current[channel] = null;
+      superseded = true;
     }
 
-    if (append) {
-      // Keep existing live-region text on braille. Assigning textContent would
-      // replace the whole node, so NVDA re-reads from the top — append instead so
-      // only the addition is spoken (aria-atomic=false).
-      //
-      // The addition has to be an element and "text" has to stay in aria-relevant:
-      // a bare text node is a text change rather than an addition, so narrowing
-      // aria-relevant to "additions" alone leaves the append silent.
-      target.setAttribute("aria-atomic", "false");
-      target.setAttribute("aria-relevant", "additions text");
-      const hasText = (target.textContent || "").trim().length > 0;
-      const part = document.createElement("span");
-      part.textContent = hasText ? ` ${message}` : message;
-      target.appendChild(part);
-    } else {
-      target.setAttribute("aria-atomic", "true");
-      target.removeAttribute("aria-relevant");
-      // Clear then set on next tick so the browser treats it as a new announcement
-      target.textContent = "";
-      announceTimeoutRef.current = setTimeout(() => {
-        announceTimeoutRef.current = null;
-        if (target) target.textContent = message;
-      }, 50);
-    }
+    // Clear then set on next tick so the browser treats it as a new announcement
+    target.textContent = "";
+    pendingRef.current[channel] = setTimeout(() => {
+      pendingRef.current[channel] = null;
+      target.textContent = message;
+    }, 50);
 
     ensureAnnouncementTools();
     sequenceRef.current += 1;
@@ -190,7 +180,10 @@ export default function AnnouncerProvider({ children }) {
       politeness,
       dedupeMs,
       source,
-      status: append ? "appended" : "emitted",
+      status: "emitted",
+      // True when this message landed before the previous one on the same region
+      // was written out, so that previous message was never spoken.
+      supersededPrevious: superseded,
     };
     writeAnnouncementLog(entry);
     if (window.__ANNOUNCE_DIAGNOSTIC__) {
