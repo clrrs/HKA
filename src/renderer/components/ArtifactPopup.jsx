@@ -335,7 +335,9 @@ function useFocusTrap(containerRef, isActive, options = {}) {
       autofocusOnActivate && !skipAutofocus && !(initialFocusDoneRef && initialDone);
 
     if (shouldAutofocus) {
-      const autofocusTarget = container.querySelector("[data-autofocus]");
+    const autofocusTarget = container.matches("[data-autofocus]")
+      ? container
+      : container.querySelector("[data-autofocus]");
       if (autofocusTarget) {
         autofocusTarget.focus();
       } else {
@@ -486,7 +488,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useFocusTrap(popupRef, mainPopupActive && !showSettings, {
     skipAutofocusRef: skipNextTrapAutofocusRef,
     initialFocusDoneRef: popupInitialFocusDoneRef,
-    autofocusOnActivate: !speechMode,
+    autofocusOnActivate: true,
   });
   useFocusTrap(zoomRef, zoomOpen && !showSettings);
   useFocusTrap(transcriptPanelRef, transcriptOpen && !showSettings);
@@ -954,6 +956,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => {
     autoplayDoneRef.current = false;
+    popupInitialFocusDoneRef.current = false;
     clearTranscriptDwell();
   }, [artifactId, clearTranscriptDwell]);
 
@@ -964,6 +967,21 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, [isAutoplaying, isPaused, setAutoReadActive]);
 
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
+
+  // NVDA prepends the document title ("Helen Keller Archive") when a dialog
+  // opens. Blank it for the popup lifetime so speech is just the artifact title.
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "\u00a0";
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!speechMode || !mainPopupActive) return;
+    popupRef.current?.focus({ preventScroll: true });
+  }, [artifactId, speechMode, mainPopupActive]);
 
   useEffect(() => {
     if (artifact && !speechMode) {
@@ -1061,17 +1079,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       autoplayTimeoutRef.current = setTimeout(playNext, delay);
     };
 
-    // Let NVDA finish the dialog title before focusing the panel or starting
-    // chunk 0 — focusing the panel immediately would steal speech from the title.
+    // Stay on the dialog so NVDA does not start reading the text panel from the
+    // top. Each chunk is spoken only via the live region.
     const firstChunkDelay =
       estimateSpeechDurationMs(artifact.title) + DIALOG_TITLE_PREAMBLE_MS;
-    const startAutoRead = () => {
-      getTextPanelFocusEl()?.focus({ preventScroll: true });
-      playNext();
-    };
-    autoplayPlayNextRef.current = startAutoRead;
+    autoplayPlayNextRef.current = playNext;
     autoplayDeadlineRef.current = Date.now() + firstChunkDelay;
-    autoplayTimeoutRef.current = setTimeout(startAutoRead, firstChunkDelay);
+    autoplayTimeoutRef.current = setTimeout(playNext, firstChunkDelay);
 
     return () => {
       if (autoplayingRef.current) {
@@ -1096,7 +1110,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     clearTextAutoScroll,
     scrollBlockToTop,
     beginInlineVideo,
-    getTextPanelFocusEl,
   ]);
 
   useEffect(() => {
@@ -1333,20 +1346,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, [markAutoplayEnded, focusVisualActiveOrFallback, showSettings]);
 
   useEffect(() => {
-    if (showSettings) return;
-    if (!isAutoplaying || !speechMode || !mainPopupActive) return;
-
-    requestAnimationFrame(() => {
-      if (showSettings) return;
-      if (!autoplayingRef.current) return;
-      const active = document.activeElement;
-      const textFocus = getTextPanelFocusEl();
-      if (active === textFocus) return;
-      textFocus?.focus({ preventScroll: true });
-    });
-  }, [isAutoplaying, speechMode, mainPopupActive, showSettings, getTextPanelFocusEl]);
-
-  useEffect(() => {
     const prev = prevSpeechModeRef.current;
     if (prev === speechMode) return;
     prevSpeechModeRef.current = speechMode;
@@ -1380,7 +1379,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (!focusInPopup) {
         if (speechMode) {
           if (autoplayingRef.current) {
-            getTextPanelFocusEl()?.focus({ preventScroll: true });
+            popupRef.current?.focus({ preventScroll: true });
           } else {
             prevArrowRef.current?.focus({ preventScroll: true });
           }
@@ -1560,10 +1559,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         el.scrollTo({ top: snap.scrollTop, behavior: "smooth" });
       }
 
-      if (speechMode && textNavActiveRef.current) {
-        getTextBlockEl(snap.blockKey)?.focus({ preventScroll: true });
-      }
-
       if (
         speechMode &&
         announceBlock &&
@@ -1576,7 +1571,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         }
       }
     },
-    [speechMode, textBlocks, announce, getTextBlockEl]
+    [speechMode, textBlocks, announce]
   );
 
   const exitTextNav = useCallback(
@@ -1909,9 +1904,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const hasTranscript =
     typeof artifact.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
-  const videoBrailleText = hasTranscript
-    ? `Video playing. Video transcript. ${transcriptText}`
-    : "Video playing.";
   // Title only — auto-read then announces description (avoids "details" + repeated title).
   const dialogAriaLabel = artifact.title;
 
@@ -1928,6 +1920,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         role="dialog"
         aria-modal="true"
         aria-label={dialogAriaLabel}
+        tabIndex={-1}
+        data-autofocus={speechMode ? true : undefined}
         onKeyDown={handlePopupKeyDown}
       >
         {focusAnchorActive && !speechMode && (
@@ -1991,7 +1985,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={zoomOrPlayRef}
                 className={`carousel-btn${autoplayBtnClass("play")}`}
                 onClick={handlePrimaryAction}
-                aria-label={isVideoPlaying ? videoBrailleText : "Play video"}
+                aria-label={isVideoPlaying ? "Pause video" : "Play video"}
               >
                 {isVideoPlaying ? "Pause" : "Play Video"}
               </button>
@@ -2056,7 +2050,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 <div
                   className="artifact-popup-text-body"
                   ref={textBodyRef}
-                  tabIndex={speechMode ? 0 : -1}
+                  tabIndex={speechMode && !isAutoplaying ? 0 : -1}
+                  aria-hidden={speechMode && isAutoplaying ? true : undefined}
                   onFocus={speechMode ? handleTextPanelFocus : undefined}
                 >
                   {textBlocks.map((block) =>

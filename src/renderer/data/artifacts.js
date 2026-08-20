@@ -307,7 +307,9 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
           },
           {
             src: "3A2Lunch2.jpeg",
-            alt: "Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface"
+            alt: "Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface",
+            guidedDescription:
+              "The lacquer luncheon set is shown fully assembled in its carrying stand. The exterior is dark lacquer with gold decorative patterns and areas of abalone inlay. A brass handle is attached at the top of the stand. Several stacked drawers and trays are fitted into the left side, and a pewter flask is positioned in an open compartment on the right. Additional gold patterns appear along the sides and base of the stand."
           }
         ],
         
