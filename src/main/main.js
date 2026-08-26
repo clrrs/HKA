@@ -5,13 +5,19 @@ const { autoUpdater } = require("electron-updater");
 
 const IS_WIN = process.platform === "win32";
 
-const VOLUME_STEP_SCRIPT = path.join(__dirname, "../../scripts/volume-step.ps1");
-
 // Loaded once into the persistent PowerShell session (Windows kiosk only).
 const KBD_EVENT_TYPE_DEF =
   "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; " +
   "public class KbdEvent { [DllImport(\"user32.dll\")] " +
   "public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo); }'\n";
+
+function volumeStepScriptPath() {
+  // Packaged: extraResources places the .ps1 next to the app (outside asar).
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, "volume-step.ps1");
+  }
+  return path.join(__dirname, "../../scripts/volume-step.ps1");
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -67,13 +73,23 @@ function sendKeys(script) {
   ps.stdin.write(script + "\n");
 }
 
+function sendVolumeKey(direction) {
+  // July fallback: VK_VOLUME_UP (0xAF) / VK_VOLUME_DOWN (0xAE). Cuts NVDA briefly.
+  const vk = direction === "Up" ? "0xAF" : "0xAE";
+  sendKeys(
+    `[KbdEvent]::keybd_event(${vk},0,0,[UIntPtr]::Zero);` +
+    `[KbdEvent]::keybd_event(${vk},0,2,[UIntPtr]::Zero)`
+  );
+}
+
 function adjustVolume(direction) {
   if (!IS_WIN) return Promise.resolve(null);
   const arg = direction === "Up" ? "up" : "down";
+  const scriptPath = volumeStepScriptPath();
   return new Promise((resolve) => {
     const child = spawn(
       "powershell.exe",
-      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", VOLUME_STEP_SCRIPT, arg],
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath, arg],
       { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }
     );
     let out = "";
@@ -81,14 +97,26 @@ function adjustVolume(direction) {
       out += d.toString();
     });
     child.stderr.on("data", (d) => console.error("volume-step:", d.toString()));
+    child.on("error", (err) => {
+      console.error("volume-step: spawn failed:", err.message);
+      sendVolumeKey(direction);
+      resolve(null);
+    });
     child.on("exit", (code) => {
       if (code !== 0) {
-        console.error(`volume-step: exited with code ${code}`);
+        console.error(`volume-step: exited with code ${code}; falling back to VK_VOLUME`);
+        sendVolumeKey(direction);
         resolve(null);
         return;
       }
       const pct = parseInt(String(out).trim(), 10);
-      resolve(Number.isFinite(pct) ? pct : null);
+      if (!Number.isFinite(pct)) {
+        console.error("volume-step: no percent in stdout; falling back to VK_VOLUME");
+        sendVolumeKey(direction);
+        resolve(null);
+        return;
+      }
+      resolve(pct);
     });
   });
 }
@@ -103,7 +131,7 @@ ipcMain.on("toggle-tts", () => {
   sendKeys(press + "Start-Sleep -Milliseconds 100;" + press);
 });
 
-// Volume Up/Down — one-shot Core Audio step (no VK_VOLUME_*; those cut NVDA speech)
+// Volume Up/Down — Core Audio first (no NVDA cut); VK_VOLUME_* fallback if script fails
 ipcMain.handle("volume-up", () => adjustVolume("Up"));
 ipcMain.handle("volume-down", () => adjustVolume("Down"));
 ipcMain.on("volume-up", () => {

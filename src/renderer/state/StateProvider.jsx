@@ -72,11 +72,10 @@ if (typeof window !== "undefined") {
         volumeAnnounceRef.current?.(label);
         if (typeof window.kioskApi?.invoke === "function") {
           window.kioskApi.invoke(channel).then((pct) => {
-            volumeHudRef.current?.(label, pct);
+            if (typeof pct === "number") volumeHudRef.current?.(label, pct);
           });
         } else {
           window.kioskApi?.send(channel);
-          volumeHudRef.current?.(label, null);
         }
       }
     },
