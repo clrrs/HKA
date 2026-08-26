@@ -30,6 +30,15 @@ export const themes = {
         videoSrc: "1A1VeteranVid.mp4",
         posterSrc: "1A1VeteranVid_frame.png",
         images: [],
+        transcriptTitle: "Transcript",
+        transcriptText: `Male audio description: In a medical institution, Helen and Polly stand aside men sitting on hospital beds.
+Female narrator: The newly handicapped, the once whole young men who have come back from Korea disabled, these command as much as attention from Helen as did their brothers in the Second World War.  
+Male audio description: She leans near a soldier.
+Female narrator: Then as now she and Polly tramp the endless corridors of our military hospitals, bringing hope to the amputees, the blind, and the disabled.
+Male audio description: Helen gently touches the man’s hair and face. The man grins and laughs with Helen.
+Female narrator: Meeting Helen, seeing what she has made of her life, gives them more courage to reshape their own.
+Male audio description: Polly translates into Helen’s hand as they stand near the men.
+Female narrator: For her services she was cited at the close of World War II.`,
         guidedDescription:
           "Men sit in two hospital beds with simple metal frames while Helen speaks, shakes one man\u2019s hand, and touches the other\u2019s face. Helen then embraces the right hand of a young, bedridden man whose other hand is being held by young woman at his bedside. Helen is briefly shown speaking to a young man with short dark hair and dark skin. Finally, Helen stands between two veterans in beds as three other veterans in wheelchairs gather around them."
       },
@@ -277,7 +286,7 @@ export const themes = {
         displayTitle: "Helen Keller Takes a Ride in an Airplane",
         year: "1919",
         description:
-          "In this clip from her 1919 silent movie “Deliverance,” Helen puts on a leather flight jacket and crash helmet, and rides in the open cockpit of a biplane. Anne Sullivan and Polly Thomson, Helen's teacher and assistant, respectively, help Helen gear up. Helen’s brother Phillips Brooks Keller, an Army pilot in WWI, keeps a watchful eye on his sister during her flight.",
+          "The 1919 silent movie “Deliverance” tells the story of Helen Keller’s life in three acts: Childhood, Maidenhood, and Womanhood. Helen plays herself in this movie. In this clip, she rides in the open cockpit of a biplane.",
         type: "video",
         videoSrc: "3A1Biplane.mp4",
         posterSrc: "3A1Biplane_frame.png",
@@ -290,7 +299,7 @@ Male audio description: She also wears a tight leather helmet on her head. An ai
 [uplifting orchestral music]
 Male audio description: Helen rides in the front and a pilot steers in the back of the two-seater aircraft. Wind flies over their heads in the open, roofless plane. The airplane safely lands on the flat, grassy ground. Dozens of people rush to the parked plane and assist Helen out of the sunken seat. Helen smiles broadly and hugs her teacher Anne Sullivan Macy.`,
         guidedDescription:
-          "Grainy black-and-white film shows Helen preparing her leather flight jacket and helmet. Helen’s companions, Anne Sullivan and Polly Thomson, assist her, while Helen's mother and brother watch. Her brother wears the uniform of a US Army WWI aviator. Anne and Polly help Helen board the open front cockpit of a biplane, while the pilot sits in the rear cockpit. Groundcrew spins the propeller to start the engine, and the biplane makes a wobbly takeoff from a dusty field. The biplane is shown high in the sky, followed by a shot of Helen's friends and family watching from the ground. A smooth landing on grass is shown, and Helen is assisted out of the biplane and gives Anne a hug."
+          "In grainy, black-and-white film, Anne Sullivan and Polly Thomson, Helen's teacher and assistant, respectively, help Helen gear up to board the biplane. Helen’s brother Phillips Brooks Keller, a US Army World War I aviator, is wearing his military uniform as he watches alongside Helen’s mother. Anne and Polly help Helen board the open front cockpit of the biplane, while the pilot sits in the rear cockpit. Groundcrew spins the propeller to start the engine, and the biplane makes a wobbly takeoff from a dusty field. The biplane is shown high in the sky, followed by a shot of Helen's friends and family watching from the ground. The plane lands smoothly on the grass, and Helen is assisted out of the biplane and gives Anne a hug."
       },
       {
         id: "3A2",
@@ -298,7 +307,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         displayTitle: "Japanese Luncheon Set",
         year: "1948",
         description:
-          "Kazuo Honma, the founder of the Japanese Braille Library, gifted Helen a New Year's luncheon set in 1948. The black lacquer set has gold symbols and carved abalone inlays, all set in a carrying stand with a brass handle. It contains six drawers, six trays, and a pair of cylindrical flasks.",
+          "Kazuo Honma, a blind Japanese activist, educator, and founder of the National Library for the Blind in Japan, gifted Helen a black lacquer New Year's luncheon set in 1948. Two photos show the luncheon set in detail.",
         type: "object",
         images: [
           {
@@ -309,12 +318,12 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
             src: "3A2Lunch2.jpeg",
             alt: "Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface",
             guidedDescription:
-              "The lacquer luncheon set is shown fully assembled in its carrying stand. The exterior is dark lacquer with gold decorative patterns and areas of abalone inlay. A brass handle is attached at the top of the stand. Several stacked drawers and trays are fitted into the left side, and a pewter flask is positioned in an open compartment on the right. Additional gold patterns appear along the sides and base of the stand."
+              "The luncheon set fits neatly back together, with all items inside the carrying stand with the brass top."
           }
         ],
         
         guidedDescription:
-          "A black lacquer luncheon set features gold decorations showing plants, symbols, and designs. Golden and carved abalone inlays show birds facing each other in a triangular pattern. An outer carrying stand with brass top handle holds six drawers, each with a red interior. One medium sized tray, five smaller trays, a removable bottle holder, and a pair of pewter cylinder bottles all fit into the carrying stand."
+          "All items in the luncheon set feature gold decorations showing plants, symbols, and designs. Golden and carved abalone inlays show birds facing each other in a triangular pattern. An outer carrying stand with brass top handle holds six drawers, each with a red interior. One medium sized tray, five smaller trays, a removable bottle holder, and a pair of pewter cylinder bottles all fit into the carrying stand."
       },
       {
         id: "3A3",
@@ -322,17 +331,15 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         displayTitle: "Photograph with Bantu Chief",
         year: "1951",
         description:
-          "In this photograph, Helen and her assistant Polly Thomson pose with a Bantu Chieftain and his wife in South Africa on April 11, 1951. Helen was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. The Bantu couple seen here are wearing traditional beaded garments. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes.",
+          "Helen traveled to East London, South Africa to open the Duncan Village Community Center for Bantu People on April 11, 1951. Like other segregated locations in other South African cities, Duncan Village demonstrated the extreme inequality between black and white residents under the country’s system of apartheid.",
         type: "photograph",
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
           {
             src: "3A3Bantu2.jpeg",
             alt: "Another view of Helen Keller's meeting with the Bantu Chief",
-            guidedDescription: `[Stamped: "WYNDON PHOTOS" S.A.N.L.A.M. BLDGS., FOR REPRINT QUOTE (followed by a blank line) EAST LONDON. PHONE 2633]
-
-[Handwritten note, top left corner: "Amer Fnd fr Blind" written above "2-5+7 (illegible)"]
-[Handwritten note, top center: "Helen Keller opened the Community Center for Bantu people. East London, Cape Province. Her picture was taken with a tribal chieftan and his wife"] [Handwritten note in left margin: "Chief and Wife (ineligible) April"] [Handwritten center note in red: "14 1/2 Picas" with arrows marking the dimension] [Handwritten center note in blue: "R3288"] [Handwritten center note: Please return to American Foundation] [Handwritten note: HK07.01.B058.F07.001] [Handwritten lower center note in red: "(ineligible) BP - 4482"] [Handwritten note in bottom right corner: "33.3"]`
+            guidedDescription:
+              "The back of the photo has handwritten text in pencil that describes the image. Additional information about the size of the photograph is written in red ink. A rectangular stamp says “Wyndon Photos,” where the image was printed."
           }
         ],
           transcriptTitle: "Transcript",
@@ -343,7 +350,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
 [Handwritten note, top left corner: "Amer Fnd fr Blind" written above "2-5+7 (illegible)"]
 [Handwritten note, top center: "Helen Keller opened the Community Center for Bantu people. East London, Cape Province. Her picture was taken with a tribal chieftan and his wife"] [Handwritten note in left margin: "Chief and Wife (ineligible) April"] [Handwritten center note in red: "14 1/2 Picas" with arrows marking the dimension] [Handwritten center note in blue: "R3288"] [Handwritten center note: Please return to American Foundation] [Handwritten note: HK07.01.B058.F07.001] [Handwritten lower center note in red: "(ineligible) BP - 4482"] [Handwritten note in bottom right corner: "33.3"]`,
         guidedDescription:
-          "A black-and-white photograph shows a dark-skinned male Bantu chief, the wife of the chief, Helen Keller, and her companion Polly Thomson standing in a row against a wall. Helen and Polly both wear similar dresses textured with horizontal stripes, belts at the waist, broaches on their left chests, pearl necklaces, and small hats. The chief wears a skull cap, a collar of beaded necklaces, beaded belts across his waist and chest, and bands around his shoulders and upper arms. The chief holds a spear while Helen's hand feels the spearhead. The chief’s wife wears similar belts over a light-colored dress, a large cloth hat, and has light colored dots of paint contrasting with the dark skin of her forehead, chin, and cheeks. She holds some textiles and a light-colored cloth bag. The photo is glued to a white board with notes typed and written on it, and yellowed glue is showing near the bottom."
+          "In this black-and-white photograph, Helen and her assistant Polly Thomson pose with a Bantu Chieftain and his wife. The chief wears a collar of beaded necklaces, beaded belts across his waist and chest, and bands around his shoulders and upper arms. The chief holds a spear while Helen's hand feels the spearhead. The chief’s wife wears similar belts over a light-colored dress, a large cloth hat, and has light-colored dots of paint on her forehead, chin, and cheeks. She holds textiles and a cloth bag. Helen and Polly both wear dresses textured with horizontal stripes, belts at the waist, broaches on their left chests, pearl necklaces, and small hats. The photo is glued to a white board with type and handwritten notes, and yellowed glue is showing near the bottom."
       },
       {
         id: "3A4",
@@ -351,7 +358,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         displayTitle: "Global Travel Schedule",
         year: "1948\u201349",
         description:
-          "From March of 1948 to April 1949, Helen embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
+          "This travel itinerary details Helen’s travels from March of 1948 to April 1949, when she embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
         type: "document",
         images: [
           { src: "3A4_TentativeShedKeller.jpeg", alt: "Helen Keller's global travel schedule from 1948-49" }
@@ -400,24 +407,19 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         displayTitle: "Dancing with Italian Veteran",
         year: "1946",
         description:
-          "In this photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind. Although he may have served with the Axis during the war, their warm embrace is apparent, signaling a global fatigue with the war and a desire for peace.",
+          "In this black-and-white photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind.",
         type: "photograph",
         images: [
           { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
           {
             src: "3A5ItalyVet2.jpeg",
             alt: "Another view of Helen Keller with the Italian veteran",
-            guidedDescription: `[Typed note: Rome, 25 Novembre 1946 Helen Adams Keller in visita (remaining text illegible)]
-
-[Stamped: MINISTERO deila GU (ineligible) GABINETTO Ufficio Collegamento Esercito Paese]
-
-[Stamped overprint: Original in Helen Keller (Archives). American Foundation (for the Blind), New York. Not to be reproduced or quoted without permission.]
-
-[Handwritten upside down: "17" (circled)]`
+            guidedDescription:
+              "The back of the photograph shows a purple-ink stamp of an Italian Ministry. Type in black in features the photograph’s date and location and a brief description of the photograph’s contents."
           }
         ],
         guidedDescription:
-          "A black-and-white photo shows Helen dancing in the embrace of a blinded Italian veteran. He is still wearing his wartime San Marco Marine uniform jumper with an insignia patch on his left chest, which shows a winged lion with sword standing on an open book. Polly Thomson spells into Helen's right hand while it is being held by the veteran's left. Several people in civilian clothes watch in the background. The smile on the face of the veteran shows missing teeth, possibly also a result of the wounds that blinded him. The text logo of an Italian Ministry partially appears in the bottom left corner of the photo. The rear shows information in a purple -ink stamp in Italian, and in black typing and handwritten notes."
+          "The veteran is wearing his wartime San Marco Marine uniform jumper with an insignia patch on his left chest, which shows a winged lion with sword standing on an open book. Polly Thomson spells into Helen's right hand while it is being held by the veteran's left. Several people in civilian clothes watch in the background.  The smile on the face of the veteran shows missing teeth, possibly a result of the wounds that blinded him."
       },
       {
         id: "3A6",
@@ -425,11 +427,16 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         displayTitle: "Photograph with Golda Meir",
         year: "1952",
         description:
-          "Helen meets with future Prime Minister of Israel Golda Meir in 1952. In this photograph, Helen “listens” to her companion Polly Thomson by placing her thumb on Polly's throat and fingers on her lips.",
+          "In the spring of 1952, a 72-year-old Helen met with future Prime Minister of Israel, Golda Meir. Helen spent a total of two weeks in Israel on an international advocacy tour for people who are blind or deaf.",
         type: "photograph",
         images: [
           { src: "3A6Israel1.jpeg", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
-          { src: "3A6Israel2.jpeg", alt: "Another photograph from Helen Keller's meeting with Golda Meir" }
+          {
+            src: "3A6Israel2.jpeg",
+            alt: "Another photograph from Helen Keller's meeting with Golda Meir",
+            guidedDescription:
+              "The back of the photo has a purple stamp of the State of Israel in Hebrew and English, and handwritten notes in pencil."
+          }
         ],
         transcriptTitle: "Transcript",
         transcriptText: `Title: Transcription for Photograph of Helen Keller, Polly Thomson, Golda Meir and Zipporah Sharett in Israel. 1952
@@ -437,7 +444,7 @@ Transcript: Black-and-white photograph showing Helen Keller seated on a sofa bes
 
 [Handwritten note: Helen Keller, Polly Thompson, Golda Myerson, Mrs. ^ Zypora Sharett 1952] [Stamp: (Hebrew) STATE OF ISRAEL  Government Press Division]`,
         guidedDescription:
-          "A black-and-white photograph shows Helen Keller sitting on a sofa beside Polly Thomson, with Helen’s hand placed on Polly’s mouth and Polly holding Helen’s wrist. Golda Meir and Zipporah Sharett sit on the other side of a round coffee table filled with several items, including ash trays. Keller and Thomson wear colorful dresses and hats, while Meir and Sharett dress in darker clothing. The back of the photos has a purple stamp of the State of Israel in Hebrew and English, and handwritten notes in pencil."
+          "In this black-and-white photograph, Helen sits on a sofa beside Polly Thomson, while Helen “listens” to her companion by placing her thumb on Polly's throat and fingers on her lips. Golda Meir and Zipporah Sharett, wife of Moshe Sharett, Israel's second Prime Minister, sit on the other side of a round coffee table. Keller and Thomson wear colorful dresses and hats, while Meir and Sharett are dressed in darker clothing."
       },
       {
         id: "3A7",
@@ -445,7 +452,7 @@ Transcript: Black-and-white photograph showing Helen Keller seated on a sofa bes
         displayTitle: "Syria Travel Itinerary",
         year: "1952",
         description:
-          "Helen traveled to the Middle East in 1952, spending 5 days in Syria. The handwriting on the top of the page indicates that these days were packed between her travels to other countries in the region, including Egypt, Lebanon, and Jordan.",
+          "This travel itinerary details Helen travels to the Middle East in 1952, during which she spent 5 days in Syria to raise awareness for people who are blind or deaf and visit local communities.",
         type: "document",
         images: [
           { src: "3A7Syria1.jpeg", alt: "Helen Keller's Syria travel itinerary from 1952" }
@@ -536,7 +543,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
 11.30 ”
 6.00 p.m.`,
         guidedDescription:
-          "A typed page with times of the day in a left column and underlined dates in a heading a column of appointments on the right-hand side. A brief table of contents for Helen's entire trip to the Middle East is written in bright blue ink in the top left corner, with the word \"Syria\" circled in red both in that table, and in the underlined heading on the top of the page."
+          "The handwriting on the top of the typed travel itinerary page indicates that these days were packed between her travels to other countries in the region, including Egypt, Lebanon, and Jordan. Times of the day appear in the left column, and underlined dates appear in a heading of the right column. A brief table of contents for Helen's entire trip to the Middle East is written in bright blue ink in the top left corner, with the word \"Syria\" circled in red both in that table, and in the underlined heading on the top of the page."
       }
     ]
   },

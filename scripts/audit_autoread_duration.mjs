@@ -22,8 +22,8 @@ const { themes, DESCRIPTION_MODE_COMBINED, GUIDED_DESCRIPTION_MODE_LETTERS } =
 
 const MISSING_COPY = "MISSING COPY";
 const WORDS_PER_SEC = 2.4;
-const CHUNK_BUFFER_MS = 6000;
-const TRANSCRIPT_DWELL_MS = 6000;
+const SECTION_TRANSITION_MS = 1000;
+const POST_READ_DWELL_MS = 4000;
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 const HIDE_MISSING_GUIDED_SECTIONS = false;
 
@@ -42,8 +42,8 @@ const GUIDED_HEADINGS = {
 const textOrMissing = (v) =>
   v == null ? MISSING_COPY : String(v).trim() || MISSING_COPY;
 const countWords = (t) => t.trim().split(/\s+/).filter(Boolean).length;
-const estimateChunkDurationMs = (t) =>
-  Math.round((countWords(t) / WORDS_PER_SEC) * 1000) + CHUNK_BUFFER_MS;
+const estimateChunkDurationMs = (t, bufferMs = SECTION_TRANSITION_MS) =>
+  Math.round((countWords(t) / WORDS_PER_SEC) * 1000) + bufferMs;
 
 function getGuidedTextForImage(artifact, images, imageIndex) {
   const fromImage = images[imageIndex]?.guidedDescription?.trim();
@@ -125,11 +125,20 @@ const getBlockSpeech = (block, isFirst) =>
       ? `Artifact description. ${block.text}`
       : block.text;
 
-function buildAutoplayChunks(blocks, isVideo) {
-  const chunks = blocks.map((block, i) => ({
+function buildAutoplayChunks(artifact, blocks, isVideo) {
+  let chunks = blocks.map((block, i) => ({
     text: getBlockSpeech(block, i === 0),
     section: block.kind === "guided" ? "guided" : "description",
   }));
+  if (artifact.type === "document") {
+    let sawGuided = false;
+    chunks = chunks.filter((chunk) => {
+      if (chunk.section !== "guided") return true;
+      if (sawGuided) return false;
+      sawGuided = true;
+      return true;
+    });
+  }
   if (!isVideo) return chunks;
   const spoken = chunks.filter((c) => c.section === "description");
   spoken.push({ text: VIDEO_AUTOPLAY_PROMPT, section: "videoPrompt" });
@@ -144,13 +153,13 @@ for (const theme of Object.values(themes)) {
     const isVideo = artifact.type === "video";
     const images = !isVideo ? artifact.images || [] : [];
     const blocks = buildTextBlocks(artifact, images, isCombined);
-    const chunks = buildAutoplayChunks(blocks, isVideo);
+    const chunks = buildAutoplayChunks(artifact, blocks, isVideo);
 
     const readMs = chunks.reduce((sum, c) => sum + estimateChunkDurationMs(c.text), 0);
     const hasTranscript =
       typeof artifact.transcriptText === "string" &&
       artifact.transcriptText.trim().length > 0;
-    const totalMs = readMs + (hasTranscript ? TRANSCRIPT_DWELL_MS : 0);
+    const totalMs = readMs + (hasTranscript ? POST_READ_DWELL_MS : 0);
     const missing = blocks.filter((b) => b.text === MISSING_COPY).length;
 
     rows.push({

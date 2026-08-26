@@ -1827,9 +1827,9 @@ h1[tabindex]:focus-visible {
   align-items: center;
   padding: 50px 0;
   box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .artifact-popup {
@@ -1916,25 +1916,6 @@ h1[tabindex]:focus-visible {
   border-left-color: var(--accent);
 }
 
-@keyframes navArrowBump {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(1.4);
-  }
-  70% {
-    transform: scale(0.9);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.artifact-popup-nav-arrow--bump::before {
-  animation: navArrowBump 0.35s ease-out forwards;
-}
-
 .artifact-popup-card {
   position: relative;
   width: 1200px;
@@ -1973,6 +1954,12 @@ h1[tabindex]:focus-visible {
   background: var(--color-black);
 }
 
+.artifact-popup-controls
+  .carousel-btn[aria-disabled="true"]:not(:focus):not(:focus-visible):not(.carousel-btn--autoplay-active) {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .artifact-popup-media-empty {
   color: var(--text-primary);
   font-size: calc(24px * var(--text-scale));
@@ -1992,6 +1979,7 @@ h1[tabindex]:focus-visible {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 12px 32px;
   margin-bottom: 14px;
@@ -2007,27 +1995,6 @@ h1[tabindex]:focus-visible {
   justify-content: center;
   font-size: calc(22px * var(--text-scale));
   font-weight: 300;
-}
-
-.artifact-popup-zoom-btn {
-  width: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 0;
-  border-radius: 50%;
-}
-
-.artifact-popup-zoom-btn img {
-  width: 20px;
-  height: 20px;
-  filter: var(--icon-filter);
-}
-
-.artifact-popup-zoom-btn:hover img,
-.artifact-popup-zoom-btn:focus-visible img,
-.artifact-popup-zoom-btn.is-selected img {
-  /* Force black icon on gold fill (both themes) */
-  filter: none;
 }
 
 .artifact-popup-text {

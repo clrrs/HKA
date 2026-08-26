@@ -1,0 +1,26 @@
+---
+description: Keep the canonical screen-reader announcements CSV in sync with code
+globs: src/renderer/**/*.{js,jsx}
+alwaysApply: false
+---
+
+# Screen-reader announcements CSV
+
+Canonical file: `docs/screen-reader-announcements.csv`
+
+When you add, change, or remove any of these in renderer code, update that CSV in the **same change**:
+
+- `aria-label` / `aria-labelledby` / `aria-describedby`
+- `announce(...)` live-region strings
+- `alt` text that is spoken
+- dialog / region titles (`role="dialog"` labels, `id` headings)
+
+Do **not** invent copy. Match the string in code.
+
+CSV columns: `type, location, Trigger, Scenario, Message, source_file, line, politeness, Notes`
+
+- `type`: `aria-label`, `live-announce`, `dialog-title`, `aria-describedby`, `helper-fn`, `data-field`
+- `location`: component or module name
+- `line`: the current source line (best effort)
+- `politeness`: `assertive`, `polite`, or `n/a` for labels
+- Do not rename visitor-facing labels (keep Transcript, Zoom, etc.) unless the product change is explicitly a rename
