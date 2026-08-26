@@ -64,7 +64,6 @@ if (typeof window !== "undefined") {
       if (key === "w" || key === "i") {
         e.preventDefault();
         e.stopImmediatePropagation();
-        // Fire-and-forget — no HUD / live-region (those interrupt NVDA).
         window.kioskApi?.send(key === "w" ? "volume-up" : "volume-down");
       }
     },

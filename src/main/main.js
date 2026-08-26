@@ -11,14 +11,6 @@ const KBD_EVENT_TYPE_DEF =
   "public class KbdEvent { [DllImport(\"user32.dll\")] " +
   "public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo); }'\n";
 
-function volumeStepScriptPath() {
-  // Packaged: extraResources places the .ps1 next to the app (outside asar).
-  if (app.isPackaged) {
-    return path.join(process.resourcesPath, "volume-step.ps1");
-  }
-  return path.join(__dirname, "../../scripts/volume-step.ps1");
-}
-
 function createWindow() {
   const win = new BrowserWindow({
     width: 1920,
@@ -73,54 +65,6 @@ function sendKeys(script) {
   ps.stdin.write(script + "\n");
 }
 
-function sendVolumeKey(direction) {
-  // July fallback: VK_VOLUME_UP (0xAF) / VK_VOLUME_DOWN (0xAE). Cuts NVDA briefly.
-  const vk = direction === "Up" ? "0xAF" : "0xAE";
-  sendKeys(
-    `[KbdEvent]::keybd_event(${vk},0,0,[UIntPtr]::Zero);` +
-    `[KbdEvent]::keybd_event(${vk},0,2,[UIntPtr]::Zero)`
-  );
-}
-
-function adjustVolume(direction) {
-  if (!IS_WIN) return Promise.resolve(null);
-  const arg = direction === "Up" ? "up" : "down";
-  const scriptPath = volumeStepScriptPath();
-  return new Promise((resolve) => {
-    const child = spawn(
-      "powershell.exe",
-      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath, arg],
-      { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }
-    );
-    let out = "";
-    child.stdout.on("data", (d) => {
-      out += d.toString();
-    });
-    child.stderr.on("data", (d) => console.error("volume-step:", d.toString()));
-    child.on("error", (err) => {
-      console.error("volume-step: spawn failed:", err.message);
-      sendVolumeKey(direction);
-      resolve(null);
-    });
-    child.on("exit", (code) => {
-      if (code !== 0) {
-        console.error(`volume-step: exited with code ${code}; falling back to VK_VOLUME`);
-        sendVolumeKey(direction);
-        resolve(null);
-        return;
-      }
-      const pct = parseInt(String(out).trim(), 10);
-      if (!Number.isFinite(pct)) {
-        console.error("volume-step: no percent in stdout; falling back to VK_VOLUME");
-        sendVolumeKey(direction);
-        resolve(null);
-        return;
-      }
-      resolve(pct);
-    });
-  });
-}
-
 // Toggle NVDA speech (Insert+S x2 to skip "beeps" mode: talk → off or off → talk)
 ipcMain.on("toggle-tts", () => {
   const press =
@@ -131,15 +75,20 @@ ipcMain.on("toggle-tts", () => {
   sendKeys(press + "Start-Sleep -Milliseconds 100;" + press);
 });
 
-// Volume Up/Down — Core Audio first (private event context; does not cut NVDA).
-// Falls back to VK_VOLUME_* only if the script fails (that path does interrupt speech).
-ipcMain.handle("volume-up", () => adjustVolume("Up"));
-ipcMain.handle("volume-down", () => adjustVolume("Down"));
+// Volume Up (VK_VOLUME_UP = 0xAF)
 ipcMain.on("volume-up", () => {
-  adjustVolume("Up");
+  sendKeys(
+    "[KbdEvent]::keybd_event(0xAF,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0xAF,0,2,[UIntPtr]::Zero)"
+  );
 });
+
+// Volume Down (VK_VOLUME_DOWN = 0xAE)
 ipcMain.on("volume-down", () => {
-  adjustVolume("Down");
+  sendKeys(
+    "[KbdEvent]::keybd_event(0xAE,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0xAE,0,2,[UIntPtr]::Zero)"
+  );
 });
 
 // Stop current NVDA speech immediately (Ctrl)

@@ -35,12 +35,6 @@
       "dist/renderer/**/*",
       "src/main/**/*"
     ],
-    "extraResources": [
-      {
-        "from": "scripts/volume-step.ps1",
-        "to": "volume-step.ps1"
-      }
-    ],
     "win": {
       "target": "nsis"
     },
