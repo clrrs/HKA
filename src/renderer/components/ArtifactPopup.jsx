@@ -301,6 +301,13 @@ function getBlockSpeech(block, isFirst) {
   return isFirst ? `Artifact description. ${block.text}` : block.text;
 }
 
+/** Same-section overflow scroll only. New sections still use getBlockSpeech. */
+function getTextSnapScrollCue(index, total) {
+  if (index <= 0) return "Top of description.";
+  if (index >= total - 1) return "End of description.";
+  return `More description. ${index + 1} of ${total}.`;
+}
+
 function buildAutoplayChunks(artifact, blocks, isVideo) {
   if (!artifact) return [];
 
@@ -1976,15 +1983,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         el.scrollTo({ top: snap.scrollTop, behavior: "smooth" });
       }
 
-      if (
-        speechMode &&
-        announceBlock &&
-        (forceAnnounce || snap.blockKey !== prevKey)
-      ) {
-        const blockIndex = visibleBlocks.findIndex((b) => b.key === snap.blockKey);
-        const block = visibleBlocks[blockIndex];
-        if (block) {
-          announce(getBlockSpeech(block, blockIndex === 0), { dedupeMs: 200 });
+      if (speechMode && announceBlock) {
+        const crossedSection = forceAnnounce || snap.blockKey !== prevKey;
+        if (crossedSection) {
+          const blockIndex = visibleBlocks.findIndex((b) => b.key === snap.blockKey);
+          const block = visibleBlocks[blockIndex];
+          if (block) {
+            announce(getBlockSpeech(block, blockIndex === 0), { dedupeMs: 200 });
+          }
+        } else {
+          announce(getTextSnapScrollCue(index, snaps.length), { dedupeMs: 200 });
         }
       }
     },
