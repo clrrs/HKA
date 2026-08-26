@@ -131,7 +131,8 @@ ipcMain.on("toggle-tts", () => {
   sendKeys(press + "Start-Sleep -Milliseconds 100;" + press);
 });
 
-// Volume Up/Down — Core Audio first (no NVDA cut); VK_VOLUME_* fallback if script fails
+// Volume Up/Down — Core Audio first (private event context; does not cut NVDA).
+// Falls back to VK_VOLUME_* only if the script fails (that path does interrupt speech).
 ipcMain.handle("volume-up", () => adjustVolume("Up"));
 ipcMain.handle("volume-down", () => adjustVolume("Down"));
 ipcMain.on("volume-up", () => {

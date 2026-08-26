@@ -40,8 +40,6 @@ const AppState = createContext();
 // window/capture order, ahead of anything a component effect can attach.
 const idleTimeoutToggleRef = { current: null };
 const autoReadFastToggleRef = { current: null };
-export const volumeAnnounceRef = { current: null };
-export const volumeHudRef = { current: null };
 
 if (typeof window !== "undefined") {
   window.addEventListener(
@@ -66,17 +64,8 @@ if (typeof window !== "undefined") {
       if (key === "w" || key === "i") {
         e.preventDefault();
         e.stopImmediatePropagation();
-        const isUp = key === "w";
-        const channel = isUp ? "volume-up" : "volume-down";
-        const label = isUp ? "Volume Up" : "Volume Down";
-        volumeAnnounceRef.current?.(label);
-        if (typeof window.kioskApi?.invoke === "function") {
-          window.kioskApi.invoke(channel).then((pct) => {
-            if (typeof pct === "number") volumeHudRef.current?.(label, pct);
-          });
-        } else {
-          window.kioskApi?.send(channel);
-        }
+        // Fire-and-forget — no HUD / live-region (those interrupt NVDA).
+        window.kioskApi?.send(key === "w" ? "volume-up" : "volume-down");
       }
     },
     true
