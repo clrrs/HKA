@@ -24,6 +24,8 @@ const MISSING_COPY = "MISSING COPY";
 const WORDS_PER_SEC = 2.4;
 const SECTION_TRANSITION_MS = 1000;
 const POST_READ_DWELL_MS = 4000;
+const TRANSCRIPT_AUTOPLAY_PROMPT =
+  "Transcript. Press Select for the full transcript of this artifact.";
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 const HIDE_MISSING_GUIDED_SECTIONS = false;
 
@@ -44,6 +46,8 @@ const textOrMissing = (v) =>
 const countWords = (t) => t.trim().split(/\s+/).filter(Boolean).length;
 const estimateChunkDurationMs = (t, bufferMs = SECTION_TRANSITION_MS) =>
   Math.round((countWords(t) / WORDS_PER_SEC) * 1000) + bufferMs;
+const estimateSpeechDurationMs = (t) =>
+  Math.round((countWords(t) / WORDS_PER_SEC) * 1000);
 
 function getGuidedTextForImage(artifact, images, imageIndex) {
   const fromImage = images[imageIndex]?.guidedDescription?.trim();
@@ -159,7 +163,11 @@ for (const theme of Object.values(themes)) {
     const hasTranscript =
       typeof artifact.transcriptText === "string" &&
       artifact.transcriptText.trim().length > 0;
-    const totalMs = readMs + (hasTranscript ? POST_READ_DWELL_MS : 0);
+    const totalMs =
+      readMs +
+      (hasTranscript
+        ? estimateSpeechDurationMs(TRANSCRIPT_AUTOPLAY_PROMPT) + POST_READ_DWELL_MS
+        : 0);
     const missing = blocks.filter((b) => b.text === MISSING_COPY).length;
 
     rows.push({

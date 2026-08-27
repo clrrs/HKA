@@ -276,14 +276,16 @@ export default function StateProvider({ children }) {
     setPendingAccessibilityOnboarding(true);
     setPreviousScene("attract");
     setTestEasterEgg(null);
-    setVisitedThemes({});
+    setHasSeenThemeTip(false);
+    setSpeechMode((prev) => {
+      if (!prev) {
+        lastTtsToggleRef.current = Date.now();
+        window.kioskApi?.send("toggle-tts");
+      }
+      return true;
+    });
     setIsPaused(false);
     setAutoReadActive(false);
-    try {
-      localStorage.removeItem("prefs");
-    } catch {
-      // ignore
-    }
   };
 
   const goBack = () => {

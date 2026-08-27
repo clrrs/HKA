@@ -4,7 +4,6 @@
 
 # --- exhibit-specific phrase suppressions — must come before broad role/word rules ---
 \bhelen keller archives document\b		0	1
-\bthis menu\b	this hkacopymenu	0	1
 
 # --- container / structural roles ---
 \b(grouping|group)\b		0	1
@@ -32,7 +31,6 @@
 \bradio button\b		0	1
 \bslider\b		0	1
 \bspin button\b		0	1
-\b(menu|menu bar|menu item|menu button)\b		0	1
 \b(tab|tab list|tab panel)\b		0	1
 
 # --- list roles (no generic N items — can false-positive exhibit text) ---
@@ -70,5 +68,4 @@
 # --- post-process after stripping ---
 [ \t]{2,}	 	0	1
 ^[ ,.;:]+		0	1
-\bhkacopymenu\b	menu	0	1
 

@@ -220,7 +220,7 @@ function inferProducerScenario(row) {
     if (notes.includes("Next artifact")) {
       return "Visitor tabs to the right nav arrow in the artifact popup.";
     }
-    if (message === "Artifact controls") {
+    if (message === "Controls") {
       return "Visitor tabs into the artifact control toolbar.";
     }
     if (message === "Next image") {

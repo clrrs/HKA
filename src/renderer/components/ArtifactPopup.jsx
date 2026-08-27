@@ -29,7 +29,7 @@ const SCROLL_STEP_RATIO = 0.75;
 const WORDS_PER_SEC = 2.4;
 /** Buffer between auto-read sections (Story intro → guided, guided → guided). */
 const SECTION_TRANSITION_MS = 1000;
-/** Auto-read handoff dwell after focus lands on Transcript / next controls. */
+/** Extra buffer after estimated speech time on the Transcript auto-read handoff. */
 const POST_READ_DWELL_MS = 4000;
 const TRANSCRIPT_AUTOPLAY_PROMPT =
   "Transcript. Press Select for the full transcript of this artifact.";
@@ -39,8 +39,6 @@ const VIDEO_END_DWELL_MS = 1000;
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 /** Covers NVDA's "dialog" role preamble before it reaches the popup title. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
-const TEXT_PANEL_SUMMARY =
-  "Artifact story. Press Select to navigate description sections.";
 const EMPTY_IMAGES = [];
 
 const GUIDED_HEADINGS = {
@@ -878,7 +876,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
     clearTranscriptDwell();
     transcriptDwellActiveRef.current = true;
-    const dwellMs = autoReadDelayMs(POST_READ_DWELL_MS, autoReadFastRef.current);
+    const dwellMs = autoReadDelayMs(
+      estimateSpeechDurationMs(TRANSCRIPT_AUTOPLAY_PROMPT) + POST_READ_DWELL_MS,
+      autoReadFastRef.current
+    );
     transcriptDwellDeadlineRef.current = Date.now() + dwellMs;
     transcriptDwellTimeoutRef.current = setTimeout(() => {
       transcriptDwellTimeoutRef.current = null;
@@ -1079,11 +1080,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const getFirstControlRef = useCallback(
     () =>
-      (textScrollable ? getTextPanelFocusEl() : null) ||
+      (!speechMode && textScrollable ? getTextPanelFocusEl() : null) ||
       (showStoryButton ? storyBtnRef.current : null) ||
       getActiveVideoControl() ||
       zoomOrPlayRef.current,
-    [getTextPanelFocusEl, showStoryButton, textScrollable, getActiveVideoControl]
+    [getTextPanelFocusEl, showStoryButton, speechMode, textScrollable, getActiveVideoControl]
   );
 
   const getToolbarButtonAfterStory = useCallback(() => {
@@ -1993,8 +1994,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     rememberMainFocus();
     markAutoplayEnded();
     setTranscriptOpen(true);
-    announce("Transcript window opened.", { politeness: "assertive" });
-  }, [announce, markAutoplayEnded, rememberMainFocus]);
+  }, [markAutoplayEnded, rememberMainFocus]);
 
   const openZoom = useCallback(() => {
     rememberMainFocus();
@@ -2514,7 +2514,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             </div>
           )}
 
-          <div className="artifact-popup-controls" role="toolbar" aria-label="Artifact controls">
+          <div className="artifact-popup-controls" role="toolbar" aria-label="Controls">
             {showStoryButton && (
               <button
                 type="button"
@@ -2653,7 +2653,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   tabIndex={speechMode && !isAutoplaying && textScrollable ? 0 : -1}
                   role={speechMode ? "group" : undefined}
                   aria-hidden={speechMode && isAutoplaying ? true : undefined}
-                  aria-label={speechMode ? TEXT_PANEL_SUMMARY : undefined}
                 >
                   {visibleBlocks.map((block) =>
                     block.kind === "guided" ? (
@@ -2712,7 +2711,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               ref={transcriptPanelRef}
               role="dialog"
               aria-modal="true"
-              aria-label="Transcript"
+              aria-label="Transcript window opened."
             >
               <button
                 type="button"
