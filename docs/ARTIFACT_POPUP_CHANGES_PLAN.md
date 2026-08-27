@@ -1,6 +1,6 @@
 # Artifact Popup Changes — Usage-Split Overview
 
-**Status:** packages A–G, I, J are **implemented**. H is still pending content. See “Status” and “Punchlist” below before doing more work here.  
+**Status:** packages A–G, I, J, K are **implemented**. H is still pending content. See “Status” and “Punchlist” below before doing more work here.  
 
 ---
 
@@ -18,6 +18,7 @@
 | H. Content source consolidation | **Not started** | Waiting on the Adventure content matrix |
 | I. SR announcement CSV | **Done** | `docs/screen-reader-announcements.csv` + `.cursor/rules/screen-reader-announcements.mdc` |
 | J. Overflow text focus return | **Done** | Added after A–G; see section below |
+| K. Description on non-video | **Done** | Description after Story on images; guided auto-read takeover leaves Description |
 
 ---
 
@@ -88,8 +89,8 @@
 
 | Requirement | Notes |
 |-------------|--------|
-| Default order: **Story → [Previous Image] → Next Image → Zoom → Transcript** | Previous Image only when **5+ images**; sits **before** Next Image. **Do not rename** any labels (visual or SR). |
-| Video toolbar | **Story** + **Guided Description** + Play/Pause (see E) + Transcript |
+| Default order: **Story → Description → [Previous Image] → Next Image → Zoom → Transcript** | Previous Image only when **5+ images**; sits **before** Next Image. **Do not rename** any labels (visual or SR). |
+| Video toolbar | **Story → Play → Pause → Description → Transcript** (Play/Pause stay immediately after Story) |
 
 ---
 
@@ -109,12 +110,12 @@ Replace single `CHUNK_BUFFER_MS` with section-transition vs post-read dwell cons
 **Owner:** smarter for behavior/focus · cheaper for CSS placement if handed a mock/checklist
 
 - **Play** and **Pause** both live **in the artifact toolbar, immediately after Story** — where the single Play button used to sit. (Superseded an earlier pass that put them in a column beside the video.)
-- Video toolbar order: **Story → Play → Pause → Guided Description → Transcript**
+- Video toolbar order: **Story → Play → Pause → Description → Transcript**
 - Inactive button stays in place but looks inactive and is **not in focus order** — same pattern as zoom pan buttons  
 - Selecting Play or Pause does **not** move focus/cursor  
 - Pressing the focused button again toggles (redundant but intentional — e.g. Pause while on Pause → play)  
 - When **auto-read** starts the video, gold stays on **Play** (not Pause). L/K takeover matches sitting on Play during manual nav: **L → Pause**, **K → Story**, and the video **keeps playing** (playback is claimed as manual so cancel does not pause it).
-- Video artifacts also get **Story** + **Guided Description** toolbar buttons (same text flow as images)
+- Non-video and video artifacts both get **Story** + **Description** toolbar buttons (same text flow). On non-video, Description sits **immediately after Story**.
 - **Transcript shows on every video artifact**, even without `transcriptText` (reads as `MISSING COPY`)
 - Keep existing **Transcript** label (no rename) 
 
@@ -171,7 +172,7 @@ Smarter defines CSV columns + sync path; cheaper runs sync when content arrives.
 | Reformat existing CSV to match reference org; merge current code truth | cheaper |
 | Delete reference file after merge | cheaper |
 | Rule: any aria-label / live-announce / alt change → update canonical CSV in same change | smarter writes Cursor rule; cheaper follows |
-| New strings (Story, Guided Description, Play/Pause, doc page announce, Zoom word, etc.) — **no label renames** | cheaper after code lands |
+| New strings (Story, Description, Play/Pause, doc page announce, Zoom word, etc.) — **no label renames** | cheaper after code lands |
 
 Reference columns (no screenshots): `type, location, Trigger, Scenario, Message, …file/line…, Notes`
 
@@ -180,7 +181,7 @@ Reference columns (no screenshots): `type, location, Trigger, Scenario, Message,
 ### J. Overflow text focus return  
 **Owner:** smarter (focus state machine)
 
-When **Story**, **Previous Image**, **Next Image**, or **Guided Description** reveals copy that overflows the text panel, focus moves into the panel so the next forward key scrolls. Leaving that panel — off the bottom going forward or off the top going back — returns focus to **the button that put you there**, not the next item in the global order.
+When **Story**, **Previous Image**, **Next Image**, or **Description** reveals copy that overflows the text panel, focus moves into the panel so the next forward key scrolls. Leaving that panel — off the bottom going forward or off the top going back — returns focus to **the button that put you there**, not the next item in the global order.
 
 Conditions:
 
@@ -190,6 +191,18 @@ Conditions:
 - **Transcript is untouched** — its overlay and focus handling stay as they were.
 
 Implementation: `textNavSourceRef` records the trigger; `scheduleOverflowTextNavRef` does the measure-then-enter after layout; `exitTextNav` prefers the recorded source. If the panel stops overflowing while text nav is active (e.g. Story intro → shorter guided copy), focus falls back to the same source button.
+
+---
+
+### K. Description button on non-video artifacts  
+**Owner:** smarter (focus order + auto-read takeover)
+
+Non-video artifacts now show **Description** immediately after **Story**, matching the video control’s label and action (shows the guided copy for the current image). This fills the gap where single-image artifacts had no way to reach guided copy during manual navigation.
+
+- Non-video order: **Story → Description → [Previous Image] → Next Image → Zoom → Transcript**
+- Video order unchanged: **Story → Play → Pause → Description → Transcript**
+- Auto-read takeover during the guided section mirrors Story/Play: gold is already on Description, so **L** leaves to the next toolbar button and **K** goes to Story (or the back arrow if Story is absent).
+- Overflow hand-off for Description was already wired via `scheduleOverflowTextNavRef(guidedDescBtnRef)`.
 
 ---
 
@@ -220,11 +233,13 @@ Questions answered
 |-------|----------|
 | Story vs image | Story resets **text only**; image unchanged. Open artifact → image 1 + Story intro. |
 | Story / guided text fields | Use existing `description` → then `guidedDescription`. **No content-field changes** — wire UI to what’s already there. |
-| Previous Image | When **5+ images**; order: Story → **Previous Image** → Next Image → … |
+| Previous Image | When **5+ images**; order: Story → Description → **Previous Image** → Next Image → … |
 | Labels | **No renames** — keep Transcript / Zoom / etc. as today (visual + SR) |
-| Video toolbar | **Story → Play → Pause → Guided Description → Transcript**; Transcript always present on video |
+| Video toolbar | **Story → Play → Pause → Description → Transcript**; Transcript always present on video |
+| Non-video toolbar | **Story → Description → [Previous Image] → Next Image → Zoom → Transcript** |
 | Play/Pause | In the toolbar right after Story. Both always visible; inactive one unfocusable + styled inactive (zoom pan pattern); no focus move on activate; re-press toggles; auto-read gold stays on Play; L/K takeover leaves Play like manual nav (Pause / Story) without pausing the video |
-| Overflow text focus | Story / Prev Image / Next Image / Guided Description hand focus to the text panel **only** on real overflow **and only** on manual navigation; exiting either end returns to that button |
+| Description button | On all non-combined artifacts (video and non-video). Manual press shows guided for the current image; auto-read guided takeover leaves Description (L → next control, K → Story) |
+| Overflow text focus | Story / Prev Image / Next Image / Description hand focus to the text panel **only** on real overflow **and only** on manual navigation; exiting either end returns to that button |
 | Direction unlock | **Artifact popup arrows only** (not theme carousel) |
 | Scrim | Visibly lighter; no specific opacity |
 | Doc Next Image announce | `Page X of Y of [document name]. For full text, go to Transcript.` then document guided description |
@@ -247,6 +262,5 @@ Story intro = existing `description`. Condensed guided = existing `guidedDescrip
 | **H. Master content CSV** | Still the long-term goal. Adventure Story/Guided Description was applied from `APH_3HK7_Descriptions_260826.odt`; Change, Together, and Work still have ~16 pending paragraph edits in that same file. |
 | **Scroll-to-end announcement** | Previously ruled out of scope: leaving the text panel is silent apart from the button label the focus lands on. Revisit only if testing shows visitors get lost. |
 | **Dead `artifact-popup--video-active` class** | Applied in JSX with no matching CSS rule (pre-existing). Harmless; delete on the next cleanup pass. |
-| **Guided Description overflow hand-off** | Included in package J for consistency with Story, though only Story / Prev Image / Next Image were explicitly requested. Confirm it feels right on video artifacts. |
 | **Adventure image cuts** | .odt comments ask whether to cut `3A2Lunch2` and the Italian veteran reverse (`3A5ItalyVet2`). Kept both images and swapped copy only. |
 | **Full NVDA pass** | Behavior verified by build + code review only. Focus order, gold outline, and the return-to-button flow still need a hardware/NVDA run. |

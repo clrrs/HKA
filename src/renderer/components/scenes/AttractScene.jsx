@@ -138,7 +138,7 @@ export default function AttractScene({ isActive }) {
       role="button"
       tabIndex={0}
       data-autofocus={true}
-      aria-label="Press any button to begin. Headphones are located to the right."
+      aria-label="Welcome to the Helen Keller Archives. Use the headphones to the right. Press any button to begin."
     >
       <video
         ref={videoRef}

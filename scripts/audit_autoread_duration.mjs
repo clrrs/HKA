@@ -75,7 +75,7 @@ function buildTextBlocks(artifact, images, isCombined) {
   }));
   if (isCombined) return blocks;
 
-  const heading = GUIDED_HEADINGS[artifact.type] ?? "Guided Description";
+  const heading = GUIDED_HEADINGS[artifact.type] ?? "Description";
 
   if (artifact.guidedDescriptionMode === GUIDED_DESCRIPTION_MODE_LETTERS) {
     const sections = artifact.letterSections ?? [];
@@ -122,7 +122,7 @@ const getBlockSpeech = (block, isFirst) =>
   block.kind === "guided"
     ? [block.heading, block.tagline, block.text].filter(Boolean).join(". ")
     : isFirst
-      ? `Artifact description. ${block.text}`
+      ? `Artifact story. ${block.text}`
       : block.text;
 
 function buildAutoplayChunks(artifact, blocks, isVideo) {

@@ -660,7 +660,8 @@ by Dr. Taher Muradi, M.D. cancer specialist.
 export const themeOrder = ["change", "together", "adventure", "work"];
 
 /** Placeholder until the instructional video has a real transcript. */
-export const instructionalVideoTranscript = "";
+export const instructionalVideoTranscript =
+  "placeholder text for instructional video. Description of controls";
 
 export function getTheme(themeId) {
   return themes[themeId] || null;

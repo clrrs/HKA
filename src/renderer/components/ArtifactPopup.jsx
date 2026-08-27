@@ -39,7 +39,7 @@ const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 /** Covers NVDA's "dialog" role preamble before it reaches the popup title. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
 const TEXT_PANEL_SUMMARY =
-  "Artifact Description. Press Select to navigate description sections.";
+  "Artifact story. Press Select to navigate description sections.";
 const EMPTY_IMAGES = [];
 
 const GUIDED_HEADINGS = {
@@ -48,7 +48,7 @@ const GUIDED_HEADINGS = {
   object: "Object Description",
   video: "Video Description",
 };
-const GUIDED_HEADING_FALLBACK = "Guided Description";
+const GUIDED_HEADING_FALLBACK = "Description";
 
 /**
  * When true, images with no guided copy of their own are left out of the stacked
@@ -298,7 +298,7 @@ function getBlockSpeech(block, isFirst) {
     return [block.heading, block.tagline, block.text].filter(Boolean).join(". ");
   }
   // Dialog aria-label already announces the title on open.
-  return isFirst ? `Artifact description. ${block.text}` : block.text;
+  return isFirst ? `Artifact story. ${block.text}` : block.text;
 }
 
 /** Same-section overflow scroll only. New sections still use getBlockSpeech. */
@@ -557,7 +557,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const currentImage = images.length > 0 ? images[currentImageIndex] : null;
   const showStoryButton = !isCombined;
-  const showGuidedDescriptionButton = isVideo && !isCombined;
+  const showGuidedDescriptionButton = !isCombined;
 
   const getGuidedBlockForImage = useCallback(
     (imageIndex) => {
@@ -1031,6 +1031,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     return [
       prevArrowRef.current,
       showStoryButton ? storyBtnRef.current : null,
+      showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
       hasPrevImageButton ? prevImageRef.current : null,
       hasMultipleImages ? nextImageRef.current : null,
       zoomOrPlayRef.current,
@@ -1047,6 +1048,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     isVideoPlaying,
     heldVideoBtn,
   ]);
+
+  const getToolbarNeighbor = useCallback(
+    (el, isNext) => {
+      if (!el) return null;
+      const focusables = getPopupFocusables();
+      const i = focusables.indexOf(el);
+      if (i === -1) return null;
+      return focusables[isNext ? i + 1 : i - 1] || null;
+    },
+    [getPopupFocusables]
+  );
 
   const getActiveVideoControl = useCallback(
     () => (activeVideoBtn === "pause" ? pauseBtnRef.current : playBtnRef.current),
@@ -1070,6 +1082,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           transcriptBtnRef.current,
         ]
       : [
+          showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
           hasPrevImageButton ? prevImageRef.current : null,
           hasMultipleImages ? nextImageRef.current : null,
           zoomOrPlayRef.current,
@@ -1119,11 +1132,42 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         transcriptBtnRef.current.focus({ preventScroll: true });
         return;
       }
-      if (
-        section === "guided" ||
-        section === "description" ||
-        section === "title"
-      ) {
+      // Auto-read is already "on" Description; leave it like Story/Play:
+      // Forward → next toolbar button, Back → Story (or prev arrow).
+      if (section === "guided") {
+        if (isNext) {
+          if (hasScrollOverflow(textBodyRef.current)) {
+            const entered = enterTextNavRef.current?.({
+              announceBlock: false,
+              focus: true,
+            });
+            if (entered) {
+              stepTextNavRef.current?.("next");
+            } else {
+              (
+                getToolbarNeighbor(guidedDescBtnRef.current, true) ||
+                getToolbarButtonAfterStory() ||
+                getFirstToolbarButton()
+              )?.focus({ preventScroll: true });
+            }
+          } else {
+            resetTextScroll();
+            (
+              getToolbarNeighbor(guidedDescBtnRef.current, true) ||
+              getToolbarButtonAfterStory() ||
+              getFirstToolbarButton()
+            )?.focus({ preventScroll: true });
+          }
+        } else {
+          resetTextScroll();
+          (
+            getToolbarNeighbor(guidedDescBtnRef.current, false) ||
+            prevArrowRef.current
+          )?.focus({ preventScroll: true });
+        }
+        return;
+      }
+      if (section === "description" || section === "title") {
         if (isNext) {
           if (hasScrollOverflow(textBodyRef.current)) {
             const entered = enterTextNavRef.current?.({
@@ -1156,7 +1200,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         prevArrowRef.current?.focus({ preventScroll: true });
       }
     },
-    [getFirstControlRef, getFirstToolbarButton, getToolbarButtonAfterStory, resetTextScroll]
+    [
+      getFirstControlRef,
+      getFirstToolbarButton,
+      getToolbarButtonAfterStory,
+      getToolbarNeighbor,
+      resetTextScroll,
+    ]
   );
 
   useEffect(() => {
@@ -2506,9 +2556,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 onClick={handleGuidedDescription}
                 onFocus={() => setGuidedDescBtnFocused(true)}
                 onBlur={() => setGuidedDescBtnFocused(false)}
-                aria-label="Guided Description"
+                aria-label="Description"
               >
-                Guided Description
+                Description
               </button>
             )}
             {!isVideo && hasPrevImageButton && (

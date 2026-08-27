@@ -108,10 +108,10 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
                 resetGuidedAnchors();
               }, 0);
             }}
-            aria-label="Open guided description"
+            aria-label="Open description"
             ref={guidedButtonRef}
           >
-            Guided Description
+            Description
           </button>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
           className="video-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Guided description"
+          aria-label="Description"
         >
           <div className="video-overlay-body" onKeyDown={handleGuidedKeyDown}>
             <button
@@ -160,12 +160,12 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
                   guidedButtonRef.current.focus();
                 }
               }}
-              aria-label="Close guided description"
+              aria-label="Close description"
               ref={guidedCloseRef}
             >
               Exit
             </button>
-            <h2>Guided Description</h2>
+            <h2>Description</h2>
             <div
               className="artifact-document-transcript-text"
               ref={guidedBodyRef}

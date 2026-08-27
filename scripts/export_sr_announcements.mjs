@@ -266,11 +266,11 @@ function inferProducerScenario(row) {
     const labels = {
       "Artifact video player": "Visitor plays a video artifact; the video overlay opens.",
       "Artifact video controls": "Visitor tabs into the video control toolbar.",
-      "Open guided description": "Visitor tabs to Open guided description in the video overlay.",
+      "Open description": "Visitor tabs to Open description in the video overlay.",
       "Open transcript": "Visitor tabs to Open transcript in the video overlay.",
       "Close video player": "Visitor tabs to Close and leaves the video overlay.",
-      Transcript: "Transcript or guided-description panel is open in the video overlay.",
-      "Close guided description": "Visitor tabs to Close inside the guided-description panel.",
+      Transcript: "Transcript or description panel is open in the video overlay.",
+      "Close description": "Visitor tabs to Close inside the description panel.",
     };
     if (labels[message]) return labels[message];
     if (notes.includes("videoAlt")) {
@@ -291,11 +291,11 @@ function inferProducerScenario(row) {
       "Play video": "Visitor tabs to Play in the instruction video player.",
       "Pause video": "Visitor tabs to Pause in the instruction video player.",
       "Open transcript": "Visitor tabs to Open transcript in the instruction video player.",
-      "Open guided description": "Visitor tabs to Open guided description in the instruction video player.",
+      "Open description": "Visitor tabs to Open description in the instruction video player.",
       Transcript: "Transcript panel is open in the instruction video player.",
       "Close transcript": "Visitor tabs to Close in the transcript panel.",
-      "Guided description": "Guided description panel is open in the instruction video player.",
-      "Close guided description": "Visitor tabs to Close in the guided description panel.",
+      Description: "Description panel is open in the instruction video player.",
+      "Close description": "Visitor tabs to Close in the description panel.",
     };
     if (labels[message]) return labels[message];
   }
