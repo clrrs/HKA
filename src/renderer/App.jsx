@@ -5,6 +5,7 @@ import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
 import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
+import { EARCON, playEarcon } from "./audio/earcons";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -66,6 +67,15 @@ export default function App() {
   } = useAppState();
   const announce = useAnnounce();
   const [idleCountdown, setIdleCountdown] = useState(null);
+  const idleWasActiveRef = useRef(false);
+
+  useEffect(() => {
+    const active = idleCountdown !== null;
+    if (active && !idleWasActiveRef.current) {
+      playEarcon(EARCON.idleTimer);
+    }
+    idleWasActiveRef.current = active;
+  }, [idleCountdown]);
   const lastActivityRef = useRef(Date.now());
   const warningVisibleRef = useRef(false);
   const settingsPanelRef = useRef(null);
@@ -173,9 +183,11 @@ export default function App() {
     lastActivityRef.current = Date.now();
 
     const handleActivity = () => {
+      const wasWarning = warningVisibleRef.current;
       lastActivityRef.current = Date.now();
       setIdleCountdown(null);
       warningVisibleRef.current = false;
+      if (wasWarning) playEarcon(EARCON.popupClose);
     };
 
     const handlePassiveActivity = (e) => {
@@ -195,6 +207,7 @@ export default function App() {
       warningVisibleRef.current = false;
 
       if (wasWarning) {
+        playEarcon(EARCON.popupClose);
         e.preventDefault();
         e.stopImmediatePropagation();
         requestAnimationFrame(() => {

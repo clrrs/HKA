@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { EARCON, playEarcon } from "../audio/earcons";
 
 /**
  * K/L key step-scrolling for transcript / guided description dialogs.
@@ -78,6 +79,7 @@ export function useStepScroll() {
         body.focus();
         body.scrollTo({ top: 0, behavior: "auto" });
         setScrollIndex(0);
+        playEarcon(EARCON.scrollText);
         return;
       }
 
@@ -86,6 +88,7 @@ export function useStepScroll() {
         const nextIndex = scrollIndex + 1;
         setScrollIndex(nextIndex);
         body.scrollTo({ top: activeAnchors[nextIndex], behavior: "auto" });
+        playEarcon(EARCON.scrollText);
       } else if (closeEl) {
         closeEl.focus();
       }
@@ -101,6 +104,7 @@ export function useStepScroll() {
         const nextIndex = scrollIndex - 1;
         setScrollIndex(nextIndex);
         body.scrollTo({ top: activeAnchors[nextIndex], behavior: "auto" });
+        playEarcon(EARCON.scrollText);
       } else if (closeEl) {
         closeEl.focus();
       }
@@ -119,4 +123,3 @@ export function useStepScroll() {
     resetAnchors,
   };
 }
-

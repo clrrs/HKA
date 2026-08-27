@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { EARCON, playEarcon } from "../audio/earcons";
 
 const TEST_EASTER_EGG_MESSAGES = [
   "thank you for trying to break something!",
@@ -99,7 +100,15 @@ export default function StateProvider({ children }) {
     document.documentElement.style.setProperty("--brightness", prefs.brightness);
   }, [prefs]);
 
-  const setPref = (k, v) => setPrefs(prev => ({...prev, [k]: v}));
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
+
+  const setPref = (k, v) => {
+    if (k === "theme" && prefsRef.current.theme !== v) {
+      playEarcon(EARCON.darkLightMode);
+    }
+    setPrefs((prev) => ({ ...prev, [k]: v }));
+  };
 
   const [isPaused, setIsPaused] = useState(false);
   const togglePaused = useCallback(() => {
@@ -107,6 +116,9 @@ export default function StateProvider({ children }) {
   }, []);
 
   const goToScene = (sceneName, options = {}) => {
+    if (sceneName === "home") {
+      playEarcon(EARCON.home);
+    }
     setScene(sceneName);
     setSubscene(options.subscene || null);
     if (options.artifactId !== undefined) {
@@ -134,19 +146,29 @@ export default function StateProvider({ children }) {
   const [settingsOnboarding, setSettingsOnboarding] = useState(false);
   const [pendingAccessibilityOnboarding, setPendingAccessibilityOnboarding] =
     useState(true);
+  const showSettingsRef = useRef(showSettings);
+  showSettingsRef.current = showSettings;
 
   const dismissSettings = useCallback(() => {
+    if (showSettingsRef.current) {
+      playEarcon(EARCON.popupClose);
+    }
     setShowSettings(false);
     setSettingsOnboarding(false);
     setPendingAccessibilityOnboarding(false);
   }, []);
 
   const openSettingsOnboarding = useCallback(() => {
+    if (!showSettingsRef.current) {
+      playEarcon(EARCON.popupOpen);
+    }
     setSettingsOnboarding(true);
     setShowSettings(true);
   }, []);
 
   const toggleSettings = () => {
+    const opening = !showSettingsRef.current;
+    playEarcon(opening ? EARCON.popupOpen : EARCON.popupClose);
     setShowSettings((prev) => {
       if (prev && settingsOnboarding) {
         setSettingsOnboarding(false);

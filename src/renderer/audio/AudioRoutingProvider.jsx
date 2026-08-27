@@ -13,6 +13,7 @@ import {
   saveStoredSinkIds,
   setMediaSink,
 } from "./audioRoutingCore";
+import { bindEarconSink } from "./earcons";
 
 const AudioRoutingContext = createContext(null);
 
@@ -88,6 +89,11 @@ export default function AudioRoutingProvider({ children }) {
     },
     [ready, headphoneSinkId]
   );
+
+  useEffect(() => {
+    bindEarconSink(applyHeadphoneSink);
+    return () => bindEarconSink(null);
+  }, [applyHeadphoneSink]);
 
   const value = useMemo(
     () => ({

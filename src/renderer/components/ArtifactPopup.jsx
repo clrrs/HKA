@@ -10,6 +10,7 @@ import { useAppState } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
 import { scheduleFocus } from "../state/useSceneManager";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
+import { EARCON, playEarcon } from "../audio/earcons";
 import {
   BRAILLE_OUTPUT_SETTLE_MS,
   guardNvdaSpeechSilenceWhilePlaying,
@@ -420,12 +421,14 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
       e.preventDefault();
       e.stopPropagation();
       body.scrollTo({ top: Math.min(maxScroll, body.scrollTop + step), behavior: "auto" });
+      playEarcon(EARCON.scrollText);
       return true;
     }
     if (loop) {
       e.preventDefault();
       e.stopPropagation();
       body.scrollTo({ top: 0, behavior: "auto" });
+      playEarcon(EARCON.scrollText);
       onLoop?.();
       return true;
     }
@@ -435,6 +438,7 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
     e.preventDefault();
     e.stopPropagation();
     body.scrollTo({ top: Math.max(0, body.scrollTop - step), behavior: "auto" });
+    playEarcon(EARCON.scrollText);
     return true;
   }
   return false;
@@ -1738,6 +1742,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const handlePrevArrow = useCallback(() => {
     flashSelected(prevArrowRef);
     if (prevArtifact) {
+      playEarcon(EARCON.previousArtifact);
       goToArtifact(prevArtifact.id);
     } else {
       goToArtifact(null, { focusThemeStart: true });
@@ -1747,6 +1752,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const handleNextArrow = useCallback(() => {
     flashSelected(nextArrowRef);
     if (nextArtifact) {
+      playEarcon(EARCON.nextArtifact);
       goToArtifact(nextArtifact.id);
     } else {
       goToArtifact(null, { focusThemeStart: true });
@@ -2130,11 +2136,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (direction === "next") {
         if (index + 1 < snaps.length) {
           applyTextSnap(index + 1, { announceBlock: true });
+          playEarcon(EARCON.scrollText);
         } else {
           exitTextNav("next");
         }
       } else if (index > 0) {
         applyTextSnap(index - 1, { announceBlock: true });
+        playEarcon(EARCON.scrollText);
       } else {
         exitTextNav("back");
       }

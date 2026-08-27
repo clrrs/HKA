@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme, getArtifactIndex } from "../../data/artifacts";
+import { EARCON, playEarcon } from "../../audio/earcons";
 import ArtifactPopup from "../ArtifactPopup";
 
 const ITEM_WIDTH = 600;
@@ -94,6 +95,9 @@ export default function ThemeScene() {
   const popupOpen = Boolean(artifactId);
 
   const dismissTip = useCallback(() => {
+    if (!showTipRef.current) return;
+    showTipRef.current = false;
+    playEarcon(EARCON.popupClose);
     setTipGate((prev) => (prev.show ? { ...prev, show: false } : prev));
   }, []);
 
@@ -102,6 +106,11 @@ export default function ThemeScene() {
       headingRef.current?.focus({ preventScroll: true });
     });
   }, []);
+
+  useEffect(() => {
+    if (!showTip) return;
+    playEarcon(EARCON.popupOpen);
+  }, [showTip]);
 
   useLayoutEffect(() => {
     const wasOpen = prevShowSettingsRef.current;
