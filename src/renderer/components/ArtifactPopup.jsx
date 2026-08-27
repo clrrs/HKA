@@ -2002,8 +2002,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setSnapIndex(0);
     setZoomOpen(true);
     playEarcon(EARCON.popupOpen);
-    announce("Zoom mode. Snap up or down to see the image.", { politeness: "assertive" });
-  }, [announce, markAutoplayEnded, rememberMainFocus]);
+  }, [markAutoplayEnded, rememberMainFocus]);
 
   const exitZoom = useCallback(() => {
     setZoomOpen(false);
@@ -2385,18 +2384,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     return () => ro.disconnect();
   }, [zoomOpen, measureSnapPane]);
 
-  const focusOppositeAfterSnap = useCallback((which) => {
-    setTimeout(() => {
-      if (which === "up") {
-        if (snapDownRef.current && !snapDownRef.current.disabled) {
-          snapDownRef.current.focus();
-        }
-      } else if (snapUpRef.current && !snapUpRef.current.disabled) {
-        snapUpRef.current.focus();
-      }
-    }, 0);
-  }, []);
-
   const snapStepUp = () => {
     if (atSnapTop) return;
     const nextIndex = Math.max(0, snapIndex - 1);
@@ -2404,7 +2391,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     playEarcon(EARCON.scrollText);
     if (nextIndex === 0) {
       announce("Top of image.", { politeness: "assertive" });
-      focusOppositeAfterSnap("up");
     } else {
       announce(`Step ${nextIndex + 1} of ${totalSteps}.`, { politeness: "assertive" });
     }
@@ -2417,7 +2403,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     playEarcon(EARCON.scrollText);
     if (nextIndex === totalSteps - 1) {
       announce("Bottom of image.", { politeness: "assertive" });
-      focusOppositeAfterSnap("down");
     } else {
       announce(`Step ${nextIndex + 1} of ${totalSteps}.`, { politeness: "assertive" });
     }
@@ -2757,28 +2742,29 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           ref={zoomRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Image zoom view"
+          aria-label="Zoom mode opened."
         >
           <div className="snap-zoom-panel">
             <div className="snap-zoom-window" ref={snapWindowRef}>
               <img
                 ref={snapImageRef}
                 src={currentImage.src}
-                alt={currentImage.alt}
+                alt=""
+                aria-hidden="true"
                 className="snap-zoom-image"
                 style={snapImageStyle}
                 tabIndex={-1}
               />
             </div>
-            <div className="snap-zoom-controls" role="toolbar" aria-label="Zoom scroll controls">
-              <div className="document-toolbar-arrows" role="toolbar" aria-label="Snap image view">
+            <div className="snap-zoom-controls">
+              <div className="document-toolbar-arrows">
                 <button
                   type="button"
                   ref={snapUpRef}
                   onClick={snapStepUp}
                   className="carousel-btn carousel-btn-icon document-arrow-up"
                   aria-disabled={atSnapTop ? true : undefined}
-                  aria-label="Snap view up one step"
+                  aria-label="Pan up"
                 >
                   <img src="Back.svg" alt="" aria-hidden="true" />
                 </button>
@@ -2788,13 +2774,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   onClick={snapStepDown}
                   className="carousel-btn carousel-btn-icon document-arrow-down"
                   aria-disabled={atSnapBottom ? true : undefined}
-                  aria-label="Snap view down one step"
+                  aria-label="Pan down"
                   data-autofocus=""
                 >
                   <img src="Back.svg" alt="" aria-hidden="true" />
                 </button>
               </div>
-              <button type="button" onClick={exitZoom} className="carousel-btn" aria-label="Exit zoom mode">
+              <button type="button" onClick={exitZoom} className="carousel-btn" aria-label="Exit">
                 Exit Zoom
               </button>
             </div>

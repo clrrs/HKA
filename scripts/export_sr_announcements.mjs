@@ -241,23 +241,17 @@ function inferProducerScenario(row) {
     if (message === "Close transcript") {
       return "Visitor tabs to Close inside the transcript panel.";
     }
-    if (message === "Image zoom view") {
+    if (message === "Zoom mode opened.") {
       return "Visitor enters zoom mode; NVDA reads the zoom dialog label.";
     }
-    if (message === "Zoom scroll controls") {
-      return "Visitor tabs into the zoom scroll toolbar.";
-    }
-    if (message === "Snap image view") {
-      return "Structural label for the snap-scroll arrow group in zoom mode.";
-    }
-    if (message === "Snap view up one step") {
+    if (message === "Pan up") {
       return "Visitor tabs to the up-arrow in zoom mode.";
     }
-    if (message === "Snap view down one step") {
+    if (message === "Pan down") {
       return "Visitor tabs to the down-arrow in zoom mode.";
     }
-    if (message === "Exit zoom mode") {
-      return "Visitor tabs to Exit zoom mode in the zoom toolbar.";
+    if (message === "Exit") {
+      return "Visitor tabs to Exit in the zoom controls.";
     }
   }
 
