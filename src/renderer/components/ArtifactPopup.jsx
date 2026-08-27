@@ -419,13 +419,13 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
     if (body.scrollTop < maxScroll - 1) {
       e.preventDefault();
       e.stopPropagation();
-      body.scrollTo({ top: Math.min(maxScroll, body.scrollTop + step), behavior: "smooth" });
+      body.scrollTo({ top: Math.min(maxScroll, body.scrollTop + step), behavior: "auto" });
       return true;
     }
     if (loop) {
       e.preventDefault();
       e.stopPropagation();
-      body.scrollTo({ top: 0, behavior: "smooth" });
+      body.scrollTo({ top: 0, behavior: "auto" });
       onLoop?.();
       return true;
     }
@@ -434,7 +434,7 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
   if (key === "k" && body.scrollTop > 0) {
     e.preventDefault();
     e.stopPropagation();
-    body.scrollTo({ top: Math.max(0, body.scrollTop - step), behavior: "smooth" });
+    body.scrollTo({ top: Math.max(0, body.scrollTop - step), behavior: "auto" });
     return true;
   }
   return false;
@@ -2030,7 +2030,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       const el = textBodyRef.current;
       if (el) {
         clearTextAutoScroll();
-        el.scrollTo({ top: snap.scrollTop, behavior: "smooth" });
+        el.scrollTo({ top: snap.scrollTop, behavior: "auto" });
       }
 
       if (speechMode && announceBlock) {
@@ -2290,7 +2290,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (key === "l" && document.activeElement === body && body.scrollTop >= maxScroll - 1) {
       e.preventDefault();
       e.stopPropagation();
-      body.scrollTo({ top: 0, behavior: "smooth" });
+      body.scrollTo({ top: 0, behavior: "auto" });
       exitBtn.focus();
       return;
     }

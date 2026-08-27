@@ -76,7 +76,7 @@ export function useStepScroll() {
       // From Exit: jump back to top of text.
       if (document.activeElement === closeEl) {
         body.focus();
-        body.scrollTo({ top: 0, behavior: "smooth" });
+        body.scrollTo({ top: 0, behavior: "auto" });
         setScrollIndex(0);
         return;
       }
@@ -85,7 +85,7 @@ export function useStepScroll() {
       if (scrollIndex < activeAnchors.length - 1) {
         const nextIndex = scrollIndex + 1;
         setScrollIndex(nextIndex);
-        body.scrollTo({ top: activeAnchors[nextIndex], behavior: "smooth" });
+        body.scrollTo({ top: activeAnchors[nextIndex], behavior: "auto" });
       } else if (closeEl) {
         closeEl.focus();
       }
@@ -100,7 +100,7 @@ export function useStepScroll() {
       if (scrollIndex > 0) {
         const nextIndex = scrollIndex - 1;
         setScrollIndex(nextIndex);
-        body.scrollTo({ top: activeAnchors[nextIndex], behavior: "smooth" });
+        body.scrollTo({ top: activeAnchors[nextIndex], behavior: "auto" });
       } else if (closeEl) {
         closeEl.focus();
       }
