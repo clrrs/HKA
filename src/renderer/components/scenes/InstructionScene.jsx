@@ -19,6 +19,7 @@ export default function InstructionScene({ isActive }) {
   const videoRef = useRef(null);
   const emptyFocusRef = useRef(null);
   const skipButtonRef = useRef(null);
+  const skipExploringRef = useRef(false);
   const wasPlayingRef = useRef(false);
   const autoContinueTimerRef = useRef(null);
   const advancingRef = useRef(false);
@@ -68,7 +69,9 @@ export default function InstructionScene({ isActive }) {
       stopNvdaSpeechForMediaStart();
       video.currentTime = 0;
       video.play().catch(() => {});
-      return guardNvdaSpeechSilenceWhilePlaying(video);
+      return guardNvdaSpeechSilenceWhilePlaying(video, {
+        shouldSilence: () => !skipExploringRef.current,
+      });
     }
     video.pause();
     setShowSkip(false);
@@ -172,6 +175,18 @@ export default function InstructionScene({ isActive }) {
             type="button"
             className="nav-btn instruction-skip-btn"
             onClick={handleSkip}
+            onMouseEnter={() => {
+              skipExploringRef.current = true;
+            }}
+            onMouseLeave={() => {
+              skipExploringRef.current = false;
+            }}
+            onFocus={() => {
+              skipExploringRef.current = true;
+            }}
+            onBlur={() => {
+              skipExploringRef.current = false;
+            }}
             aria-label="Skip instructions"
           >
             Skip

@@ -67,7 +67,8 @@ const SPEECH_GUARD_INTERVAL_MS = 400;
  * Keep NVDA speech silenced while media plays; braille from focus is unchanged.
  * Returns a cleanup function (remove listeners + clear interval).
  */
-export function guardNvdaSpeechSilenceWhilePlaying(audioEl) {
+export function guardNvdaSpeechSilenceWhilePlaying(audioEl, options = {}) {
+  const { shouldSilence = () => true } = options;
   if (!audioEl) return () => {};
 
   let intervalId = null;
@@ -80,6 +81,7 @@ export function guardNvdaSpeechSilenceWhilePlaying(audioEl) {
   };
 
   const startGuard = () => {
+    if (!shouldSilence()) return;
     stopNvdaSpeechAggressively();
     if (intervalId !== null) return;
     intervalId = window.setInterval(() => {
@@ -87,6 +89,7 @@ export function guardNvdaSpeechSilenceWhilePlaying(audioEl) {
         clearGuard();
         return;
       }
+      if (!shouldSilence()) return;
       stopNvdaSpeechAggressively();
     }, SPEECH_GUARD_INTERVAL_MS);
   };

@@ -303,9 +303,17 @@ function getBlockSpeech(block, isFirst) {
 }
 
 /** Same-section overflow scroll only. New sections still use getBlockSpeech. */
-function getTextSnapScrollCue(index, total) {
-  if (index <= 0) return "Top of description.";
-  if (index >= total - 1) return "End of description.";
+function getTextSnapScrollCue(index, total, blockSpeech = "") {
+  if (index <= 0) {
+    return blockSpeech
+      ? `View snapped to beginning of description. ${blockSpeech}`
+      : "View snapped to beginning of description.";
+  }
+  if (index >= total - 1) {
+    return blockSpeech
+      ? `View snapped to end of description. ${blockSpeech}`
+      : "View snapped to end of description.";
+  }
   return `More description. ${index + 1} of ${total}.`;
 }
 
@@ -1993,12 +2001,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     markAutoplayEnded();
     setSnapIndex(0);
     setZoomOpen(true);
+    playEarcon(EARCON.popupOpen);
     announce("Zoom mode. Snap up or down to see the image.", { politeness: "assertive" });
   }, [announce, markAutoplayEnded, rememberMainFocus]);
 
   const exitZoom = useCallback(() => {
     setZoomOpen(false);
     setSnapIndex(0);
+    playEarcon(EARCON.popupClose);
     announce("Exited zoom mode.");
     restoreMainFocus(zoomOrPlayRef);
   }, [announce, restoreMainFocus]);
@@ -2048,7 +2058,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             announce(getBlockSpeech(block, blockIndex === 0), { dedupeMs: 200 });
           }
         } else {
-          announce(getTextSnapScrollCue(index, snaps.length), { dedupeMs: 200 });
+          const blockIndex = visibleBlocks.findIndex((b) => b.key === snap.blockKey);
+          const block = visibleBlocks[blockIndex];
+          const blockSpeech = block ? getBlockSpeech(block, blockIndex === 0) : "";
+          announce(getTextSnapScrollCue(index, snaps.length, blockSpeech), {
+            dedupeMs: 200,
+          });
         }
       }
     },
@@ -2168,19 +2183,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         setVisualSection(null);
       }
 
-      // First move off the silent anchor: next enters the text section, back
-      // goes to the previous-artifact arrow, and the anchor drops out of the order.
+      // First move off the silent anchor: next lands on Story (or the first
+      // toolbar control), back goes to the previous-artifact arrow, and the
+      // anchor drops out of the order.
       if (document.activeElement === focusAnchorRef.current) {
         e.preventDefault();
         e.stopPropagation();
         if (isNext) {
-          const focusables = getPopupFocusables();
-          const textEl = getTextPanelFocusEl();
-          const next =
-            (textScrollable && textEl) ||
-            focusables.find((el) => el !== prevArrowRef.current) ||
-            getFirstControlRef();
-          next?.focus({ preventScroll: true });
+          (storyBtnRef.current || getFirstToolbarButton())?.focus({
+            preventScroll: true,
+          });
           clearFocusAnchor();
         } else if (isBack) {
           prevArrowRef.current?.focus({ preventScroll: true });
@@ -2389,6 +2401,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (atSnapTop) return;
     const nextIndex = Math.max(0, snapIndex - 1);
     setSnapIndex(nextIndex);
+    playEarcon(EARCON.scrollText);
     if (nextIndex === 0) {
       announce("Top of image.", { politeness: "assertive" });
       focusOppositeAfterSnap("up");
@@ -2401,6 +2414,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (atSnapBottom) return;
     const nextIndex = Math.min(totalSteps - 1, snapIndex + 1);
     setSnapIndex(nextIndex);
+    playEarcon(EARCON.scrollText);
     if (nextIndex === totalSteps - 1) {
       announce("Bottom of image.", { politeness: "assertive" });
       focusOppositeAfterSnap("down");

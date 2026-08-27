@@ -50,6 +50,7 @@ export default function QuoteScene() {
     // (its delayed announcement raced past the old immediate Ctrl stops).
     quoteTextRef.current?.focus({ preventScroll: true });
     audioEl.currentTime = 0;
+    stopNvdaSpeechAggressively();
 
     const cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
       settleMs: 150,
