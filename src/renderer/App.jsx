@@ -6,6 +6,7 @@ import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
 import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 import { EARCON, playEarcon } from "./audio/earcons";
+import { moveSettingsFocus } from "./utils/settingsFocus";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -107,6 +108,12 @@ export default function App() {
 
     const handleEarlyDismiss = (e) => {
       if (Date.now() - openedAt < 200) return;
+      const key = e.key.toLowerCase();
+      // Let home / S reach useKeyboardNav so home is never blocked.
+      if (key === "s" || key === "home") {
+        dismissTestEasterEgg();
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       dismissTestEasterEgg();
@@ -200,6 +207,7 @@ export default function App() {
 
     // Keydown gets its own capture handler: when the idle warning is showing,
     // it swallows the event so useKeyboardNav never sees it, keeping focus in place.
+    // Home / S are an exception — dismiss the warning and let home navigation run.
     const handleKeydownCapture = (e) => {
       const wasWarning = warningVisibleRef.current;
       lastActivityRef.current = Date.now();
@@ -208,6 +216,10 @@ export default function App() {
 
       if (wasWarning) {
         playEarcon(EARCON.popupClose);
+        const key = e.key.toLowerCase();
+        if (key === "s" || key === "home") {
+          return;
+        }
         e.preventDefault();
         e.stopImmediatePropagation();
         requestAnimationFrame(() => {
@@ -286,36 +298,9 @@ export default function App() {
     const panel = settingsPanelRef.current;
     if (!panel) return;
 
-    const focusables = Array.from(
-      panel.querySelectorAll(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter(el => el.offsetParent !== null);
-
-    if (!focusables.length) return;
-
-    const currentIndex = focusables.indexOf(document.activeElement);
-    let nextIndex;
-
-    if (e.shiftKey) {
-      if (currentIndex <= 0) {
-        e.preventDefault();
-        return;
-      }
-      nextIndex = currentIndex - 1;
-    } else {
-      if (currentIndex === -1) {
-        nextIndex = 0;
-      } else if (currentIndex >= focusables.length - 1) {
-        e.preventDefault();
-        return;
-      } else {
-        nextIndex = currentIndex + 1;
-      }
-    }
-
+    const nextEl = moveSettingsFocus(panel, e.shiftKey ? "prev" : "next");
     e.preventDefault();
-    focusables[nextIndex].focus();
+    nextEl?.focus();
   };
 
   useLayoutEffect(() => {

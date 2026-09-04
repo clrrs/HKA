@@ -5,6 +5,7 @@ import {
   getElementSummary,
   logInputEvent,
 } from "./interactionLog";
+import { moveSettingsFocus } from "../utils/settingsFocus";
 
 /** Focus after inert/overlay teardown. Chromium often ignores a single .focus() in that same turn. */
 export function scheduleFocus(el, { stealWindow = false } = {}) {
@@ -188,14 +189,29 @@ export function useKeyboardNav() {
       // Back (K) - simulate Shift+Tab
       if (key === "k") {
         e.preventDefault();
-        const container = showSettings
-          ? document.querySelector(".settings-panel") || document
-          : document.querySelector(".artifact-popup-transcript") ||
-            document.querySelector(".carousel-zoom") ||
-            document.querySelector(".artifact-popup") ||
-            document;
+        if (showSettings) {
+          const panel = document.querySelector(".settings-panel");
+          const nextEl = moveSettingsFocus(panel, "prev");
+          if (nextEl) {
+            logInputEvent({
+              source: "useKeyboardNav",
+              scene,
+              subscene,
+              key,
+              action: "navigate-prev-focus",
+              target: getElementSummary(nextEl),
+              details: `from=${getElementSummary(document.activeElement)}`,
+            });
+            nextEl.focus();
+          }
+          return;
+        }
+        const container =
+          document.querySelector(".artifact-popup-transcript") ||
+          document.querySelector(".carousel-zoom") ||
+          document.querySelector(".artifact-popup") ||
+          document;
         const noWraparound =
-          showSettings ||
           scene === "home" ||
           scene === "theme" ||
           container.classList?.contains("artifact-popup") ||
@@ -257,14 +273,29 @@ export function useKeyboardNav() {
       // Next (L) - simulate Tab
       if (key === "l") {
         e.preventDefault();
-        const container = showSettings
-          ? document.querySelector(".settings-panel") || document
-          : document.querySelector(".artifact-popup-transcript") ||
-            document.querySelector(".carousel-zoom") ||
-            document.querySelector(".artifact-popup") ||
-            document;
+        if (showSettings) {
+          const panel = document.querySelector(".settings-panel");
+          const nextEl = moveSettingsFocus(panel, "next");
+          if (nextEl) {
+            logInputEvent({
+              source: "useKeyboardNav",
+              scene,
+              subscene,
+              key,
+              action: "navigate-next-focus",
+              target: getElementSummary(nextEl),
+              details: `from=${getElementSummary(document.activeElement)}`,
+            });
+            nextEl.focus();
+          }
+          return;
+        }
+        const container =
+          document.querySelector(".artifact-popup-transcript") ||
+          document.querySelector(".carousel-zoom") ||
+          document.querySelector(".artifact-popup") ||
+          document;
         const noWraparound =
-          showSettings ||
           scene === "home" ||
           scene === "theme" ||
           container.classList?.contains("artifact-popup") ||

@@ -1,6 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAppState, DEFAULT_PREFS } from "../state/StateProvider";
-import { useAnnounce } from "../state/AnnouncerProvider";
+import { scheduleFocus } from "../state/useSceneManager";
 
 const textSizeOptions = [
   { value: "small", label: "Small" },
@@ -25,13 +25,13 @@ const screenReaderOptions = [
   { value: false, label: "Off" },
 ];
 
-// Focus stays on the section trigger when a section opens, so the live region is
-// what tells a screen reader user the options appeared.
-const SECTION_OPEN_SR_LABELS = {
-  screenReader: "Screen reader options below.",
-  textSize: "Text size options below.",
-  theme: "Contrast options below.",
-  brightness: "Brightness options below.",
+const MENU_ITEM_COUNT = 4;
+
+const SECTION_OPTION_IDS = {
+  screenReader: "access-screen-reader-options",
+  textSize: "access-text-size-options",
+  theme: "access-theme-options",
+  brightness: "access-brightness-options",
 };
 
 const ONBOARDING_BLURB =
@@ -40,12 +40,28 @@ const ONBOARDING_BLURB =
 const SKIP_SR_LABEL =
   "Skip. Press the Select key to stick with these settings, or press the right arrow key to toggle screen reader or adjust text size, contrast, or brightness.";
 
+const CLOSE_SR_LABEL =
+  "Close button. This will close the settings menu. Your settings will be saved.";
+
+// Always attached to Screen Reader via aria-describedby (name, then description).
+const SCREEN_READER_TIP =
+  "Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
+
 function prefsMatchDefaults(prefs) {
   return (
     prefs.textSize === DEFAULT_PREFS.textSize &&
     prefs.theme === DEFAULT_PREFS.theme &&
     prefs.brightness === DEFAULT_PREFS.brightness
   );
+}
+
+// Name → current value → how many choices inside → position among menu items.
+function menuItemLabel(name, valueLabel, index, optionCount) {
+  return `${name}, ${valueLabel} selected, ${optionCount} options, ${index} of ${MENU_ITEM_COUNT} menu items`;
+}
+
+function optionLabel(label, selected, index, total) {
+  return `${label}, ${selected ? "selected" : "unselected"}, option ${index} of ${total}`;
 }
 
 export default function AccessibilityMenu({ onboarding = false }) {
@@ -56,29 +72,32 @@ export default function AccessibilityMenu({ onboarding = false }) {
     dismissSettings,
     toggleSettings,
     speechMode,
-    setSpeechModeWithTts,
-    lastTtsToggleRef,
+    setSpeechModePreference,
   } = useAppState();
-  const announce = useAnnounce();
   const [expandedSection, setExpandedSection] = useState(null);
   const introRef = useRef(null);
+  const sectionRefs = useRef({});
 
-  // Open the options but leave focus on the trigger so the operator can hear which
-  // section they are in before stepping into it.
+  // After Select opens a section, move focus to the first option once it's mounted.
+  useEffect(() => {
+    if (!expandedSection) return;
+    const root = document.getElementById(SECTION_OPTION_IDS[expandedSection]);
+    const first = root?.querySelector("button:not([disabled])");
+    if (!first) return undefined;
+    return scheduleFocus(first);
+  }, [expandedSection]);
+
   const openSection = (section) => {
     setExpandedSection(section);
-    const label = SECTION_OPEN_SR_LABELS[section];
-    if (label) {
-      announce(label, { politeness: "assertive", source: "settings-section-open" });
-    }
   };
 
-  const handleOptionsBlur = (e) => {
-    const next = e.relatedTarget;
-    const optionsEl = e.currentTarget;
-    if (next && !optionsEl.contains(next)) {
-      setExpandedSection(null);
-    }
+  const returnToMenuItem = (section) => {
+    setExpandedSection(null);
+    const focusTrigger = () => {
+      sectionRefs.current[section]?.focus({ preventScroll: true });
+    };
+    requestAnimationFrame(focusTrigger);
+    window.setTimeout(focusTrigger, 50);
   };
 
   const currentTextSizeLabel = textSizeOptions.find((o) => o.value === prefs.textSize)?.label ?? prefs.textSize;
@@ -89,9 +108,15 @@ export default function AccessibilityMenu({ onboarding = false }) {
   const isAtDefaults = prefsMatchDefaults(prefs) && speechMode === true;
 
   const handleScreenReader = (enabled) => {
-    if (enabled === speechMode) return;
-    lastTtsToggleRef.current = Date.now();
-    setSpeechModeWithTts(enabled);
+    if (enabled !== speechMode) {
+      setSpeechModePreference(enabled);
+    }
+    returnToMenuItem("screenReader");
+  };
+
+  const handlePrefOption = (section, key, value) => {
+    setPref(key, value);
+    returnToMenuItem(section);
   };
 
   const handleResetToDefaults = () => {
@@ -104,6 +129,9 @@ export default function AccessibilityMenu({ onboarding = false }) {
 
   return (
     <div className="accessibility-menu">
+      <p id="access-screen-reader-tip" className="sr-only">
+        {SCREEN_READER_TIP}
+      </p>
       <div
         className={`settings-intro-block${onboarding ? " settings-intro-block--onboarding" : ""}`}
       >
@@ -112,18 +140,19 @@ export default function AccessibilityMenu({ onboarding = false }) {
           className="settings-intro"
           tabIndex={0}
           data-autofocus
-          aria-label={speechMode && onboarding ? ONBOARDING_BLURB : undefined}
+          data-settings-layer="chrome"
+          aria-label={onboarding ? ONBOARDING_BLURB : undefined}
         >
           <h2
             id="accessibility-settings-title"
-            aria-hidden={speechMode ? true : undefined}
+            aria-hidden="true"
           >
             Accessibility Settings
           </h2>
           {onboarding && (
             <p
               id="accessibility-onboarding-blurb"
-              aria-hidden={speechMode ? true : undefined}
+              aria-hidden="true"
             >
               {ONBOARDING_BLURB}
             </p>
@@ -134,6 +163,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           <button
             type="button"
             className="setting-btn settings-onboarding-skip"
+            data-settings-layer="chrome"
             onClick={dismissSettings}
             aria-label={SKIP_SR_LABEL}
           >
@@ -146,12 +176,24 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-section-trigger"
+          ref={(el) => {
+            sectionRefs.current.screenReader = el;
+          }}
+          data-settings-layer="menu"
+          data-settings-menu-item
           onClick={() => openSection("screenReader")}
           aria-expanded={expandedSection === "screenReader"}
           aria-controls="access-screen-reader-options"
+          aria-describedby="access-screen-reader-tip"
           id="access-screen-reader-trigger"
+          aria-label={menuItemLabel(
+            "Screen Reader",
+            currentScreenReaderLabel,
+            1,
+            screenReaderOptions.length
+          )}
         >
-          <span className="setting-section-label">Screen Reader</span>
+          <span className="setting-section-label" aria-hidden="true">Screen Reader</span>
           <span className="setting-section-value" aria-hidden="true">{currentScreenReaderLabel}</span>
         </button>
         {expandedSection === "screenReader" && (
@@ -160,16 +202,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-options"
             role="group"
             aria-labelledby="access-screen-reader-trigger"
-            onBlur={handleOptionsBlur}
           >
-            {screenReaderOptions.map((option) => (
+            {screenReaderOptions.map((option, i) => (
               <button
                 key={String(option.value)}
+                type="button"
                 className={`setting-btn ${speechMode === option.value ? "active" : ""}`}
+                data-settings-layer="options"
                 onClick={() => handleScreenReader(option.value)}
                 aria-pressed={speechMode === option.value}
+                aria-label={optionLabel(
+                  option.label,
+                  speechMode === option.value,
+                  i + 1,
+                  screenReaderOptions.length
+                )}
               >
-                {option.label}
+                <span aria-hidden="true">{option.label}</span>
               </button>
             ))}
           </div>
@@ -180,12 +229,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-section-trigger"
+          ref={(el) => {
+            sectionRefs.current.textSize = el;
+          }}
+          data-settings-layer="menu"
+          data-settings-menu-item
           onClick={() => openSection("textSize")}
           aria-expanded={expandedSection === "textSize"}
           aria-controls="access-text-size-options"
           id="access-text-size-trigger"
+          aria-label={menuItemLabel(
+            "Text Size",
+            currentTextSizeLabel,
+            2,
+            textSizeOptions.length
+          )}
         >
-          <span className="setting-section-label">Text Size</span>
+          <span className="setting-section-label" aria-hidden="true">Text Size</span>
           <span className="setting-section-value" aria-hidden="true">{currentTextSizeLabel}</span>
         </button>
         {expandedSection === "textSize" && (
@@ -194,16 +254,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-options"
             role="group"
             aria-labelledby="access-text-size-trigger"
-            onBlur={handleOptionsBlur}
           >
-            {textSizeOptions.map((option) => (
+            {textSizeOptions.map((option, i) => (
               <button
                 key={option.value}
+                type="button"
                 className={`setting-btn ${prefs.textSize === option.value ? "active" : ""}`}
-                onClick={() => setPref("textSize", option.value)}
+                data-settings-layer="options"
+                onClick={() => handlePrefOption("textSize", "textSize", option.value)}
                 aria-pressed={prefs.textSize === option.value}
+                aria-label={optionLabel(
+                  option.label,
+                  prefs.textSize === option.value,
+                  i + 1,
+                  textSizeOptions.length
+                )}
               >
-                {option.label}
+                <span aria-hidden="true">{option.label}</span>
               </button>
             ))}
           </div>
@@ -214,12 +281,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-section-trigger"
+          ref={(el) => {
+            sectionRefs.current.theme = el;
+          }}
+          data-settings-layer="menu"
+          data-settings-menu-item
           onClick={() => openSection("theme")}
           aria-expanded={expandedSection === "theme"}
           aria-controls="access-theme-options"
           id="access-theme-trigger"
+          aria-label={menuItemLabel(
+            "Contrast",
+            currentThemeLabel,
+            3,
+            themeOptions.length
+          )}
         >
-          <span className="setting-section-label">Contrast</span>
+          <span className="setting-section-label" aria-hidden="true">Contrast</span>
           <span className="setting-section-value" aria-hidden="true">{currentThemeLabel}</span>
         </button>
         {expandedSection === "theme" && (
@@ -228,16 +306,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-options"
             role="group"
             aria-labelledby="access-theme-trigger"
-            onBlur={handleOptionsBlur}
           >
-            {themeOptions.map((option) => (
+            {themeOptions.map((option, i) => (
               <button
                 key={option.value}
+                type="button"
                 className={`setting-btn ${prefs.theme === option.value ? "active" : ""}`}
-                onClick={() => setPref("theme", option.value)}
+                data-settings-layer="options"
+                onClick={() => handlePrefOption("theme", "theme", option.value)}
                 aria-pressed={prefs.theme === option.value}
+                aria-label={optionLabel(
+                  option.label,
+                  prefs.theme === option.value,
+                  i + 1,
+                  themeOptions.length
+                )}
               >
-                {option.label}
+                <span aria-hidden="true">{option.label}</span>
               </button>
             ))}
           </div>
@@ -248,12 +333,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-section-trigger"
+          ref={(el) => {
+            sectionRefs.current.brightness = el;
+          }}
+          data-settings-layer="menu"
+          data-settings-menu-item
           onClick={() => openSection("brightness")}
           aria-expanded={expandedSection === "brightness"}
           aria-controls="access-brightness-options"
           id="access-brightness-trigger"
+          aria-label={menuItemLabel(
+            "Brightness",
+            currentBrightnessLabel,
+            4,
+            brightnessOptions.length
+          )}
         >
-          <span className="setting-section-label">Brightness</span>
+          <span className="setting-section-label" aria-hidden="true">Brightness</span>
           <span className="setting-section-value" aria-hidden="true">{currentBrightnessLabel}</span>
         </button>
         {expandedSection === "brightness" && (
@@ -262,16 +358,23 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-options"
             role="group"
             aria-labelledby="access-brightness-trigger"
-            onBlur={handleOptionsBlur}
           >
-            {brightnessOptions.map((option) => (
+            {brightnessOptions.map((option, i) => (
               <button
                 key={option.value}
+                type="button"
                 className={`setting-btn ${prefs.brightness === option.value ? "active" : ""}`}
-                onClick={() => setPref("brightness", option.value)}
+                data-settings-layer="options"
+                onClick={() => handlePrefOption("brightness", "brightness", option.value)}
                 aria-pressed={prefs.brightness === option.value}
+                aria-label={optionLabel(
+                  option.label,
+                  prefs.brightness === option.value,
+                  i + 1,
+                  brightnessOptions.length
+                )}
               >
-                {option.label}
+                <span aria-hidden="true">{option.label}</span>
               </button>
             ))}
           </div>
@@ -282,6 +385,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-btn settings-reset-btn"
+          data-settings-layer="chrome"
           onClick={handleResetToDefaults}
           disabled={isAtDefaults}
         >
@@ -290,9 +394,12 @@ export default function AccessibilityMenu({ onboarding = false }) {
         <button
           type="button"
           className="setting-btn"
+          data-settings-layer="chrome"
+          data-settings-close
           onClick={onboarding ? dismissSettings : toggleSettings}
+          aria-label={CLOSE_SR_LABEL}
         >
-          Save and Exit
+          Close
         </button>
       </div>
     </div>

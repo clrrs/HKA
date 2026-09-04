@@ -41,7 +41,8 @@ const HOME_HEADING_LABEL =
   "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page.";
 
 export default function HomeScene({ isActive = false }) {
-  const { goToScene, setVideoOverlayOpen, speechMode, showSettings } = useAppState();
+  const { goToScene, setVideoOverlayOpen, speechMode, showSettings, lastTtsToggleRef } =
+    useAppState();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
   const [announceHomeArrival, setAnnounceHomeArrival] = useState(false);
@@ -132,6 +133,20 @@ export default function HomeScene({ isActive = false }) {
       helpButtonRef.current.focus();
     }
   };
+
+  // Home / S must close the help video so it can't block the home page.
+  useEffect(() => {
+    if (!showVideo) return;
+    const handleHome = (e) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      if (key !== "s" && key !== "home") return;
+      if (Date.now() - lastTtsToggleRef.current < 500) return;
+      closeVideo();
+    };
+    window.addEventListener("keydown", handleHome);
+    return () => window.removeEventListener("keydown", handleHome);
+  }, [showVideo, lastTtsToggleRef]);
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");

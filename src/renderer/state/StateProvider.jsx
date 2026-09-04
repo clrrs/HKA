@@ -186,8 +186,11 @@ export default function StateProvider({ children }) {
   const [autoReadActive, setAutoReadActive] = useState(false);
 
   const [speechMode, setSpeechMode] = useState(true);
+  const speechModeRef = useRef(speechMode);
+  speechModeRef.current = speechMode;
   const toggleSpeechMode = () => setSpeechMode((prev) => !prev);
   const lastTtsToggleRef = useRef(0);
+  const prevShowSettingsForTtsRef = useRef(false);
 
   const setSpeechModeWithTts = useCallback((enabled) => {
     lastTtsToggleRef.current = Date.now();
@@ -195,17 +198,42 @@ export default function StateProvider({ children }) {
     window.kioskApi?.send("toggle-tts");
   }, []);
 
+  // Preference only — TTS stays on while Settings is open (synced on open/close).
+  const setSpeechModePreference = useCallback((enabled) => {
+    setSpeechMode(enabled);
+  }, []);
+
   const resetPrefs = useCallback(() => {
     setPrefs(DEFAULT_PREFS);
     setSpeechMode((prev) => {
       if (!prev) {
-        lastTtsToggleRef.current = Date.now();
-        window.kioskApi?.send("toggle-tts");
+        // Settings holds TTS unmuted; don't toggle or we'd mute while the overlay is open.
+        if (!showSettingsRef.current) {
+          lastTtsToggleRef.current = Date.now();
+          window.kioskApi?.send("toggle-tts");
+        }
         return true;
       }
       return prev;
     });
   }, []);
+
+  // Keep NVDA speaking for the whole Settings session; apply mute only on close if Off.
+  useEffect(() => {
+    const wasOpen = prevShowSettingsForTtsRef.current;
+    prevShowSettingsForTtsRef.current = showSettings;
+    if (showSettings && !wasOpen) {
+      if (!speechModeRef.current) {
+        lastTtsToggleRef.current = Date.now();
+        window.kioskApi?.send("toggle-tts");
+      }
+    } else if (!showSettings && wasOpen) {
+      if (!speechModeRef.current) {
+        lastTtsToggleRef.current = Date.now();
+        window.kioskApi?.send("toggle-tts");
+      }
+    }
+  }, [showSettings]);
 
   const [hasSeenThemeTip, setHasSeenThemeTip] = useState(false);
 
@@ -310,6 +338,15 @@ export default function StateProvider({ children }) {
     if (sceneName === "accessibility" && scene !== "accessibility") {
       setPreviousScene(scene);
     }
+    // Prefs are live-saved, so closing settings here is the same as Close.
+    if (sceneName === "home") {
+      if (showSettingsRef.current) {
+        setShowSettings(false);
+        setSettingsOnboarding(false);
+        setPendingAccessibilityOnboarding(false);
+      }
+      setTestEasterEgg(null);
+    }
     goToScene(sceneName, options);
   };
 
@@ -342,6 +379,7 @@ export default function StateProvider({ children }) {
       speechMode,
       toggleSpeechMode,
       setSpeechModeWithTts,
+      setSpeechModePreference,
       lastTtsToggleRef,
       isPaused,
       togglePaused,
