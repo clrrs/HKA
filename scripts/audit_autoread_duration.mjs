@@ -17,7 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const artifactsSrc = path.join(__dirname, "..", "src", "renderer", "data", "artifacts.js");
 const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "hka-")), "artifacts.mjs");
 fs.writeFileSync(tmp, fs.readFileSync(artifactsSrc));
-const { themes, DESCRIPTION_MODE_COMBINED, GUIDED_DESCRIPTION_MODE_LETTERS } =
+const { themes, DESCRIPTION_MODE_COMBINED, GUIDED_DESCRIPTION_MODE_LETTERS, getArtifactAltText } =
   await import(pathToFileURL(tmp).href);
 
 const MISSING_COPY = "MISSING COPY";
@@ -27,6 +27,7 @@ const POST_READ_DWELL_MS = 4000;
 const TRANSCRIPT_AUTOPLAY_PROMPT =
   "Transcript. Press Select for the full transcript of this artifact.";
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
+const DIALOG_TITLE_PREAMBLE_MS = 500;
 const HIDE_MISSING_GUIDED_SECTIONS = false;
 
 // App.jsx
@@ -160,10 +161,15 @@ for (const theme of Object.values(themes)) {
     const chunks = buildAutoplayChunks(artifact, blocks, isVideo);
 
     const readMs = chunks.reduce((sum, c) => sum + estimateChunkDurationMs(c.text), 0);
-    const hasTranscript =
-      typeof artifact.transcriptText === "string" &&
-      artifact.transcriptText.trim().length > 0;
+    const openAlt = getArtifactAltText(artifact);
+    const openPreambleMs =
+      estimateSpeechDurationMs(openAlt) +
+      DIALOG_TITLE_PREAMBLE_MS +
+      estimateSpeechDurationMs(artifact.title) +
+      DIALOG_TITLE_PREAMBLE_MS;
+    const hasTranscript = isVideo;
     const totalMs =
+      openPreambleMs +
       readMs +
       (hasTranscript
         ? estimateSpeechDurationMs(TRANSCRIPT_AUTOPLAY_PROMPT) + POST_READ_DWELL_MS

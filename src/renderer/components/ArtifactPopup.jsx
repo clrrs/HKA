@@ -20,6 +20,7 @@ import {
   DESCRIPTION_MODE_COMBINED,
   GUIDED_DESCRIPTION_MODE_LETTERS,
   getArtifact,
+  getArtifactAltText,
   getNextArtifact,
   getPrevArtifact,
 } from "../data/artifacts";
@@ -37,7 +38,7 @@ const AUTO_READ_THEME_END_PROMPT =
   "End of artifacts in this theme. Press Select to return to the start of the theme.";
 const VIDEO_END_DWELL_MS = 1000;
 const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
-/** Covers NVDA's "dialog" role preamble before it reaches the popup title. */
+/** Covers NVDA's "dialog" role preamble before it reaches the spoken dialog label. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
 const EMPTY_IMAGES = [];
 
@@ -83,12 +84,9 @@ function hasScrollOverflow(el) {
   return getScrollOverflowPx(el) > SCROLL_OVERFLOW_THRESHOLD_PX;
 }
 
-function artifactHasTranscriptCopy(artifact) {
-  return typeof artifact?.transcriptText === "string" && artifact.transcriptText.trim().length > 0;
-}
-
-function showsTranscriptButton(artifact, isVideo) {
-  return Boolean(isVideo || artifactHasTranscriptCopy(artifact));
+function showsTranscriptButton(_artifact, isVideo) {
+  // Transcript is video-only; image/document copy now lives in the story text.
+  return Boolean(isVideo);
 }
 
 function getNodeOffsetTop(panel, node) {
@@ -289,14 +287,14 @@ function buildTextBlocks(artifact, images, isCombined) {
 
 function getDocumentPageAnnounce(artifact, pageIndex, pageCount) {
   const name = artifact?.displayTitle || artifact?.title || "this document";
-  return `Page ${pageIndex + 1} of ${pageCount} of ${name}. For full text, go to Transcript.`;
+  return `Page ${pageIndex + 1} of ${pageCount} of ${name}.`;
 }
 
 function getBlockSpeech(block, isFirst) {
   if (block.kind === "guided") {
     return [block.heading, block.tagline, block.text].filter(Boolean).join(". ");
   }
-  // Dialog aria-label already announces the title on open.
+  // Open alt + title are spoken before auto-read reaches story chunks.
   return isFirst ? `Artifact story. ${block.text}` : block.text;
 }
 
@@ -339,8 +337,7 @@ function buildAutoplayChunks(artifact, blocks, isVideo) {
 
   if (!isVideo) return chunks;
 
-  // Video artifacts hand off to playback rather than stepping through images;
-  // beginInlineVideo speaks the guided copy just before the video starts.
+  // Video artifacts hand off to playback rather than stepping through guided copy.
   const spoken = chunks.filter((chunk) => chunk.section === "description");
   spoken.push({
     text: VIDEO_AUTOPLAY_PROMPT,
@@ -567,7 +564,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const currentImage = images.length > 0 ? images[currentImageIndex] : null;
   const showStoryButton = !isCombined;
-  const showGuidedDescriptionButton = !isCombined;
+  const showGuidedDescriptionButton = !isCombined && !isVideo;
 
   const getGuidedBlockForImage = useCallback(
     (imageIndex) => {
@@ -916,18 +913,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         flashSelected(playBtnRef);
       }
 
-      // A live-region update reaches NVDA braille first. Speech is then cut
-      // aggressively before media starts, matching quote playback behavior.
-      const describing = isCombined
-        ? textBlocks
-        : textBlocks.filter((block) => block.kind === "guided");
-      const spoken = describing.map((block) => getBlockSpeech(block, false)).join(" ");
-      if (spoken) {
-        setTextMode("guided");
-        scrollBlockToTop(describing[0]?.key);
-        announce(spoken, { politeness: "assertive", dedupeMs: 0 });
-      }
-
+      // Cut NVDA speech before media starts (braille settle matches quote playback).
       if (videoStartTimeoutRef.current !== null) {
         clearTimeout(videoStartTimeoutRef.current);
       }
@@ -949,15 +935,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }, BRAILLE_OUTPUT_SETTLE_MS);
     },
     [
-      announce,
       artifact,
       flashSelected,
-      isCombined,
       isVideo,
-      scrollBlockToTop,
       setVideoOverlayOpen,
       setVisualSection,
-      textBlocks,
     ]
   );
 
@@ -1238,7 +1220,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
 
   // NVDA prepends the document title ("Helen Keller Archive") when a dialog
-  // opens. Blank it for the popup lifetime so speech is just the artifact title.
+  // opens. Blank it for the popup lifetime so speech starts with the short alt.
   useEffect(() => {
     const previousTitle = document.title;
     document.title = "\u00a0";
@@ -1255,7 +1237,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => {
     if (artifact && !speechMode) {
-      announce(`${artifact.title} opened.`, { politeness: "assertive" });
+      const alt = getArtifactAltText(artifact);
+      announce(`${alt}. ${artifact.title} opened.`, { politeness: "assertive" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1285,6 +1268,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (chunks.length === 0) return;
 
     const hasTranscriptLocal = showsTranscriptButton(artifact, isVideo);
+    const openAlt = getArtifactAltText(artifact);
+    const openTitle = artifact.title;
 
     let chunkIndex = 0;
     autoplayingRef.current = true;
@@ -1365,15 +1350,26 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       autoplayTimeoutRef.current = setTimeout(playNext, delay);
     };
 
-    // Stay on the dialog so NVDA does not start reading the text panel from the
-    // top. Each chunk is spoken only via the live region.
-    const firstChunkDelay = autoReadDelayMs(
-      estimateSpeechDurationMs(artifact.title) + DIALOG_TITLE_PREAMBLE_MS,
+    // Dialog aria-label speaks short alt first. Then title, then story chunks.
+    const announceTitleThenStory = () => {
+      if (!autoplayingRef.current || isPausedRef.current) return;
+      announce(openTitle, { politeness: "assertive" });
+      const titleDelay = autoReadDelayMs(
+        estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS,
+        autoReadFastRef.current
+      );
+      autoplayPlayNextRef.current = playNext;
+      autoplayDeadlineRef.current = Date.now() + titleDelay;
+      autoplayTimeoutRef.current = setTimeout(playNext, titleDelay);
+    };
+
+    const altDelay = autoReadDelayMs(
+      estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
       autoReadFastRef.current
     );
-    autoplayPlayNextRef.current = playNext;
-    autoplayDeadlineRef.current = Date.now() + firstChunkDelay;
-    autoplayTimeoutRef.current = setTimeout(playNext, firstChunkDelay);
+    autoplayPlayNextRef.current = announceTitleThenStory;
+    autoplayDeadlineRef.current = Date.now() + altDelay;
+    autoplayTimeoutRef.current = setTimeout(announceTitleThenStory, altDelay);
 
     return () => {
       if (autoplayingRef.current) {
@@ -2427,8 +2423,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const hasTranscript = showsTranscriptButton(artifact, isVideo);
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
-  // Title only — auto-read then announces description (avoids "details" + repeated title).
-  const dialogAriaLabel = artifact.title;
+  // Short alt first — auto-read then announces title, then story.
+  const dialogAriaLabel = getArtifactAltText(artifact);
 
   const autoplayBtnClass = (section) =>
     visualActiveSection === section ? " carousel-btn--autoplay-active" : "";

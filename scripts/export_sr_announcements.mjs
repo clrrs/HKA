@@ -156,14 +156,17 @@ function inferProducerScenario(row) {
 
   // --- Theme blurbs (data-field) ---
   if (type === "data-field" && location === "artifacts") {
-    return `On Home with speech on, visitor pauses on the ${row.trigger.match(/— (.+?) \(/)?.[1] ?? "theme"} circle for 3 seconds and hears this summary.`;
+    return `On Home with speech on, visitor focuses the ${row.trigger.match(/— (.+?) \(/)?.[1] ?? "theme"} circle and hears icon alt plus select CTA.`;
   }
   if (location === "artifacts" && notes.includes("getThemeFocusAnnouncement")) {
-    return "Code template that builds the 3-second theme-circle announcements on Home.";
+    return "Code template that builds theme-circle announcements on Home.";
   }
 
   // --- ArtifactPopup live-announce ---
   if (location === "ArtifactPopup" && type === "live-announce") {
+    if (message.includes("{alt}") && msg.includes("opened")) {
+      return "Speech off: visitor opens an artifact; NVDA announces short alt, then title opened.";
+    }
     if (message.includes("{artifact.title}") && msg.includes("opened")) {
       return "Visitor opens an artifact; NVDA interrupts to announce the artifact title plus 'opened.'";
     }
@@ -212,7 +215,7 @@ function inferProducerScenario(row) {
   // --- ArtifactPopup aria-label ---
   if (location === "ArtifactPopup" && type === "aria-label") {
     if (msg.includes("artifact details")) {
-      return "Artifact popup opens; NVDA reads the dialog label with the artifact title.";
+      return "Artifact popup opens; NVDA reads the dialog label with the short image alt first.";
     }
     if (notes.includes("Previous artifact")) {
       return "Visitor tabs to the left nav arrow in the artifact popup.";
@@ -750,17 +753,17 @@ async function extractThemeBlurbs() {
 
   for (const themeId of themeOrder) {
     const theme = themes[themeId];
-    if (!theme?.screenReaderBlurb) continue;
+    if (!theme?.iconAlt) continue;
 
-    const fullMessage = `${theme.screenReaderBlurb} Press select key to view the artifacts in this theme.`;
+    const fullMessage = `${theme.iconAlt} Press select key to view the artifacts in this theme.`;
     addRow({
       type: "data-field",
       location: "artifacts",
-      trigger: `Theme circle focused for 3s — ${theme.label} (speech mode)`,
+      trigger: `Theme circle focused — ${theme.label} (speech mode)`,
       message: fullMessage,
       source_file: relPath(artifactsPath),
       line: "",
-      notes: `screenReaderBlurb for theme "${themeId}"; expanded via getThemeFocusAnnouncement()`,
+      notes: `iconAlt for theme "${themeId}"; expanded via getThemeFocusAnnouncement()`,
     });
   }
 }

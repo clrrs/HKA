@@ -18,7 +18,7 @@ export const themes = {
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CThe power of effecting changes for the better is within ourselves\u2026\u201D",
     description: "Helen Keller was a life-long advocate for change across society. Beginning with her fundraising campaign as a 10-year-old student, Helen was an advocate for voting, labor, and economic rights, in addition to working for several decades to advocate for people who were blind and deafblind.",
-    screenReaderBlurb: "Helen Keller was a lifelong advocate for voting, labor, economic rights, and disability rights.",
+    iconAlt: "TODO_ALT: Short visual description for Change theme icon",
     artifacts: [
       {
         id: "1A1",
@@ -29,6 +29,7 @@ export const themes = {
         type: "video",
         videoSrc: "1A1VeteranVid.mp4",
         posterSrc: "1A1VeteranVid_frame.png",
+        alt: "TODO_ALT: Short visual description for Korean War Veteran Visit",
         images: [],
         transcriptTitle: "Transcript",
         transcriptText: `Male audio description: In a medical institution, Helen and Polly stand aside men sitting on hospital beds.
@@ -142,7 +143,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CTogether we can do so much.\u201D",
     description: "Relationships were an essential part of Helen Keller\u2019s growth, education, and her accomplishments. Through friends across both society and the globe, known and unknown, Helen knew that collaboration was the key to success.",
-    screenReaderBlurb: "Helen Keller\u2019s growth and accomplishments grew from friendships and collaboration across society and the world.",
+    iconAlt: "TODO_ALT: Short visual description for Together theme icon",
     artifacts: [
       {
         id: "2A1",
@@ -278,7 +279,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CLife is either a daring adventure or nothing at all.\u201D",
     description: "Whether exploring one of the 39 different countries she traveled to, or piloting an airplane over Europe, Helen\u2019s lust for adventure was an inspiration to the world. Each of her travels left a lasting impression on the people and nations that she visited.",
-    screenReaderBlurb: "Helen Keller traveled to 39 countries and even piloted a plane, inspiring people everywhere she went.",
+    iconAlt: "TODO_ALT: Short visual description for Adventure theme icon",
     artifacts: [
       {
         id: "3A1",
@@ -290,6 +291,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
         type: "video",
         videoSrc: "3A1Biplane.mp4",
         posterSrc: "3A1Biplane_frame.png",
+        alt: "TODO_ALT: Short visual description for Helen Keller Takes a Ride in an Airplane",
         images: [],
         transcriptTitle: "Transcript",
         transcriptText: `Female narrator: It showed her first airplane ride. A daring feat at that time.
@@ -555,7 +557,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CIf we do not like our work, and do not try to get happiness out of it, we are a menace to our profession as well as to ourselves.\u201D",
     description: "No less a fixture in Vaudeville than in the Cambridge School for Young Ladies, Helen had an extremely diverse life in both education and employment. Her work in literary circles, Radcliffe College, and even in Hollywood no doubt contributed to her incredible ability to prevail in the most challenging of endeavors.",
-    screenReaderBlurb: "From Vaudeville and Radcliffe College to Hollywood, Helen Keller pursued an extraordinarily diverse life of education and work.",
+    iconAlt: "TODO_ALT: Short visual description for Work theme icon",
     artifacts: [
       {
         id: "4A1",
@@ -667,16 +669,27 @@ export function getTheme(themeId) {
   return themes[themeId] || null;
 }
 
+/** Short icon/poster alt for selection buttons and artifact-open speech. */
+export function getArtifactAltText(artifact) {
+  if (!artifact) return "TODO_ALT: Short visual description";
+  const fromImage = artifact.images?.[0]?.alt;
+  if (typeof fromImage === "string" && fromImage.trim()) return fromImage.trim();
+  const fromArtifact = artifact.alt;
+  if (typeof fromArtifact === "string" && fromArtifact.trim()) return fromArtifact.trim();
+  const name = artifact.displayTitle || artifact.title || "this artifact";
+  return `TODO_ALT: Short visual description for ${name}`;
+}
+
 export function getThemeFocusAnnouncement(themeId) {
-  const blurb = themes[themeId]?.screenReaderBlurb;
-  if (!blurb) return null;
-  return `${blurb} Press select key to view the artifacts in this theme.`;
+  const iconAlt = themes[themeId]?.iconAlt;
+  if (!iconAlt) return null;
+  return `${iconAlt} Press select key to view the artifacts in this theme.`;
 }
 
 export function getThemeCarouselLabel(themeId, themeLabel, index, total) {
   const position = `${themeLabel}, ${index + 1} of ${total}`;
-  const blurb = getThemeFocusAnnouncement(themeId);
-  return blurb ? `${position}. ${blurb}` : position;
+  const announcement = getThemeFocusAnnouncement(themeId);
+  return announcement ? `${position}. ${announcement}` : position;
 }
 
 export function getThemeArtifacts(themeId) {

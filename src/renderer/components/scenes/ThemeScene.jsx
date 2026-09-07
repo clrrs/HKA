@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
-import { getTheme, getArtifactIndex } from "../../data/artifacts";
+import { getTheme, getArtifactIndex, getArtifactAltText } from "../../data/artifacts";
 import { EARCON, playEarcon } from "../../audio/earcons";
 import ArtifactPopup from "../ArtifactPopup";
 
@@ -384,7 +384,7 @@ export default function ThemeScene() {
                     onFocus={() => handleFocus(i)}
                     onBlur={handleBlur}
                     onClick={() => openArtifact(artifact.id)}
-                    aria-label={`${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}`}
+                    aria-label={`${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}. ${getArtifactAltText(artifact)}`}
                     tabIndex={0}
                   >
                     <span className="artifact-circle-inner" aria-hidden="true" />
