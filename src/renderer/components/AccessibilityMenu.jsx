@@ -107,38 +107,11 @@ export default function AccessibilityMenu({ onboarding = false }) {
 
   const closeSection = (section) => {
     const name = SECTION_NAMES[section];
-    const valueLabel =
-      section === "screenReader"
-        ? speechMode
-          ? "On"
-          : "Off"
-        : section === "textSize"
-          ? textSizeOptions.find((o) => o.value === prefs.textSize)?.label ?? prefs.textSize
-          : section === "theme"
-            ? themeOptions.find((o) => o.value === prefs.theme)?.label ?? prefs.theme
-            : brightnessOptions.find((o) => o.value === prefs.brightness)?.label ??
-              String(prefs.brightness);
-    const optionCount =
-      section === "screenReader"
-        ? screenReaderOptions.length
-        : section === "textSize"
-          ? textSizeOptions.length
-          : section === "theme"
-            ? themeOptions.length
-            : brightnessOptions.length;
-    const index =
-      section === "screenReader"
-        ? 1
-        : section === "textSize"
-          ? 2
-          : section === "theme"
-            ? 3
-            : 4;
 
     setExpandedSection(null);
-    // Focus stays on the trigger (already focused when Select closed it), so
-    // NVDA will not re-read on its own — announce the closed state + label.
-    announce(`${name} menu item closed. ${menuItemLabel(name, valueLabel, index, optionCount)}`, {
+    // Focus stays on the trigger, so the full menu-item label is still one
+    // Next/Prev away — the confirmation only needs to say what closed.
+    announce(`${name} closed.`, {
       politeness: "assertive",
       source: "settings-section-close",
     });
@@ -256,13 +229,10 @@ export default function AccessibilityMenu({ onboarding = false }) {
           <span className="setting-section-label" aria-hidden="true">Screen Reader</span>
           <span className="setting-section-value" aria-hidden="true">{currentScreenReaderLabel}</span>
         </button>
+        {/* No role/label on the options wrappers: a labelled group makes NVDA
+            re-read the trigger's whole label when focus enters it. */}
         {expandedSection === "screenReader" && (
-          <div
-            id="access-screen-reader-options"
-            className="setting-options"
-            role="group"
-            aria-labelledby="access-screen-reader-trigger"
-          >
+          <div id="access-screen-reader-options" className="setting-options">
             {screenReaderOptions.map((option, i) => {
               const base = optionLabel(
                 option.label,
@@ -315,12 +285,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           <span className="setting-section-value" aria-hidden="true">{currentTextSizeLabel}</span>
         </button>
         {expandedSection === "textSize" && (
-          <div
-            id="access-text-size-options"
-            className="setting-options"
-            role="group"
-            aria-labelledby="access-text-size-trigger"
-          >
+          <div id="access-text-size-options" className="setting-options">
             {textSizeOptions.map((option, i) => (
               <button
                 key={option.value}
@@ -368,12 +333,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           <span className="setting-section-value" aria-hidden="true">{currentThemeLabel}</span>
         </button>
         {expandedSection === "theme" && (
-          <div
-            id="access-theme-options"
-            className="setting-options"
-            role="group"
-            aria-labelledby="access-theme-trigger"
-          >
+          <div id="access-theme-options" className="setting-options">
             {themeOptions.map((option, i) => (
               <button
                 key={option.value}
@@ -421,12 +381,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           <span className="setting-section-value" aria-hidden="true">{currentBrightnessLabel}</span>
         </button>
         {expandedSection === "brightness" && (
-          <div
-            id="access-brightness-options"
-            className="setting-options"
-            role="group"
-            aria-labelledby="access-brightness-trigger"
-          >
+          <div id="access-brightness-options" className="setting-options">
             {brightnessOptions.map((option, i) => (
               <button
                 key={option.value}
