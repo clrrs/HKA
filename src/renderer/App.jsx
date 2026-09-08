@@ -51,6 +51,14 @@ function getIdleDismissAnnouncement(el) {
 
 export default function App() {
   useKeyboardNav();
+
+  // NVDA speaks the document title whenever focus lands on the document/body
+  // or a dialog opens. This kiosk never wants that, so blank it once for the
+  // whole app lifetime instead of per-scene blank/restore.
+  useLayoutEffect(() => {
+    document.title = "\u00a0";
+  }, []);
+
   const {
     scene,
     showSettings,
@@ -313,9 +321,11 @@ export default function App() {
       const el = settingsReturnFocusRef.current;
       settingsReturnFocusRef.current = null;
       const restore = () => {
-        if (el && document.contains(el)) {
-          el.focus({ preventScroll: true });
-        }
+        const usable =
+          el && document.contains(el) && !el.closest("[inert]") ? el : null;
+        // Fall back to the scene so focus never drops to body on close.
+        const target = usable || getActiveSceneFocusTarget();
+        target?.focus({ preventScroll: true });
       };
       restore();
       const t1 = window.setTimeout(restore, 50);

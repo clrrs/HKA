@@ -1212,16 +1212,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
 
-  // NVDA prepends the document title ("Helen Keller Archive") when a dialog
-  // opens. Blank it for the popup lifetime so speech starts with the short alt.
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = "\u00a0";
-    return () => {
-      document.title = previousTitle;
-    };
-  }, []);
-
   useEffect(() => {
     if (!mainPopupActive) return;
     if (!speechMode && !focusAnchorActive) return;

@@ -22,7 +22,6 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
 
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
 const QUOTE_INTRO_PAUSE_MS = 1000;
-const DOCUMENT_TITLE = "Helen Keller Archive";
 
 function quoteVoSrc(themeId) {
   const file = QUOTE_VO_FILE_BY_THEME_ID[themeId];
@@ -44,17 +43,6 @@ export default function QuoteScene() {
     audioRef,
     scene === "quote" ? currentTheme : scene
   );
-
-  // Blank document title while on quote so NVDA does not announce it when
-  // focus leaves the previous (now inert) home control.
-  useEffect(() => {
-    if (scene !== "quote") return undefined;
-    const previousTitle = document.title;
-    document.title = "\u00a0";
-    return () => {
-      document.title = previousTitle || DOCUMENT_TITLE;
-    };
-  }, [scene]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -162,12 +150,14 @@ export default function QuoteScene() {
   if (!theme) return null;
 
   return (
-    <div className="quote-scene" role="region" aria-label={`${theme.label} theme quote`}>
+    <div className="quote-scene">
+      {/* Silent focus park: holds focus off the document so NVDA has nothing
+          to announce before the autoplay intro. */}
       <div
         ref={quoteEntryRef}
         className="sr-only"
         tabIndex={0}
-        aria-label={`${theme.label} theme quote`}
+        aria-label={"\u00a0"}
       />
       <div
         ref={quoteTextRef}
