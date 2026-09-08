@@ -65,6 +65,8 @@ if (typeof window !== "undefined") {
       if (key === "w" || key === "i") {
         e.preventDefault();
         e.stopImmediatePropagation();
+        // Feedback only — does not move focus.
+        playEarcon(EARCON.volumeTone);
         window.kioskApi?.send(key === "w" ? "volume-up" : "volume-down");
       }
     },

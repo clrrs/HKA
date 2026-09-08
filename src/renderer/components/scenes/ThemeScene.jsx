@@ -1,7 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
-import { getTheme, getArtifactIndex, getArtifactAltText } from "../../data/artifacts";
+import { getTheme, getArtifactIndex, getArtifactCircleName, getArtifactCircleDescription } from "../../data/artifacts";
+import { scheduleFocus } from "../../state/useSceneManager";
 import { EARCON, playEarcon } from "../../audio/earcons";
 import ArtifactPopup from "../ArtifactPopup";
 
@@ -102,9 +103,7 @@ export default function ThemeScene() {
   }, []);
 
   const restoreThemeEntryFocus = useCallback(() => {
-    requestAnimationFrame(() => {
-      headingRef.current?.focus({ preventScroll: true });
-    });
+    return scheduleFocus(headingRef.current);
   }, []);
 
   useEffect(() => {
@@ -316,6 +315,15 @@ export default function ThemeScene() {
       className={`theme-scene${popupOpen ? " theme-scene--popup-open" : ""}`}
       onKeyDown={handleSceneKeyDown}
     >
+      {artifacts.map((artifact, i) => (
+        <p
+          key={`artifact-circle-desc-${artifact.id}`}
+          id={`artifact-circle-desc-${artifact.id}`}
+          className="sr-only"
+        >
+          {getArtifactCircleDescription(artifact)}
+        </p>
+      ))}
       <div className="home-bg" aria-hidden="true" />
 
       <div
@@ -384,7 +392,8 @@ export default function ThemeScene() {
                     onFocus={() => handleFocus(i)}
                     onBlur={handleBlur}
                     onClick={() => openArtifact(artifact.id)}
-                    aria-label={`${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}, ${i + 1} of ${artifacts.length}. ${getArtifactAltText(artifact)}`}
+                    aria-label={getArtifactCircleName(artifact, i, artifacts.length)}
+                    aria-describedby={`artifact-circle-desc-${artifact.id}`}
                     tabIndex={0}
                   >
                     <span className="artifact-circle-inner" aria-hidden="true" />

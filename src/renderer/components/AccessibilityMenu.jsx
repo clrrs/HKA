@@ -45,15 +45,18 @@ const SECTION_NAMES = {
 const ONBOARDING_BLURB =
   "By default, the screen reader is on. Press Skip to continue, or use the left and right keys to customize. Press the settings key to access this menu at any time.";
 
+// Single spoken open line (dialog title + blurb) so NVDA does not stack
+// dialog aria-label + intro aria-label into a double read.
+const ONBOARDING_INTRO_SR_LABEL = `Accessibility Settings. ${ONBOARDING_BLURB}`;
+
 const SKIP_TIP =
   "Tip: Press the Select key to stick with these settings, or press the right key to toggle screen reader or adjust text size, contrast, or brightness.";
 
-const CLOSE_SR_LABEL =
-  "Close button. This will close the settings menu. Your settings will be saved.";
-
-// Always attached to Screen Reader via aria-describedby (name, then description).
+// Folded into aria-label after a period so NVDA pauses before the tip (not after "button").
 const SCREEN_READER_TIP =
   "Tip: Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
+
+const RESET_RESTORED_ANNOUNCEMENT = "Default settings restored.";
 
 function prefsMatchDefaults(prefs) {
   return (
@@ -63,8 +66,6 @@ function prefsMatchDefaults(prefs) {
   );
 }
 
-// Name → set to value → position → available options count. Trailing period
-// creates a pause before any aria-describedby tip.
 function menuItemLabel(name, valueLabel, index, optionCount) {
   return `${name}, set to ${valueLabel}, ${index} of ${MENU_ITEM_COUNT} menu items, ${optionCount} available ${name.toLowerCase()} options.`;
 }
@@ -73,9 +74,11 @@ function optionLabel(label, selected, index, total) {
   return `${label}, ${selected ? "selected" : "unselected"}, option ${index} of ${total}`;
 }
 
-function triggerAriaLabel(name, valueLabel, index, optionCount, isExpanded) {
-  const base = menuItemLabel(name, valueLabel, index, optionCount);
-  return isExpanded ? `${base} Press Select to close.` : base;
+function triggerAriaLabel(name, valueLabel, index, optionCount, isExpanded, tip) {
+  let label = menuItemLabel(name, valueLabel, index, optionCount);
+  if (tip) label = `${label} ${tip}`;
+  if (isExpanded) label = `${label} Press Select to close.`;
+  return label;
 }
 
 export default function AccessibilityMenu({ onboarding = false }) {
@@ -92,17 +95,10 @@ export default function AccessibilityMenu({ onboarding = false }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const introRef = useRef(null);
   const sectionRefs = useRef({});
-  // Skip auto-focusing the first option when the visitor just closed a section
-  // by selecting its own trigger (focus should stay on the trigger).
-  const skipAutoFocusOptionsRef = useRef(false);
 
   // After Select opens a section, move focus to the first option once it's mounted.
   useEffect(() => {
     if (!expandedSection) return;
-    if (skipAutoFocusOptionsRef.current) {
-      skipAutoFocusOptionsRef.current = false;
-      return undefined;
-    }
     const root = document.getElementById(SECTION_OPTION_IDS[expandedSection]);
     const first = root?.querySelector("button:not([disabled])");
     if (!first) return undefined;
@@ -139,7 +135,6 @@ export default function AccessibilityMenu({ onboarding = false }) {
             ? 3
             : 4;
 
-    skipAutoFocusOptionsRef.current = true;
     setExpandedSection(null);
     // Focus stays on the trigger (already focused when Select closed it), so
     // NVDA will not re-read on its own — announce the closed state + label.
@@ -188,21 +183,14 @@ export default function AccessibilityMenu({ onboarding = false }) {
   const handleResetToDefaults = () => {
     resetPrefs();
     setExpandedSection(null);
-    requestAnimationFrame(() => {
-      introRef.current?.focus();
+    announce(RESET_RESTORED_ANNOUNCEMENT, {
+      politeness: "assertive",
+      source: "settings-reset",
     });
   };
 
   return (
     <div className="accessibility-menu">
-      <p id="access-screen-reader-tip" className="sr-only">
-        {SCREEN_READER_TIP}
-      </p>
-      {onboarding && (
-        <p id="access-skip-tip" className="sr-only">
-          {SKIP_TIP}
-        </p>
-      )}
       <div
         className={`settings-intro-block${onboarding ? " settings-intro-block--onboarding" : ""}`}
       >
@@ -212,7 +200,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           tabIndex={0}
           data-autofocus
           data-settings-layer="chrome"
-          aria-label={onboarding ? ONBOARDING_BLURB : undefined}
+          aria-label={onboarding ? ONBOARDING_INTRO_SR_LABEL : undefined}
         >
           <h2
             id="accessibility-settings-title"
@@ -236,7 +224,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-btn settings-onboarding-skip"
             data-settings-layer="chrome"
             onClick={dismissSettings}
-            aria-describedby="access-skip-tip"
+            aria-label={`Skip. ${SKIP_TIP}`}
           >
             Skip
           </button>
@@ -255,14 +243,14 @@ export default function AccessibilityMenu({ onboarding = false }) {
           onClick={() => toggleSection("screenReader")}
           aria-expanded={expandedSection === "screenReader"}
           aria-controls="access-screen-reader-options"
-          aria-describedby="access-screen-reader-tip"
           id="access-screen-reader-trigger"
           aria-label={triggerAriaLabel(
             "Screen Reader",
             currentScreenReaderLabel,
             1,
             screenReaderOptions.length,
-            expandedSection === "screenReader"
+            expandedSection === "screenReader",
+            SCREEN_READER_TIP
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Screen Reader</span>
@@ -275,7 +263,14 @@ export default function AccessibilityMenu({ onboarding = false }) {
             role="group"
             aria-labelledby="access-screen-reader-trigger"
           >
-            {screenReaderOptions.map((option, i) => (
+            {screenReaderOptions.map((option, i) => {
+              const base = optionLabel(
+                option.label,
+                speechMode === option.value,
+                i + 1,
+                screenReaderOptions.length
+              );
+              return (
               <button
                 key={String(option.value)}
                 type="button"
@@ -283,17 +278,14 @@ export default function AccessibilityMenu({ onboarding = false }) {
                 data-settings-layer="options"
                 onClick={() => handleScreenReader(option.value)}
                 aria-pressed={speechMode === option.value}
-                aria-describedby={option.value === false ? "access-screen-reader-tip" : undefined}
-                aria-label={optionLabel(
-                  option.label,
-                  speechMode === option.value,
-                  i + 1,
-                  screenReaderOptions.length
-                )}
+                aria-label={
+                  option.value === false ? `${base}. ${SCREEN_READER_TIP}` : base
+                }
               >
                 <span aria-hidden="true">{option.label}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -473,7 +465,6 @@ export default function AccessibilityMenu({ onboarding = false }) {
           data-settings-layer="chrome"
           data-settings-close
           onClick={onboarding ? dismissSettings : toggleSettings}
-          aria-label={CLOSE_SR_LABEL}
         >
           Close
         </button>

@@ -674,16 +674,58 @@ export function getArtifactAltText(_artifact) {
   return "TODO: placeholder alt text";
 }
 
+const THEME_SELECT_CTA = "Press select key to view the artifacts in this theme.";
+const ARTIFACT_SELECT_CTA = "Press select key to learn more.";
+const ARTIFACT_NAV_CTA = "Press select key to enter this artifact.";
+
+/** Title + position only — NVDA appends "button" after this name. */
+export function getThemeCarouselName(themeLabel, index, total) {
+  return `${themeLabel}, ${index + 1} of ${total}`;
+}
+
+/**
+ * Description after role "button". Leading period nudges a brief pause.
+ * Returns null when there is no icon alt.
+ */
+export function getThemeCarouselDescription(themeId) {
+  const iconAlt = themes[themeId]?.iconAlt;
+  if (!iconAlt) return `. ${THEME_SELECT_CTA}`;
+  return `. ${iconAlt}. ${THEME_SELECT_CTA}`;
+}
+
+/** @deprecated Prefer getThemeCarouselName + getThemeCarouselDescription */
 export function getThemeFocusAnnouncement(themeId) {
   const iconAlt = themes[themeId]?.iconAlt;
   if (!iconAlt) return null;
-  return `${iconAlt} Press select key to view the artifacts in this theme.`;
+  return `${iconAlt} ${THEME_SELECT_CTA}`;
 }
 
+/** @deprecated Prefer getThemeCarouselName + getThemeCarouselDescription */
 export function getThemeCarouselLabel(themeId, themeLabel, index, total) {
-  const position = `${themeLabel}, ${index + 1} of ${total}`;
-  const announcement = getThemeFocusAnnouncement(themeId);
-  return announcement ? `${position}. ${announcement}` : position;
+  const position = getThemeCarouselName(themeLabel, index, total);
+  const description = getThemeCarouselDescription(themeId);
+  return description ? `${position}${description}` : position;
+}
+
+export function getArtifactCircleName(artifact, index, total) {
+  const title = `${artifact.displayTitle}${artifact.year ? `, ${artifact.year}` : ""}`;
+  return `${title}, ${index + 1} of ${total}`;
+}
+
+export function getArtifactCircleDescription(artifact) {
+  return `. ${getArtifactAltText(artifact)}. ${ARTIFACT_SELECT_CTA}`;
+}
+
+export function getArtifactNavName(artifact, themeId) {
+  const arts = getThemeArtifacts(themeId);
+  const index = arts.findIndex((a) => a.id === artifact.id);
+  const total = arts.length;
+  if (index < 0) return artifact.displayTitle;
+  return `${artifact.displayTitle}, ${index + 1} of ${total}`;
+}
+
+export function getArtifactNavDescription() {
+  return `. ${ARTIFACT_NAV_CTA}`;
 }
 
 export function getThemeArtifacts(themeId) {

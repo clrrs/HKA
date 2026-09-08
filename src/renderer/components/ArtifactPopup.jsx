@@ -23,6 +23,8 @@ import {
   getArtifactAltText,
   getNextArtifact,
   getPrevArtifact,
+  getArtifactNavName,
+  getArtifactNavDescription,
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 import { estimateSpeechDurationMs } from "../utils/speechTiming";
@@ -2466,6 +2468,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             aria-hidden={speechMode ? undefined : true}
           />
         )}
+        <p id="artifact-nav-desc" className="sr-only">
+          {getArtifactNavDescription()}
+        </p>
         <button
           type="button"
           ref={prevArrowRef}
@@ -2473,9 +2478,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           onClick={handlePrevArrow}
           aria-label={
             prevArtifact
-              ? `Previous artifact: ${prevArtifact.displayTitle}. Press select key to enter this artifact.`
+              ? getArtifactNavName(prevArtifact, theme.id)
               : "Back to theme"
           }
+          aria-describedby={prevArtifact ? "artifact-nav-desc" : undefined}
         />
 
         <div className="artifact-popup-card">
@@ -2742,9 +2748,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           onClick={handleNextArrow}
           aria-label={
             nextArtifact
-              ? `Next artifact: ${nextArtifact.displayTitle}. Press select key to enter this artifact.`
+              ? getArtifactNavName(nextArtifact, theme.id)
               : AUTO_READ_THEME_END_PROMPT
           }
+          aria-describedby={nextArtifact ? "artifact-nav-desc" : undefined}
         />
       </div>
 

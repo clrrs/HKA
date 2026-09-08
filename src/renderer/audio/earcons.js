@@ -12,6 +12,7 @@ export const EARCON = {
   previousArtifact: "previousArtifact",
   darkLightMode: "darkLightMode",
   scrollText: "scrollText",
+  volumeTone: "volumeTone",
 };
 
 const EARCON_SRC = {
@@ -23,6 +24,7 @@ const EARCON_SRC = {
   [EARCON.previousArtifact]: "/sfx/previousArtifact.mp3",
   [EARCON.darkLightMode]: "/sfx/darkLightMode.mp3",
   [EARCON.scrollText]: "/sfx/scrollText.wav",
+  [EARCON.volumeTone]: "/sfx/volumeTone.mp3",
 };
 
 let applySink = null;

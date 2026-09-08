@@ -340,19 +340,28 @@ export default function App() {
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       );
 
+    // Reclaim focus from scene autofocus (home scheduleFocus races on
+    // instruction→home+settings). Do not call .focus() if already on the
+    // target or already inside the panel — that re-announces for NVDA.
     const focusIntro = () => {
       const target = getTarget();
-      // Re-focusing the same element makes NVDA re-announce the onboarding blurb.
-      if (!target || document.activeElement === target) return;
+      if (!target) return;
+      const active = document.activeElement;
+      if (active === target) return;
+      if (active && panel.contains(active)) return;
       target.focus({ preventScroll: true });
     };
 
     focusIntro();
+    const raf = requestAnimationFrame(focusIntro);
     const t1 = window.setTimeout(focusIntro, 50);
     const t2 = window.setTimeout(focusIntro, 150);
+    const t3 = window.setTimeout(focusIntro, 300);
     return () => {
+      cancelAnimationFrame(raf);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      window.clearTimeout(t3);
     };
   }, [showSettings, settingsOnboarding]);
 
@@ -455,13 +464,25 @@ export default function App() {
           aria-hidden={idleWarningActive ? true : undefined}
           inert={idleWarningActive ? "" : undefined}
         >
-          <SceneContainer />
+          {/* Keep scenes inert under Settings so home autofocus / L-K cannot
+              drive the carousel behind the overlay. */}
+          <div
+            className="app-scenes"
+            aria-hidden={showSettings ? true : undefined}
+            inert={showSettings ? "" : undefined}
+          >
+            <SceneContainer />
+          </div>
           {showSettings && (
             <div
               className="settings-overlay"
               role="dialog"
               aria-modal="true"
-              aria-label="Accessibility Settings"
+              // Onboarding: name lives only on the focused intro so NVDA does not
+              // announce "Accessibility Settings" here and again on the blurb.
+              aria-label={
+                settingsOnboarding ? undefined : "Accessibility Settings"
+              }
             >
               <div
                 className="settings-backdrop"

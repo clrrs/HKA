@@ -9,6 +9,7 @@ import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme } from "../../data/artifacts";
 import { estimateSpeechDurationMs } from "../../utils/speechTiming";
+import { scheduleFocus } from "../../state/useSceneManager";
 
 const QUOTE_VO_DIR = "Quote VOs";
 
@@ -21,6 +22,7 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
 
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
 const QUOTE_INTRO_PAUSE_MS = 1000;
+const DOCUMENT_TITLE = "Helen Keller Archive";
 
 function quoteVoSrc(themeId) {
   const file = QUOTE_VO_FILE_BY_THEME_ID[themeId];
@@ -35,12 +37,24 @@ export default function QuoteScene() {
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
   const quoteTextRef = useRef(null);
+  const quoteEntryRef = useRef(null);
   const timeoutRef = useRef(null);
 
   useHeadphoneSinkEffect(
     audioRef,
     scene === "quote" ? currentTheme : scene
   );
+
+  // Blank document title while on quote so NVDA does not announce it when
+  // focus leaves the previous (now inert) home control.
+  useEffect(() => {
+    if (scene !== "quote") return undefined;
+    const previousTitle = document.title;
+    document.title = "\u00a0";
+    return () => {
+      document.title = previousTitle || DOCUMENT_TITLE;
+    };
+  }, [scene]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -54,12 +68,15 @@ export default function QuoteScene() {
 
     let cancelled = false;
     let cancelSpeechStops = () => {};
+    let cancelEntryFocus = () => {};
     let introTimer = null;
+
+    // Park focus immediately so it never falls to the document (title speech).
+    cancelEntryFocus = scheduleFocus(quoteEntryRef.current);
 
     const startQuotePlayback = () => {
       if (cancelled) return;
-      // Focus quote text so braille gets the quote; do not use aria-live
-      // (its delayed announcement raced past the old immediate Ctrl stops).
+      // Move to quote text for braille, then silence NVDA and play VO.
       quoteTextRef.current?.focus({ preventScroll: true });
       audioEl.currentTime = 0;
       stopNvdaSpeechAggressively();
@@ -78,12 +95,18 @@ export default function QuoteScene() {
     };
 
     if (speechMode) {
-      announce(QUOTE_INTRO_ANNOUNCEMENT, {
-        politeness: "assertive",
-        source: "quote-scene-intro",
-      });
+      // Focus first, then announce, so the intro timer matches spoken content.
+      window.setTimeout(() => {
+        if (cancelled) return;
+        announce(QUOTE_INTRO_ANNOUNCEMENT, {
+          politeness: "assertive",
+          source: "quote-scene-intro",
+        });
+      }, 50);
       const waitMs =
-        estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT) + QUOTE_INTRO_PAUSE_MS;
+        50 +
+        estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT) +
+        QUOTE_INTRO_PAUSE_MS;
       introTimer = window.setTimeout(startQuotePlayback, waitMs);
     } else {
       startQuotePlayback();
@@ -92,6 +115,7 @@ export default function QuoteScene() {
     return () => {
       cancelled = true;
       if (introTimer) window.clearTimeout(introTimer);
+      cancelEntryFocus();
       cancelSpeechStops();
     };
   }, [scene, theme?.id, speechMode, announce]);
@@ -139,6 +163,12 @@ export default function QuoteScene() {
 
   return (
     <div className="quote-scene" role="region" aria-label={`${theme.label} theme quote`}>
+      <div
+        ref={quoteEntryRef}
+        className="sr-only"
+        tabIndex={0}
+        aria-label={`${theme.label} theme quote`}
+      />
       <div
         ref={quoteTextRef}
         className="quote-scene-text"

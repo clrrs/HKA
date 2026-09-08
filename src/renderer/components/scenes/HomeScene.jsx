@@ -5,7 +5,7 @@ import {
   guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
-import { getThemeCarouselLabel } from "../../data/artifacts";
+import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
 import { useAppState } from "../../state/StateProvider";
 
 const TESTING_ADVENTURE_ONLY = false;
@@ -276,6 +276,18 @@ export default function HomeScene({ isActive = false }) {
 
   return (
     <div className="home-scene" onKeyDown={handleSceneKeyDown}>
+      {speechMode &&
+        themes.map((theme) =>
+          theme.disabledForTesting ? null : (
+            <p
+              key={`theme-circle-desc-${theme.id}`}
+              id={`theme-circle-desc-${theme.id}`}
+              className="sr-only"
+            >
+              {getThemeCarouselDescription(theme.id)}
+            </p>
+          )
+        )}
       <div className="home-bg" aria-hidden="true" />
       <button
         ref={helpButtonRef}
@@ -333,8 +345,13 @@ export default function HomeScene({ isActive = false }) {
                 onClick={() => { if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
                 aria-label={
                   speechMode && !theme.disabledForTesting
-                    ? getThemeCarouselLabel(theme.id, theme.label, i, themes.length)
+                    ? getThemeCarouselName(theme.label, i, themes.length)
                     : `${theme.label}, ${i + 1} of ${themes.length}`
+                }
+                aria-describedby={
+                  speechMode && !theme.disabledForTesting
+                    ? `theme-circle-desc-${theme.id}`
+                    : undefined
                 }
                 aria-disabled={theme.disabledForTesting ? true : undefined}
                 tabIndex={0}
