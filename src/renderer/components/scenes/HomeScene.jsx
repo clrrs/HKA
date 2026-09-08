@@ -62,40 +62,34 @@ export default function HomeScene({ isActive = false }) {
   const wasActiveRef = useRef(isActive);
   const prevShowSettingsRef = useRef(showSettings);
   const prevHomeArrivalNonceRef = useRef(homeArrivalNonce);
+  // Snapshot before we update wasActiveRef — true only when Home key is pressed
+  // while already on the home scene (nonce bump without inactive→active).
+  const stayedOnHomeRef = useRef(false);
   focusedIndexRef.current = focusedIndex;
 
+  stayedOnHomeRef.current = wasActiveRef.current && isActive;
   if (isActive && !wasActiveRef.current) {
     setAnnounceHomeArrival(true);
   }
+  wasActiveRef.current = isActive;
 
-  // Every Home key press bumps the nonce — even when already on home — so we
-  // re-announce "Home." by briefly blurring then re-focusing the heading.
-  // First arrivals (inactive → active) are handled by useSceneFocus; only
-  // re-focus when the visitor was already on this screen.
+  // Re-announce "Home." when the Home key is pressed while already on this screen.
   useLayoutEffect(() => {
-    const alreadyActive = wasActiveRef.current;
-    const nonceChanged = homeArrivalNonce !== prevHomeArrivalNonceRef.current;
-    if (nonceChanged) {
-      prevHomeArrivalNonceRef.current = homeArrivalNonce;
-      if (isActive && homeArrivalNonce > 0) {
-        setAnnounceHomeArrival(true);
-        if (alreadyActive) {
-          const heading = headingRef.current;
-          if (heading) {
-            heading.blur();
-            const focusHeading = () => {
-              heading.focus({ preventScroll: true });
-            };
-            requestAnimationFrame(focusHeading);
-            const t = window.setTimeout(focusHeading, 50);
-            wasActiveRef.current = isActive;
-            return () => window.clearTimeout(t);
-          }
-        }
-      }
-    }
-    wasActiveRef.current = isActive;
-  }, [homeArrivalNonce, isActive]);
+    if (homeArrivalNonce === prevHomeArrivalNonceRef.current) return;
+    prevHomeArrivalNonceRef.current = homeArrivalNonce;
+    if (!stayedOnHomeRef.current || homeArrivalNonce === 0) return;
+
+    setAnnounceHomeArrival(true);
+    const heading = headingRef.current;
+    if (!heading) return;
+    heading.blur();
+    const focusHeading = () => {
+      heading.focus({ preventScroll: true });
+    };
+    requestAnimationFrame(focusHeading);
+    const t = window.setTimeout(focusHeading, 50);
+    return () => window.clearTimeout(t);
+  }, [homeArrivalNonce]);
 
   useLayoutEffect(() => {
     const wasOpen = prevShowSettingsRef.current;
