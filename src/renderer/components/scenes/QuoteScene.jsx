@@ -6,7 +6,9 @@ import {
   stopNvdaSpeechAggressively,
 } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
+import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme } from "../../data/artifacts";
+import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 
 const QUOTE_VO_DIR = "Quote VOs";
 
@@ -17,6 +19,9 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
   work: "APH_Work_Scratch Aud.mp3"
 };
 
+const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
+const QUOTE_INTRO_PAUSE_MS = 1000;
+
 function quoteVoSrc(themeId) {
   const file = QUOTE_VO_FILE_BY_THEME_ID[themeId];
   if (!file) return "";
@@ -25,7 +30,8 @@ function quoteVoSrc(themeId) {
 }
 
 export default function QuoteScene() {
-  const { currentTheme, goToScene, scene } = useAppState();
+  const { currentTheme, goToScene, scene, speechMode } = useAppState();
+  const announce = useAnnounce();
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
   const quoteTextRef = useRef(null);
@@ -46,27 +52,49 @@ export default function QuoteScene() {
       return;
     }
 
-    // Focus quote text so braille gets the quote; do not use aria-live
-    // (its delayed announcement raced past the old immediate Ctrl stops).
-    quoteTextRef.current?.focus({ preventScroll: true });
-    audioEl.currentTime = 0;
-    stopNvdaSpeechAggressively();
+    let cancelled = false;
+    let cancelSpeechStops = () => {};
+    let introTimer = null;
 
-    const cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
-      settleMs: 150,
-      followUpMs: 180,
-      onSettled: () => {
-        const playPromise = audioEl.play();
-        if (playPromise && typeof playPromise.catch === "function") {
-          playPromise.catch(() => {});
-        }
-      },
-    });
+    const startQuotePlayback = () => {
+      if (cancelled) return;
+      // Focus quote text so braille gets the quote; do not use aria-live
+      // (its delayed announcement raced past the old immediate Ctrl stops).
+      quoteTextRef.current?.focus({ preventScroll: true });
+      audioEl.currentTime = 0;
+      stopNvdaSpeechAggressively();
+
+      cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
+        settleMs: 150,
+        followUpMs: 180,
+        onSettled: () => {
+          if (cancelled) return;
+          const playPromise = audioEl.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {});
+          }
+        },
+      });
+    };
+
+    if (speechMode) {
+      announce(QUOTE_INTRO_ANNOUNCEMENT, {
+        politeness: "assertive",
+        source: "quote-scene-intro",
+      });
+      const waitMs =
+        estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT) + QUOTE_INTRO_PAUSE_MS;
+      introTimer = window.setTimeout(startQuotePlayback, waitMs);
+    } else {
+      startQuotePlayback();
+    }
 
     return () => {
+      cancelled = true;
+      if (introTimer) window.clearTimeout(introTimer);
       cancelSpeechStops();
     };
-  }, [scene, theme?.id]);
+  }, [scene, theme?.id, speechMode, announce]);
 
   useEffect(() => {
     const audioEl = audioRef.current;

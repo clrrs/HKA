@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAppState, DEFAULT_PREFS } from "../state/StateProvider";
+import { useAnnounce } from "../state/AnnouncerProvider";
 import { scheduleFocus } from "../state/useSceneManager";
 
 const textSizeOptions = [
@@ -34,18 +35,25 @@ const SECTION_OPTION_IDS = {
   brightness: "access-brightness-options",
 };
 
-const ONBOARDING_BLURB =
-  "By default, the screen reader is on. Press Skip to continue, or use the arrow keys to customize. Press the settings key to access this menu at any time.";
+const SECTION_NAMES = {
+  screenReader: "Screen Reader",
+  textSize: "Text Size",
+  theme: "Contrast",
+  brightness: "Brightness",
+};
 
-const SKIP_SR_LABEL =
-  "Skip. Press the Select key to stick with these settings, or press the right arrow key to toggle screen reader or adjust text size, contrast, or brightness.";
+const ONBOARDING_BLURB =
+  "By default, the screen reader is on. Press Skip to continue, or use the left and right keys to customize. Press the settings key to access this menu at any time.";
+
+const SKIP_TIP =
+  "Tip: Press the Select key to stick with these settings, or press the right key to toggle screen reader or adjust text size, contrast, or brightness.";
 
 const CLOSE_SR_LABEL =
   "Close button. This will close the settings menu. Your settings will be saved.";
 
 // Always attached to Screen Reader via aria-describedby (name, then description).
 const SCREEN_READER_TIP =
-  "Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
+  "Tip: Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
 
 function prefsMatchDefaults(prefs) {
   return (
@@ -55,13 +63,19 @@ function prefsMatchDefaults(prefs) {
   );
 }
 
-// Name → current value → how many choices inside → position among menu items.
+// Name → set to value → position → available options count. Trailing period
+// creates a pause before any aria-describedby tip.
 function menuItemLabel(name, valueLabel, index, optionCount) {
-  return `${name}, ${valueLabel} selected, ${optionCount} options, ${index} of ${MENU_ITEM_COUNT} menu items`;
+  return `${name}, set to ${valueLabel}, ${index} of ${MENU_ITEM_COUNT} menu items, ${optionCount} available ${name.toLowerCase()} options.`;
 }
 
 function optionLabel(label, selected, index, total) {
   return `${label}, ${selected ? "selected" : "unselected"}, option ${index} of ${total}`;
+}
+
+function triggerAriaLabel(name, valueLabel, index, optionCount, isExpanded) {
+  const base = menuItemLabel(name, valueLabel, index, optionCount);
+  return isExpanded ? `${base} Press Select to close.` : base;
 }
 
 export default function AccessibilityMenu({ onboarding = false }) {
@@ -74,20 +88,72 @@ export default function AccessibilityMenu({ onboarding = false }) {
     speechMode,
     setSpeechModePreference,
   } = useAppState();
+  const announce = useAnnounce();
   const [expandedSection, setExpandedSection] = useState(null);
   const introRef = useRef(null);
   const sectionRefs = useRef({});
+  // Skip auto-focusing the first option when the visitor just closed a section
+  // by selecting its own trigger (focus should stay on the trigger).
+  const skipAutoFocusOptionsRef = useRef(false);
 
   // After Select opens a section, move focus to the first option once it's mounted.
   useEffect(() => {
     if (!expandedSection) return;
+    if (skipAutoFocusOptionsRef.current) {
+      skipAutoFocusOptionsRef.current = false;
+      return undefined;
+    }
     const root = document.getElementById(SECTION_OPTION_IDS[expandedSection]);
     const first = root?.querySelector("button:not([disabled])");
     if (!first) return undefined;
     return scheduleFocus(first);
   }, [expandedSection]);
 
-  const openSection = (section) => {
+  const closeSection = (section) => {
+    const name = SECTION_NAMES[section];
+    const valueLabel =
+      section === "screenReader"
+        ? speechMode
+          ? "On"
+          : "Off"
+        : section === "textSize"
+          ? textSizeOptions.find((o) => o.value === prefs.textSize)?.label ?? prefs.textSize
+          : section === "theme"
+            ? themeOptions.find((o) => o.value === prefs.theme)?.label ?? prefs.theme
+            : brightnessOptions.find((o) => o.value === prefs.brightness)?.label ??
+              String(prefs.brightness);
+    const optionCount =
+      section === "screenReader"
+        ? screenReaderOptions.length
+        : section === "textSize"
+          ? textSizeOptions.length
+          : section === "theme"
+            ? themeOptions.length
+            : brightnessOptions.length;
+    const index =
+      section === "screenReader"
+        ? 1
+        : section === "textSize"
+          ? 2
+          : section === "theme"
+            ? 3
+            : 4;
+
+    skipAutoFocusOptionsRef.current = true;
+    setExpandedSection(null);
+    // Focus stays on the trigger (already focused when Select closed it), so
+    // NVDA will not re-read on its own — announce the closed state + label.
+    announce(`${name} menu item closed. ${menuItemLabel(name, valueLabel, index, optionCount)}`, {
+      politeness: "assertive",
+      source: "settings-section-close",
+    });
+  };
+
+  const toggleSection = (section) => {
+    if (expandedSection === section) {
+      closeSection(section);
+      return;
+    }
     setExpandedSection(section);
   };
 
@@ -132,6 +198,11 @@ export default function AccessibilityMenu({ onboarding = false }) {
       <p id="access-screen-reader-tip" className="sr-only">
         {SCREEN_READER_TIP}
       </p>
+      {onboarding && (
+        <p id="access-skip-tip" className="sr-only">
+          {SKIP_TIP}
+        </p>
+      )}
       <div
         className={`settings-intro-block${onboarding ? " settings-intro-block--onboarding" : ""}`}
       >
@@ -165,7 +236,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-btn settings-onboarding-skip"
             data-settings-layer="chrome"
             onClick={dismissSettings}
-            aria-label={SKIP_SR_LABEL}
+            aria-describedby="access-skip-tip"
           >
             Skip
           </button>
@@ -181,16 +252,17 @@ export default function AccessibilityMenu({ onboarding = false }) {
           }}
           data-settings-layer="menu"
           data-settings-menu-item
-          onClick={() => openSection("screenReader")}
+          onClick={() => toggleSection("screenReader")}
           aria-expanded={expandedSection === "screenReader"}
           aria-controls="access-screen-reader-options"
           aria-describedby="access-screen-reader-tip"
           id="access-screen-reader-trigger"
-          aria-label={menuItemLabel(
+          aria-label={triggerAriaLabel(
             "Screen Reader",
             currentScreenReaderLabel,
             1,
-            screenReaderOptions.length
+            screenReaderOptions.length,
+            expandedSection === "screenReader"
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Screen Reader</span>
@@ -211,6 +283,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
                 data-settings-layer="options"
                 onClick={() => handleScreenReader(option.value)}
                 aria-pressed={speechMode === option.value}
+                aria-describedby={option.value === false ? "access-screen-reader-tip" : undefined}
                 aria-label={optionLabel(
                   option.label,
                   speechMode === option.value,
@@ -234,15 +307,16 @@ export default function AccessibilityMenu({ onboarding = false }) {
           }}
           data-settings-layer="menu"
           data-settings-menu-item
-          onClick={() => openSection("textSize")}
+          onClick={() => toggleSection("textSize")}
           aria-expanded={expandedSection === "textSize"}
           aria-controls="access-text-size-options"
           id="access-text-size-trigger"
-          aria-label={menuItemLabel(
+          aria-label={triggerAriaLabel(
             "Text Size",
             currentTextSizeLabel,
             2,
-            textSizeOptions.length
+            textSizeOptions.length,
+            expandedSection === "textSize"
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Text Size</span>
@@ -286,15 +360,16 @@ export default function AccessibilityMenu({ onboarding = false }) {
           }}
           data-settings-layer="menu"
           data-settings-menu-item
-          onClick={() => openSection("theme")}
+          onClick={() => toggleSection("theme")}
           aria-expanded={expandedSection === "theme"}
           aria-controls="access-theme-options"
           id="access-theme-trigger"
-          aria-label={menuItemLabel(
+          aria-label={triggerAriaLabel(
             "Contrast",
             currentThemeLabel,
             3,
-            themeOptions.length
+            themeOptions.length,
+            expandedSection === "theme"
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Contrast</span>
@@ -338,15 +413,16 @@ export default function AccessibilityMenu({ onboarding = false }) {
           }}
           data-settings-layer="menu"
           data-settings-menu-item
-          onClick={() => openSection("brightness")}
+          onClick={() => toggleSection("brightness")}
           aria-expanded={expandedSection === "brightness"}
           aria-controls="access-brightness-options"
           id="access-brightness-trigger"
-          aria-label={menuItemLabel(
+          aria-label={triggerAriaLabel(
             "Brightness",
             currentBrightnessLabel,
             4,
-            brightnessOptions.length
+            brightnessOptions.length,
+            expandedSection === "brightness"
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Brightness</span>

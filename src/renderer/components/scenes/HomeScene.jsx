@@ -38,11 +38,17 @@ function getTrackTranslateX(focusedIndex) {
 }
 
 const HOME_HEADING_LABEL =
-  "Choose a theme from Helen Keller's life journey. Use arrow keys to view themes. Press the select key to enter a theme. Use the home key to return to this page.";
+  "Choose a theme from Helen Keller's life journey. Use left and right keys to view themes. Press the select key to enter a theme. Use the home key to return to this page.";
 
 export default function HomeScene({ isActive = false }) {
-  const { goToScene, setVideoOverlayOpen, speechMode, showSettings, lastTtsToggleRef } =
-    useAppState();
+  const {
+    goToScene,
+    setVideoOverlayOpen,
+    speechMode,
+    showSettings,
+    lastTtsToggleRef,
+    homeArrivalNonce,
+  } = useAppState();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
   const [announceHomeArrival, setAnnounceHomeArrival] = useState(false);
@@ -55,12 +61,41 @@ export default function HomeScene({ isActive = false }) {
   const focusedIndexRef = useRef(focusedIndex);
   const wasActiveRef = useRef(isActive);
   const prevShowSettingsRef = useRef(showSettings);
+  const prevHomeArrivalNonceRef = useRef(homeArrivalNonce);
   focusedIndexRef.current = focusedIndex;
 
   if (isActive && !wasActiveRef.current) {
     setAnnounceHomeArrival(true);
   }
-  wasActiveRef.current = isActive;
+
+  // Every Home key press bumps the nonce — even when already on home — so we
+  // re-announce "Home." by briefly blurring then re-focusing the heading.
+  // First arrivals (inactive → active) are handled by useSceneFocus; only
+  // re-focus when the visitor was already on this screen.
+  useLayoutEffect(() => {
+    const alreadyActive = wasActiveRef.current;
+    const nonceChanged = homeArrivalNonce !== prevHomeArrivalNonceRef.current;
+    if (nonceChanged) {
+      prevHomeArrivalNonceRef.current = homeArrivalNonce;
+      if (isActive && homeArrivalNonce > 0) {
+        setAnnounceHomeArrival(true);
+        if (alreadyActive) {
+          const heading = headingRef.current;
+          if (heading) {
+            heading.blur();
+            const focusHeading = () => {
+              heading.focus({ preventScroll: true });
+            };
+            requestAnimationFrame(focusHeading);
+            const t = window.setTimeout(focusHeading, 50);
+            wasActiveRef.current = isActive;
+            return () => window.clearTimeout(t);
+          }
+        }
+      }
+    }
+    wasActiveRef.current = isActive;
+  }, [homeArrivalNonce, isActive]);
 
   useLayoutEffect(() => {
     const wasOpen = prevShowSettingsRef.current;
@@ -252,7 +287,7 @@ export default function HomeScene({ isActive = false }) {
         ref={helpButtonRef}
         type="button"
         className="nav-btn icon-btn home-help-btn"
-        aria-label="Watch instructional video for help navigating the controls"
+        aria-label="Watch instructional video"
         onClick={openVideo}
       >
         <img src="./InformationIcon.svg" alt="" aria-hidden="true" />
@@ -278,7 +313,7 @@ export default function HomeScene({ isActive = false }) {
             Choose a theme from Helen&nbsp;Keller&#8217;s life journey
           </p>
           <p className="home-heading-cta" aria-hidden={speechMode ? true : undefined}>
-            Use arrow keys to view themes.
+            Use left and right keys to view themes.
             <br />
             Press the select key to enter a theme.
             <br />

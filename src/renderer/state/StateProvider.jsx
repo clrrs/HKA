@@ -115,9 +115,13 @@ export default function StateProvider({ children }) {
     setIsPaused((prev) => !prev);
   }, []);
 
+  // Incremented on every goToScene("home") so HomeScene can re-announce "Home."
+  // even when the visitor is already on the home screen.
+  const [homeArrivalNonce, setHomeArrivalNonce] = useState(0);
+
   const goToScene = (sceneName, options = {}) => {
     if (sceneName === "home") {
-      playEarcon(EARCON.home);
+      setHomeArrivalNonce((n) => n + 1);
     }
     setScene(sceneName);
     setSubscene(options.subscene || null);
@@ -386,6 +390,7 @@ export default function StateProvider({ children }) {
       hasSeenThemeTip,
       markThemeTipSeen,
       resetToStart,
+      homeArrivalNonce,
       idleTimeoutDisabled,
       autoReadFast,
       testEasterEgg,

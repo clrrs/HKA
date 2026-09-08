@@ -12,14 +12,24 @@ function visibleFocusables(root) {
  * Settings uses two focus layers: menu (items + chrome) and options (no wrap).
  * Menu wrap: Next on Close → first menu item; Prev on first menu item → Close
  * (skips onboarding intro/Skip on wrap).
+ *
+ * When a section is open, the layer is [expanded trigger, ...options] with no
+ * wrap: Prev from the first option returns to the trigger; Next from the
+ * trigger goes to the first option. Select on the trigger closes the section.
  */
 export function moveSettingsFocus(panel, direction) {
   if (!panel) return null;
 
   const optionsRoot = panel.querySelector(".setting-options");
   if (optionsRoot) {
-    const focusables = visibleFocusables(optionsRoot);
+    const options = visibleFocusables(optionsRoot);
+    const trigger =
+      panel.querySelector(
+        '[data-settings-menu-item][aria-expanded="true"]'
+      ) || null;
+    const focusables = trigger ? [trigger, ...options] : options;
     if (!focusables.length) return null;
+
     const idx = focusables.indexOf(document.activeElement);
     if (direction === "next") {
       if (idx === -1) return focusables[0];

@@ -43,7 +43,8 @@ export default function InstructionScene({ isActive }) {
     }
   }, [goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding]);
 
-  // Focus trap: L/Tab from Skip goes to empty; K/Shift+Tab from empty goes to Skip (loop)
+  // Focus trap: Next from Skip is a dead end (stay on Skip). Back from the
+  // empty anchor returns to Skip.
   const handleKeyDown = (e) => {
     if (!showSkip || e.repeat) return;
     const key = e.key.toLowerCase();
@@ -52,7 +53,6 @@ export default function InstructionScene({ isActive }) {
     if (isNext && document.activeElement === skipButtonRef.current) {
       e.preventDefault();
       e.stopPropagation();
-      emptyFocusRef.current?.focus();
     } else if (isBack && document.activeElement === emptyFocusRef.current) {
       e.preventDefault();
       e.stopPropagation();

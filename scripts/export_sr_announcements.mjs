@@ -120,7 +120,7 @@ function inferProducerScenario(row) {
     return "Structural label for the theme carousel (mostly hidden from sighted view).";
   }
   if (location === "HomeScene" && msg.includes("{theme.label}")) {
-    return "Visitor moves between theme circles with the arrow keys; each circle announces its name and position.";
+    return "Visitor moves between theme circles with the left and right keys; each circle announces its name and position.";
   }
   if (location === "HomeScene" && message === "Instructional video") {
     return "Visitor opens the help video overlay; NVDA reads the video dialog label.";

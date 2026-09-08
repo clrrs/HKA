@@ -670,14 +670,8 @@ export function getTheme(themeId) {
 }
 
 /** Short icon/poster alt for selection buttons and artifact-open speech. */
-export function getArtifactAltText(artifact) {
-  if (!artifact) return "TODO_ALT: Short visual description";
-  const fromImage = artifact.images?.[0]?.alt;
-  if (typeof fromImage === "string" && fromImage.trim()) return fromImage.trim();
-  const fromArtifact = artifact.alt;
-  if (typeof fromArtifact === "string" && fromArtifact.trim()) return fromArtifact.trim();
-  const name = artifact.displayTitle || artifact.title || "this artifact";
-  return `TODO_ALT: Short visual description for ${name}`;
+export function getArtifactAltText(_artifact) {
+  return "TODO: placeholder alt text";
 }
 
 export function getThemeFocusAnnouncement(themeId) {

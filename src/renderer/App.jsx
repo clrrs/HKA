@@ -342,7 +342,9 @@ export default function App() {
 
     const focusIntro = () => {
       const target = getTarget();
-      target?.focus({ preventScroll: true });
+      // Re-focusing the same element makes NVDA re-announce the onboarding blurb.
+      if (!target || document.activeElement === target) return;
+      target.focus({ preventScroll: true });
     };
 
     focusIntro();

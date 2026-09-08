@@ -25,10 +25,9 @@ import {
   getPrevArtifact,
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
+import { estimateSpeechDurationMs } from "../utils/speechTiming";
 
 const SCROLL_STEP_RATIO = 0.75;
-const WORDS_PER_SEC = 2.4;
-/** Buffer between auto-read sections (Story intro → guided, guided → guided). */
 const SECTION_TRANSITION_MS = 1000;
 /** Extra buffer after estimated speech time on the Transcript auto-read handoff. */
 const POST_READ_DWELL_MS = 4000;
@@ -55,14 +54,6 @@ const GUIDED_HEADING_FALLBACK = "Description";
  * text panel instead of each rendering a "MISSING COPY" section.
  */
 const HIDE_MISSING_GUIDED_SECTIONS = false;
-
-function countWords(text) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function estimateSpeechDurationMs(text) {
-  return Math.round((countWords(text) / WORDS_PER_SEC) * 1000);
-}
 
 function estimateChunkDurationMs(text, bufferMs = SECTION_TRANSITION_MS) {
   return estimateSpeechDurationMs(text) + bufferMs;
@@ -2423,6 +2414,31 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const hasTranscript = showsTranscriptButton(artifact, isVideo);
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
+
+  // Toolbar-only "x of x" positions (prev/next artifact arrows are outside the toolbar).
+  // Play and Pause share one slot number, matching their tabIndex swap.
+  const toolbarLabels = (() => {
+    const entries = [];
+    if (showStoryButton) entries.push({ id: "story", base: "Story" });
+    if (isVideo) entries.push({ id: "video", base: null });
+    if (showGuidedDescriptionButton) entries.push({ id: "description", base: "Description" });
+    if (!isVideo && hasPrevImageButton) entries.push({ id: "prevImage", base: "Previous image" });
+    if (!isVideo && hasMultipleImages) entries.push({ id: "nextImage", base: "Next image" });
+    if (!isVideo) entries.push({ id: "zoom", base: "Zoom" });
+    if (hasTranscript) entries.push({ id: "transcript", base: "Transcript" });
+    const total = entries.length;
+    const map = {};
+    entries.forEach((entry, i) => {
+      const pos = `${i + 1} of ${total}`;
+      if (entry.id === "video") {
+        map.play = `Play video, ${pos}`;
+        map.pause = `Pause video, ${pos}`;
+      } else {
+        map[entry.id] = `${entry.base}, ${pos}`;
+      }
+    });
+    return map;
+  })();
   // Short alt first — auto-read then announces title, then story.
   const dialogAriaLabel = getArtifactAltText(artifact);
 
@@ -2509,7 +2525,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 onClick={handleStory}
                 onFocus={() => setStoryBtnFocused(true)}
                 onBlur={() => setStoryBtnFocused(false)}
-                aria-label="Story"
+                aria-label={toolbarLabels.story}
               >
                 Story
               </button>
@@ -2526,7 +2542,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   onFocus={() => setHeldVideoBtn("play")}
                   tabIndex={!isVideoPlaying || heldVideoBtn === "play" ? 0 : -1}
                   aria-disabled={isVideoPlaying ? true : undefined}
-                  aria-label="Play video"
+                  aria-label={toolbarLabels.play}
                 >
                   Play
                 </button>
@@ -2540,7 +2556,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   onFocus={() => setHeldVideoBtn("pause")}
                   tabIndex={isVideoPlaying || heldVideoBtn === "pause" ? 0 : -1}
                   aria-disabled={!isVideoPlaying ? true : undefined}
-                  aria-label="Pause video"
+                  aria-label={toolbarLabels.pause}
                 >
                   Pause
                 </button>
@@ -2559,7 +2575,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 onClick={handleGuidedDescription}
                 onFocus={() => setGuidedDescBtnFocused(true)}
                 onBlur={() => setGuidedDescBtnFocused(false)}
-                aria-label="Description"
+                aria-label={toolbarLabels.description}
               >
                 Description
               </button>
@@ -2570,7 +2586,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={prevImageRef}
                 className="carousel-btn"
                 onClick={handlePrevImage}
-                aria-label="Previous image"
+                aria-label={toolbarLabels.prevImage}
               >
                 Previous Image
               </button>
@@ -2581,7 +2597,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={nextImageRef}
                 className={`carousel-btn${autoplayBtnClass("nextImage")}`}
                 onClick={handleNextImage}
-                aria-label="Next image"
+                aria-label={toolbarLabels.nextImage}
               >
                 Next Image
               </button>
@@ -2592,7 +2608,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={zoomOrPlayRef}
                 className={`carousel-btn${zoomOpen ? " is-selected" : ""}`}
                 onClick={handlePrimaryAction}
-                aria-label="Zoom"
+                aria-label={toolbarLabels.zoom}
               >
                 Zoom
               </button>
@@ -2605,7 +2621,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   transcriptOpen ? " is-selected" : ""
                 }`}
                 onClick={openTranscript}
-                aria-label="Transcript"
+                aria-label={toolbarLabels.transcript}
               >
                 Transcript
               </button>

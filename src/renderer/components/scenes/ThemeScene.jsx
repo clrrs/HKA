@@ -46,7 +46,7 @@ function getThumbnailSources(artifact) {
 }
 
 function getThemeTipMessage(themeLabel) {
-  return `Tip: You are on the ${themeLabel} theme page. Use the arrow keys to navigate between artifacts, and press the select key to learn more. Press the home button to choose a different theme.`;
+  return `Tip: You are on the ${themeLabel} theme page. Use the left and right keys to navigate between artifacts, and press the select key to learn more. Press the home button to choose a different theme.`;
 }
 
 const TIP_PASS_THROUGH_KEYS = new Set(["s", "home", "a"]);
@@ -330,7 +330,7 @@ export default function ThemeScene() {
             tabIndex={0}
             data-autofocus={!showTip ? true : undefined}
             onFocus={handleHeadingFocus}
-            aria-label={speechMode ? `${theme.label}. Use arrow keys to select an artifact. ${theme.description} Use arrow keys to select an artifact.` : undefined}
+            aria-label={speechMode ? `${theme.label}. Use left and right keys to select an artifact. ${theme.description} Use left and right keys to select an artifact.` : undefined}
           >
             <p
               className="theme-title"
@@ -351,7 +351,7 @@ export default function ThemeScene() {
               tabIndex={-1}
               aria-hidden={speechMode ? true : undefined}
             >
-              Use arrow keys to select an artifact.
+              Use left and right keys to select an artifact.
             </h4>
           </div>
         </div>
