@@ -74,11 +74,12 @@ function optionLabel(label, selected, index, total) {
   return `${label}, ${selected ? "selected" : "unselected"}, option ${index} of ${total}`;
 }
 
-function triggerAriaLabel(name, valueLabel, index, optionCount, isExpanded, tip) {
-  let label = menuItemLabel(name, valueLabel, index, optionCount);
-  if (tip) label = `${label} ${tip}`;
-  if (isExpanded) label = `${label} Press Select to close.`;
-  return label;
+// Must not vary with expanded state: NVDA re-reads the whole button when the
+// accessible name of the focused element changes, which doubled up the close
+// announcement. aria-expanded already conveys expanded/collapsed.
+function triggerAriaLabel(name, valueLabel, index, optionCount, tip) {
+  const label = menuItemLabel(name, valueLabel, index, optionCount);
+  return tip ? `${label} ${tip}` : label;
 }
 
 export default function AccessibilityMenu({ onboarding = false }) {
@@ -222,7 +223,6 @@ export default function AccessibilityMenu({ onboarding = false }) {
             currentScreenReaderLabel,
             1,
             screenReaderOptions.length,
-            expandedSection === "screenReader",
             SCREEN_READER_TIP
           )}
         >
@@ -277,8 +277,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             "Text Size",
             currentTextSizeLabel,
             2,
-            textSizeOptions.length,
-            expandedSection === "textSize"
+            textSizeOptions.length
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Text Size</span>
@@ -325,8 +324,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             "Contrast",
             currentThemeLabel,
             3,
-            themeOptions.length,
-            expandedSection === "theme"
+            themeOptions.length
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Contrast</span>
@@ -373,8 +371,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             "Brightness",
             currentBrightnessLabel,
             4,
-            brightnessOptions.length,
-            expandedSection === "brightness"
+            brightnessOptions.length
           )}
         >
           <span className="setting-section-label" aria-hidden="true">Brightness</span>
