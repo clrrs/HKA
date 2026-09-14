@@ -23,10 +23,8 @@ const { themes, DESCRIPTION_MODE_COMBINED, GUIDED_DESCRIPTION_MODE_LETTERS, getA
 const MISSING_COPY = "MISSING COPY";
 const WORDS_PER_SEC = 2.4;
 const SECTION_TRANSITION_MS = 1000;
-const POST_READ_DWELL_MS = 4000;
-const TRANSCRIPT_AUTOPLAY_PROMPT =
-  "Transcript. Press Select for the full transcript of this artifact.";
-const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
+const TOOLBAR_NAV_HINT =
+  "Use left and right keys to navigate artifact toolbar.";
 const DIALOG_TITLE_PREAMBLE_MS = 500;
 const HIDE_MISSING_GUIDED_SECTIONS = false;
 
@@ -130,24 +128,13 @@ const getBlockSpeech = (block, isFirst) =>
       ? `Artifact story. ${block.text}`
       : block.text;
 
-function buildAutoplayChunks(artifact, blocks, isVideo) {
-  let chunks = blocks.map((block, i) => ({
+function buildAutoplayChunks(artifact, blocks) {
+  // Auto-read speaks story body only — no guided sections, no video handoff.
+  const storyBlocks = blocks.filter((block) => block.kind !== "guided");
+  return storyBlocks.map((block, i) => ({
     text: getBlockSpeech(block, i === 0),
-    section: block.kind === "guided" ? "guided" : "description",
+    section: "description",
   }));
-  if (artifact.type === "document") {
-    let sawGuided = false;
-    chunks = chunks.filter((chunk) => {
-      if (chunk.section !== "guided") return true;
-      if (sawGuided) return false;
-      sawGuided = true;
-      return true;
-    });
-  }
-  if (!isVideo) return chunks;
-  const spoken = chunks.filter((c) => c.section === "description");
-  spoken.push({ text: VIDEO_AUTOPLAY_PROMPT, section: "videoPrompt" });
-  return spoken;
 }
 
 const rows = [];
@@ -158,7 +145,7 @@ for (const theme of Object.values(themes)) {
     const isVideo = artifact.type === "video";
     const images = !isVideo ? artifact.images || [] : [];
     const blocks = buildTextBlocks(artifact, images, isCombined);
-    const chunks = buildAutoplayChunks(artifact, blocks, isVideo);
+    const chunks = buildAutoplayChunks(artifact, blocks);
 
     const readMs = chunks.reduce((sum, c) => sum + estimateChunkDurationMs(c.text), 0);
     const openAlt = getArtifactAltText(artifact);
@@ -167,13 +154,8 @@ for (const theme of Object.values(themes)) {
       DIALOG_TITLE_PREAMBLE_MS +
       estimateSpeechDurationMs(artifact.title) +
       DIALOG_TITLE_PREAMBLE_MS;
-    const hasTranscript = isVideo;
-    const totalMs =
-      openPreambleMs +
-      readMs +
-      (hasTranscript
-        ? estimateSpeechDurationMs(TRANSCRIPT_AUTOPLAY_PROMPT) + POST_READ_DWELL_MS
-        : 0);
+    const tipMs = estimateSpeechDurationMs(TOOLBAR_NAV_HINT);
+    const totalMs = openPreambleMs + readMs + tipMs;
     const missing = blocks.filter((b) => b.text === MISSING_COPY).length;
 
     rows.push({
@@ -191,7 +173,7 @@ rows.sort((a, b) => b.sec - a.sec);
 
 console.log(
   `Inactivity warning fires at ${WARNING_AT_SEC}s of no key/mouse/focus activity; reset at ${DEFAULT_IDLE_SEC}s.\n` +
-    `Auto-read emits no activity events, so anything at or past ${WARNING_AT_SEC}s is interrupted before it can land on the next-artifact arrow.\n`
+    `Auto-read emits no activity events, so anything at or past ${WARNING_AT_SEC}s is interrupted before the toolbar tip.\n`
 );
 
 const pad = (s, n) => String(s).padEnd(n);

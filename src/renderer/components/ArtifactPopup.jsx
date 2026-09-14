@@ -23,22 +23,17 @@ import {
   getArtifactAltText,
   getNextArtifact,
   getPrevArtifact,
-  getArtifactNavName,
-  getArtifactNavDescription,
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 import { estimateSpeechDurationMs } from "../utils/speechTiming";
 
 const SCROLL_STEP_RATIO = 0.75;
 const SECTION_TRANSITION_MS = 1000;
-/** Extra buffer after estimated speech time on the Transcript auto-read handoff. */
-const POST_READ_DWELL_MS = 4000;
-const TRANSCRIPT_AUTOPLAY_PROMPT =
-  "Transcript. Press Select for the full transcript of this artifact.";
 const AUTO_READ_THEME_END_PROMPT =
   "End of artifacts in this theme. Press Select to return to the start of the theme.";
+const TOOLBAR_NAV_HINT =
+  "Use left and right keys to navigate artifact toolbar.";
 const VIDEO_END_DWELL_MS = 1000;
-const VIDEO_AUTOPLAY_PROMPT = "The video will now play.";
 /** Covers NVDA's "dialog" role preamble before it reaches the spoken dialog label. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
 const EMPTY_IMAGES = [];
@@ -306,40 +301,18 @@ function getTextSnapScrollCue(index, total, blockSpeech = "") {
   return `More description. ${index + 1} of ${total}.`;
 }
 
-function buildAutoplayChunks(artifact, blocks, isVideo) {
+/** Auto-read speaks story body only — no guided sections, no video handoff. */
+function buildAutoplayChunks(artifact, blocks) {
   if (!artifact) return [];
 
-  let chunks = blocks.map((block, i) => ({
+  const storyBlocks = blocks.filter((block) => block.kind !== "guided");
+  return storyBlocks.map((block, i) => ({
     text: getBlockSpeech(block, i === 0),
     imageIndex: block.imageIndex,
-    section: block.kind === "guided" ? "guided" : "description",
-    mode: block.kind === "guided" ? "guided" : "intro",
+    section: "description",
+    mode: "intro",
     blockKey: block.key,
   }));
-
-  // Documents: auto-read only the first guided section (not every page).
-  if (artifact.type === "document") {
-    let sawGuided = false;
-    chunks = chunks.filter((chunk) => {
-      if (chunk.section !== "guided") return true;
-      if (sawGuided) return false;
-      sawGuided = true;
-      return true;
-    });
-  }
-
-  if (!isVideo) return chunks;
-
-  // Video artifacts hand off to playback rather than stepping through guided copy.
-  const spoken = chunks.filter((chunk) => chunk.section === "description");
-  spoken.push({
-    text: VIDEO_AUTOPLAY_PROMPT,
-    imageIndex: 0,
-    section: "videoPrompt",
-    mode: null,
-    blockKey: null,
-  });
-  return spoken;
 }
 
 function useFocusTrap(containerRef, isActive, options = {}) {
@@ -513,6 +486,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const videoWasPlayingBeforePauseRef = useRef(false);
   const isPausedRef = useRef(isPaused);
   const autoplayDoneRef = useRef(false);
+  /** After auto-read ends on Story: gold highlight stays; L/K leave from Story. */
+  const storyParkedRef = useRef(false);
   const visualActiveSectionRef = useRef(null);
   const lastMainFocusRef = useRef(null);
   const skipNextTrapAutofocusRef = useRef(false);
@@ -844,41 +819,34 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     clearTranscriptDwell();
     clearStoryTransition();
     autoplayDoneRef.current = true;
+    storyParkedRef.current = false;
     setIsAutoplaying(false);
     setVisualSection(null);
   }, [cancelAutoplay, clearTranscriptDwell, clearStoryTransition, setVisualSection]);
 
-  // Landing focus on the arrow is the whole announcement: its aria-label already
-  // carries the "press select" prompt for both the next-artifact and end-of-theme
-  // cases, so anything announced here would be spoken on top of it.
+  /** Park on Story after auto-read: gold highlight, silent focus, toolbar tip. */
+  const parkOnStoryEnd = useCallback(() => {
+    clearTranscriptDwell();
+    clearTextAutoScroll();
+    autoplayDoneRef.current = true;
+    autoplayingRef.current = false;
+    autoplayTimeoutRef.current = null;
+    autoplayDeadlineRef.current = null;
+    autoplayPlayNextRef.current = null;
+    autoplayRemainingRef.current = null;
+    setIsAutoplaying(false);
+    setVisualSection("description");
+    storyParkedRef.current = true;
+    announce(TOOLBAR_NAV_HINT, { politeness: "assertive" });
+  }, [announce, clearTranscriptDwell, clearTextAutoScroll, setVisualSection]);
+
+  // Used when an auto-started video finishes (legacy path; auto-read no longer starts video).
   const landOnNextArrowEnd = useCallback(() => {
     clearTranscriptDwell();
+    storyParkedRef.current = false;
     setVisualSection(null);
-    // Retry the landing: a single focus() in this turn can be dropped, and the
-    // arrow is unreachable for a beat if an overlay still holds the popup inert.
     scheduleFocus(nextArrowRef.current);
   }, [clearTranscriptDwell, setVisualSection]);
-
-  const startTranscriptDwell = useCallback(() => {
-    setVisualSection("transcript");
-    transcriptBtnRef.current?.focus({ preventScroll: true });
-    announce(TRANSCRIPT_AUTOPLAY_PROMPT, { politeness: "assertive" });
-
-    clearTranscriptDwell();
-    transcriptDwellActiveRef.current = true;
-    const dwellMs = autoReadDelayMs(
-      estimateSpeechDurationMs(TRANSCRIPT_AUTOPLAY_PROMPT) + POST_READ_DWELL_MS,
-      autoReadFastRef.current
-    );
-    transcriptDwellDeadlineRef.current = Date.now() + dwellMs;
-    transcriptDwellTimeoutRef.current = setTimeout(() => {
-      transcriptDwellTimeoutRef.current = null;
-      transcriptDwellDeadlineRef.current = null;
-      transcriptDwellRemainingRef.current = null;
-      transcriptDwellActiveRef.current = false;
-      landOnNextArrowEnd();
-    }, dwellMs);
-  }, [announce, clearTranscriptDwell, setVisualSection, landOnNextArrowEnd]);
 
   const flashSelected = useCallback((ref) => {
     const el = ref.current;
@@ -1199,6 +1167,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => {
     autoplayDoneRef.current = false;
+    storyParkedRef.current = false;
     popupInitialFocusDoneRef.current = false;
     clearTranscriptDwell();
     clearStoryTransition();
@@ -1243,19 +1212,20 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       setIsAutoplaying(false);
       setVisualSection(null);
       autoplayDoneRef.current = true;
+      storyParkedRef.current = false;
       return;
     }
     if (autoplayDoneRef.current) return;
 
-    const chunks = buildAutoplayChunks(artifact, textBlocks, isVideo);
+    const chunks = buildAutoplayChunks(artifact, textBlocks);
     if (chunks.length === 0) return;
 
-    const hasTranscriptLocal = showsTranscriptButton(artifact, isVideo);
     const openAlt = getArtifactAltText(artifact);
     const openTitle = artifact.title;
 
     let chunkIndex = 0;
     autoplayingRef.current = true;
+    storyParkedRef.current = false;
     setIsAutoplaying(true);
     textNavActiveRef.current = false;
     setTextNavActive(false);
@@ -1264,20 +1234,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const playNext = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
       if (chunkIndex >= chunks.length) {
-        clearTextAutoScroll();
-        autoplayDoneRef.current = true;
-        autoplayingRef.current = false;
-        autoplayTimeoutRef.current = null;
-        autoplayDeadlineRef.current = null;
-        autoplayPlayNextRef.current = null;
-        autoplayRemainingRef.current = null;
-        setIsAutoplaying(false);
-
-        if (hasTranscriptLocal && transcriptBtnRef.current) {
-          startTranscriptDwell();
-        } else {
-          landOnNextArrowEnd();
-        }
+        parkOnStoryEnd();
         return;
       }
 
@@ -1286,37 +1243,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         setTextMode(chunk.mode);
       }
       setCurrentImageIndex(chunk.imageIndex);
-      setVisualSection(
-        chunk.section === "videoPrompt" ? "play" : chunk.section,
-        chunk.blockKey
-      );
+      setVisualSection(chunk.section, chunk.blockKey);
 
       announce(chunk.text, { politeness: "assertive" });
       chunkIndex += 1;
-
-      if (chunk.section === "videoPrompt") {
-        clearTextAutoScroll();
-        const delay = autoReadDelayMs(
-          estimateChunkDurationMs(chunk.text),
-          autoReadFastRef.current
-        );
-        const startVideo = () => {
-          autoplayTimeoutRef.current = null;
-          autoplayDeadlineRef.current = null;
-          autoplayRemainingRef.current = null;
-          beginInlineVideo(true);
-        };
-        autoplayPlayNextRef.current = startVideo;
-        autoplayDeadlineRef.current = Date.now() + delay;
-        autoplayTimeoutRef.current = setTimeout(startVideo, delay);
-        return;
-      }
 
       const delay = autoReadDelayMs(
         estimateChunkDurationMs(chunk.text, SECTION_TRANSITION_MS),
         autoReadFastRef.current
       );
-      if (chunk.section === "description" || chunk.section === "guided") {
+      if (chunk.section === "description") {
         // Wait for textMode swap to render the visible block before scrolling.
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -1363,7 +1299,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     speechMode,
     artifact,
     artifactId,
-    isVideo,
     textBlocks,
     zoomOpen,
     transcriptOpen,
@@ -1372,12 +1307,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     clearTranscriptDwell,
     clearStoryTransition,
     setVisualSection,
-    startTranscriptDwell,
-    landOnNextArrowEnd,
+    parkOnStoryEnd,
     startTextAutoScroll,
     clearTextAutoScroll,
     scrollBlockToTop,
-    beginInlineVideo,
   ]);
 
   useEffect(() => {
@@ -1639,27 +1572,53 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showSettings) return;
-      if (!autoplayingRef.current || e.repeat) return;
+      if (e.repeat) return;
       const key = e.key.toLowerCase();
       const isNext = key === "l" || key === "arrowright";
       const isBack = key === "k" || key === "arrowleft";
       if (!isNext && !isBack) return;
 
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      const section = visualActiveSectionRef.current;
-      // Taking over during auto-read video keeps playback going — same as
-      // sitting on Play during manual nav. Claim it as manual before cancel.
-      if (section === "play" && videoAutoplayRef.current) {
-        videoAutoplayRef.current = false;
+      // Mid auto-read: cancel and leave from the current gold section.
+      if (autoplayingRef.current) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const section = visualActiveSectionRef.current;
+        if (section === "play" && videoAutoplayRef.current) {
+          videoAutoplayRef.current = false;
+        }
+        markAutoplayEnded();
+        focusVisualActiveOrFallback(isNext, section);
+        return;
       }
-      markAutoplayEnded();
-      focusVisualActiveOrFallback(isNext, section);
+
+      // After auto-read: parked on Story (gold, not focused). Next → item 2, Back → prev arrow.
+      if (storyParkedRef.current) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        storyParkedRef.current = false;
+        setVisualSection(null);
+        if (isNext) {
+          (
+            getToolbarButtonAfterStory() ||
+            getFirstToolbarButton() ||
+            nextArrowRef.current
+          )?.focus({ preventScroll: true });
+        } else {
+          prevArrowRef.current?.focus({ preventScroll: true });
+        }
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [markAutoplayEnded, focusVisualActiveOrFallback, showSettings]);
+  }, [
+    markAutoplayEnded,
+    focusVisualActiveOrFallback,
+    getToolbarButtonAfterStory,
+    getFirstToolbarButton,
+    setVisualSection,
+    showSettings,
+  ]);
 
   useEffect(() => {
     const prev = prevSpeechModeRef.current;
@@ -2164,9 +2123,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       // First move off the silent anchor: next lands on Story (or the first
       // toolbar control), back goes to the previous-artifact arrow, and the
       // anchor drops out of the order.
+      // (L/K while storyParked are handled in the capture listener — Next → item 2.)
       if (document.activeElement === focusAnchorRef.current) {
         e.preventDefault();
         e.stopPropagation();
+        if (storyParkedRef.current) {
+          storyParkedRef.current = false;
+          setVisualSection(null);
+        }
         if (isNext) {
           (storyBtnRef.current || getFirstToolbarButton())?.focus({
             preventScroll: true,
@@ -2458,20 +2422,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             aria-hidden={speechMode ? undefined : true}
           />
         )}
-        <p id="artifact-nav-desc" className="sr-only">
-          {getArtifactNavDescription()}
-        </p>
         <button
           type="button"
           ref={prevArrowRef}
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--prev"
           onClick={handlePrevArrow}
-          aria-label={
-            prevArtifact
-              ? getArtifactNavName(prevArtifact, theme.id)
-              : "Back to theme"
-          }
-          aria-describedby={prevArtifact ? "artifact-nav-desc" : undefined}
+          aria-label={prevArtifact ? "Previous artifact" : "Back to theme"}
         />
 
         <div className="artifact-popup-card">
@@ -2513,11 +2469,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 type="button"
                 ref={storyBtnRef}
                 className={`carousel-btn${
-                  storyBtnFocused ||
-                  (isAutoplaying && visualActiveSection === "description")
-                    ? " is-selected"
-                    : ""
-                }`}
+                  storyBtnFocused ? " is-selected" : ""
+                }${autoplayBtnClass("description")}`}
                 onClick={handleStory}
                 onFocus={() => setStoryBtnFocused(true)}
                 onBlur={() => setStoryBtnFocused(false)}
@@ -2737,11 +2690,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--next"
           onClick={handleNextArrow}
           aria-label={
-            nextArtifact
-              ? getArtifactNavName(nextArtifact, theme.id)
-              : AUTO_READ_THEME_END_PROMPT
+            nextArtifact ? "Next artifact" : AUTO_READ_THEME_END_PROMPT
           }
-          aria-describedby={nextArtifact ? "artifact-nav-desc" : undefined}
         />
       </div>
 

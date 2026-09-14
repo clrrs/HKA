@@ -196,10 +196,10 @@ function inferProducerScenario(row) {
       return "Visitor exits zoom mode and returns to the normal artifact popup.";
     }
     if (message === "[label]" && line === "577") {
-      return "Visitor tabs past the last control in the artifact popup onto the next-artifact arrow at the end of the list; NVDA reads the arrow label (next artifact name or close).";
+      return "Visitor tabs past the last control in the artifact popup onto the next-artifact arrow; NVDA reads Next artifact or the theme-end prompt.";
     }
     if (message === "[label]" && line === "585") {
-      return "Visitor tabs backward past the first control onto the previous-artifact arrow; NVDA reads the arrow label (previous artifact name or close).";
+      return "Visitor tabs backward past the first control onto the previous-artifact arrow; NVDA reads Previous artifact or Back to theme.";
     }
     if (message === "Top of image.") {
       return "Visitor tries to scroll up in zoom mode but is already at the top of the image.";

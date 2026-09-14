@@ -676,7 +676,6 @@ export function getArtifactAltText(_artifact) {
 
 const THEME_SELECT_CTA = "Press select key to view the artifacts in this theme.";
 const ARTIFACT_SELECT_CTA = "Press select key to learn more.";
-const ARTIFACT_NAV_CTA = "Press select key to enter this artifact.";
 
 /** Title + position only — NVDA appends "button" after this name. */
 export function getThemeCarouselName(themeLabel, index, total) {
@@ -714,18 +713,6 @@ export function getArtifactCircleName(artifact, index, total) {
 
 export function getArtifactCircleDescription(artifact) {
   return `. ${getArtifactAltText(artifact)}. ${ARTIFACT_SELECT_CTA}`;
-}
-
-export function getArtifactNavName(artifact, themeId) {
-  const arts = getThemeArtifacts(themeId);
-  const index = arts.findIndex((a) => a.id === artifact.id);
-  const total = arts.length;
-  if (index < 0) return artifact.displayTitle;
-  return `${artifact.displayTitle}, ${index + 1} of ${total}`;
-}
-
-export function getArtifactNavDescription() {
-  return `. ${ARTIFACT_NAV_CTA}`;
 }
 
 export function getThemeArtifacts(themeId) {
