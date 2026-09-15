@@ -690,7 +690,8 @@ export function getThemeCarouselName(themeLabel, index, total) {
 export function getThemeCarouselDescription(themeId) {
   const iconAlt = themes[themeId]?.iconAlt;
   if (!iconAlt) return THEME_SELECT_CTA;
-  return `Image: ${iconAlt}. ${THEME_SELECT_CTA}`;
+  const alt = iconAlt.replace(/\.\s*$/, "");
+  return `Image: ${alt}. ${THEME_SELECT_CTA}`;
 }
 
 /** @deprecated Prefer getThemeCarouselName + getThemeCarouselDescription */
@@ -714,7 +715,8 @@ export function getArtifactCircleName(artifact, index, total) {
 
 /** Description after role "button". Leading " , " nudges a brief pause. */
 export function getArtifactCircleDescription(artifact) {
-  return ` , ${getArtifactAltText(artifact)}. ${ARTIFACT_SELECT_CTA}`;
+  const alt = getArtifactAltText(artifact).replace(/\.\s*$/, "");
+  return ` , ${alt}. ${ARTIFACT_SELECT_CTA}`;
 }
 
 export function getThemeArtifacts(themeId) {

@@ -8,10 +8,14 @@ import {
 import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { useAppState } from "../../state/StateProvider";
+import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 
 const TESTING_ADVENTURE_ONLY = false;
 
+/** Pause after NVDA says "button" before the Image: follow-up. */
 const THEME_DESC_DELAY_MS = 300;
+/** What NVDA prepends on first entry into the revealed list. */
+const THEME_LIST_PREAMBLE = "Theme selection list";
 
 const ALL_THEMES = [
   { id: "change",    label: "Change",    scene: "quote", image: "./Change.png" },
@@ -211,6 +215,9 @@ export default function HomeScene({ isActive = false }) {
   }, [isActive, hideCarousel, clearThemeDescAnnounce]);
 
   const handleFocus = useCallback((index) => {
+    // First land on the carousel also speaks "Theme selection list"; later
+    // L/R moves only speak the button — keep the short pause for those.
+    const isFirstCarouselEntry = focusedIndexRef.current < 0;
     setFocusedIndex(index);
     clearThemeDescAnnounce();
     if (!speechMode) return;
@@ -218,13 +225,20 @@ export default function HomeScene({ isActive = false }) {
     if (!theme || theme.disabledForTesting) return;
     const message = getThemeCarouselDescription(theme.id);
     if (!message) return;
+
+    const name = getThemeCarouselName(theme.label, index, themes.length);
+    const delay = isFirstCarouselEntry
+      ? estimateSpeechDurationMs(`${THEME_LIST_PREAMBLE}. ${name} button`) +
+        THEME_DESC_DELAY_MS
+      : THEME_DESC_DELAY_MS;
+
     themeDescTimeoutRef.current = window.setTimeout(() => {
       themeDescTimeoutRef.current = null;
       announce(message, {
         politeness: "assertive",
         source: "HomeScene",
       });
-    }, THEME_DESC_DELAY_MS);
+    }, delay);
   }, [speechMode, announce, clearThemeDescAnnounce]);
 
   const handleHeadingFocus = useCallback(() => {
