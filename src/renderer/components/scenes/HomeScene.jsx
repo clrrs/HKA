@@ -6,9 +6,12 @@ import {
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
 import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
+import { useAnnounce } from "../../state/AnnouncerProvider";
 import { useAppState } from "../../state/StateProvider";
 
 const TESTING_ADVENTURE_ONLY = false;
+
+const THEME_DESC_DELAY_MS = 300;
 
 const ALL_THEMES = [
   { id: "change",    label: "Change",    scene: "quote", image: "./Change.png" },
@@ -49,6 +52,7 @@ export default function HomeScene({ isActive = false }) {
     lastTtsToggleRef,
     homeArrivalNonce,
   } = useAppState();
+  const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
   const [announceHomeArrival, setAnnounceHomeArrival] = useState(false);
@@ -59,6 +63,7 @@ export default function HomeScene({ isActive = false }) {
   const modalRef = useRef(null);
   const videoRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
+  const themeDescTimeoutRef = useRef(null);
   const wasActiveRef = useRef(isActive);
   const prevShowSettingsRef = useRef(showSettings);
   const prevHomeArrivalNonceRef = useRef(homeArrivalNonce);
@@ -66,6 +71,12 @@ export default function HomeScene({ isActive = false }) {
   // while already on the home scene (nonce bump without inactive→active).
   const stayedOnHomeRef = useRef(false);
   focusedIndexRef.current = focusedIndex;
+
+  const clearThemeDescAnnounce = useCallback(() => {
+    if (themeDescTimeoutRef.current == null) return;
+    window.clearTimeout(themeDescTimeoutRef.current);
+    themeDescTimeoutRef.current = null;
+  }, []);
 
   stayedOnHomeRef.current = wasActiveRef.current && isActive;
   if (isActive && !wasActiveRef.current) {
@@ -94,12 +105,16 @@ export default function HomeScene({ isActive = false }) {
   useLayoutEffect(() => {
     const wasOpen = prevShowSettingsRef.current;
     prevShowSettingsRef.current = showSettings;
-    if (!wasOpen || showSettings) return;
+    if (showSettings) {
+      clearThemeDescAnnounce();
+      return;
+    }
+    if (!wasOpen) return;
     const idx = focusedIndexRef.current;
     if (idx < 0) return;
     const el = circleRefs.current[idx];
     el?.focus({ preventScroll: true });
-  }, [showSettings]);
+  }, [showSettings, clearThemeDescAnnounce]);
 
   useHeadphoneSinkEffect(videoRef, showVideo);
 
@@ -185,21 +200,38 @@ export default function HomeScene({ isActive = false }) {
     carouselRef.current?.setAttribute("aria-hidden", "true");
   }, []);
 
+  useEffect(() => () => clearThemeDescAnnounce(), [clearThemeDescAnnounce]);
+
   // Snap idle while hidden so re-entry doesn't play leftover carousel CSS.
   useLayoutEffect(() => {
     if (isActive) return;
+    clearThemeDescAnnounce();
     setFocusedIndex(-1);
     hideCarousel();
-  }, [isActive, hideCarousel]);
+  }, [isActive, hideCarousel, clearThemeDescAnnounce]);
 
   const handleFocus = useCallback((index) => {
     setFocusedIndex(index);
-  }, []);
+    clearThemeDescAnnounce();
+    if (!speechMode) return;
+    const theme = themes[index];
+    if (!theme || theme.disabledForTesting) return;
+    const message = getThemeCarouselDescription(theme.id);
+    if (!message) return;
+    themeDescTimeoutRef.current = window.setTimeout(() => {
+      themeDescTimeoutRef.current = null;
+      announce(message, {
+        politeness: "assertive",
+        source: "HomeScene",
+      });
+    }, THEME_DESC_DELAY_MS);
+  }, [speechMode, announce, clearThemeDescAnnounce]);
 
   const handleHeadingFocus = useCallback(() => {
+    clearThemeDescAnnounce();
     setFocusedIndex(-1);
     hideCarousel();
-  }, [hideCarousel]);
+  }, [hideCarousel, clearThemeDescAnnounce]);
 
   const handleHeadingBlur = useCallback((e) => {
     const next = e.relatedTarget;
@@ -214,11 +246,12 @@ export default function HomeScene({ isActive = false }) {
     requestAnimationFrame(() => {
       if (document.querySelector(".settings-overlay")) return;
       if (scene && !scene.contains(document.activeElement)) {
+        clearThemeDescAnnounce();
         setFocusedIndex(-1);
         hideCarousel();
       }
     });
-  }, [hideCarousel, showSettings]);
+  }, [hideCarousel, showSettings, clearThemeDescAnnounce]);
 
   const handleSceneKeyDown = useCallback((e) => {
     if (e.repeat) return;
@@ -231,7 +264,10 @@ export default function HomeScene({ isActive = false }) {
 
     if (isSelect && idx >= 0) {
       const theme = themes[idx];
-      if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id });
+      if (!theme.disabledForTesting && theme.scene) {
+        clearThemeDescAnnounce();
+        goToScene(theme.scene, { theme: theme.id });
+      }
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -270,24 +306,12 @@ export default function HomeScene({ isActive = false }) {
         circleRefs.current[idx - 1]?.focus();
       }
     }
-  }, [goToScene, showCarousel, showVideo]);
+  }, [goToScene, showCarousel, showVideo, clearThemeDescAnnounce]);
 
   const hasFocus = focusedIndex >= 0;
 
   return (
     <div className="home-scene" onKeyDown={handleSceneKeyDown}>
-      {speechMode &&
-        themes.map((theme) =>
-          theme.disabledForTesting ? null : (
-            <p
-              key={`theme-circle-desc-${theme.id}`}
-              id={`theme-circle-desc-${theme.id}`}
-              className="sr-only"
-            >
-              {getThemeCarouselDescription(theme.id)}
-            </p>
-          )
-        )}
       <div className="home-bg" aria-hidden="true" />
       <button
         ref={helpButtonRef}
@@ -342,16 +366,16 @@ export default function HomeScene({ isActive = false }) {
                 className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""} ${theme.disabledForTesting ? "theme-circle--disabled" : ""}`}
                 onFocus={() => handleFocus(i)}
                 onBlur={handleBlur}
-                onClick={() => { if (!theme.disabledForTesting && theme.scene) goToScene(theme.scene, { theme: theme.id }); }}
+                onClick={() => {
+                  if (!theme.disabledForTesting && theme.scene) {
+                    clearThemeDescAnnounce();
+                    goToScene(theme.scene, { theme: theme.id });
+                  }
+                }}
                 aria-label={
                   speechMode && !theme.disabledForTesting
                     ? getThemeCarouselName(theme.label, i, themes.length)
                     : `${theme.label}, ${i + 1} of ${themes.length}`
-                }
-                aria-describedby={
-                  speechMode && !theme.disabledForTesting
-                    ? `theme-circle-desc-${theme.id}`
-                    : undefined
                 }
                 aria-disabled={theme.disabledForTesting ? true : undefined}
                 tabIndex={0}

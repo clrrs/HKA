@@ -20,11 +20,11 @@ const EARCON_SRC = {
   [EARCON.popupClose]: "/sfx/popUpClose.mp3",
   [EARCON.idleTimer]: "/sfx/idleTimer.mp3",
   [EARCON.home]: "/sfx/home.mp3",
-  [EARCON.nextArtifact]: "/sfx/nextArtifact.mp3",
+  [EARCON.nextArtifact]: "/sfx/nextArtifact2.mp3",
   [EARCON.previousArtifact]: "/sfx/previousArtifact.mp3",
   [EARCON.darkLightMode]: "/sfx/darkLightMode.mp3",
   [EARCON.scrollText]: "/sfx/scrollText.wav",
-  [EARCON.volumeTone]: "/sfx/volumeTone.mp3",
+  [EARCON.volumeTone]: "/sfx/volumeTone2.mp3",
 };
 
 let applySink = null;

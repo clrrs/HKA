@@ -671,7 +671,8 @@ export function getTheme(themeId) {
 
 /** Short icon/poster alt for selection buttons and artifact-open speech. */
 export function getArtifactAltText(artifact) {
-  return artifact?.alt || "TODO: placeholder alt text";
+  const alt = artifact?.alt || "TODO: placeholder alt text";
+  return `Image: ${alt}`;
 }
 
 const THEME_SELECT_CTA = "Press select key to view the artifacts in this theme.";
@@ -683,13 +684,13 @@ export function getThemeCarouselName(themeLabel, index, total) {
 }
 
 /**
- * Description after role "button". Leading " , " nudges a brief pause.
- * Returns null when there is no icon alt.
+ * Theme circle follow-up after name + "button".
+ * HomeScene speaks this via delayed live announce (not aria-describedby).
  */
 export function getThemeCarouselDescription(themeId) {
   const iconAlt = themes[themeId]?.iconAlt;
-  if (!iconAlt) return ` , ${THEME_SELECT_CTA}`;
-  return ` , ${iconAlt}. ${THEME_SELECT_CTA}`;
+  if (!iconAlt) return THEME_SELECT_CTA;
+  return `Image: ${iconAlt}. ${THEME_SELECT_CTA}`;
 }
 
 /** @deprecated Prefer getThemeCarouselName + getThemeCarouselDescription */
@@ -711,6 +712,7 @@ export function getArtifactCircleName(artifact, index, total) {
   return `${title}, ${index + 1} of ${total}`;
 }
 
+/** Description after role "button". Leading " , " nudges a brief pause. */
 export function getArtifactCircleDescription(artifact) {
   return ` , ${getArtifactAltText(artifact)}. ${ARTIFACT_SELECT_CTA}`;
 }

@@ -462,10 +462,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // Speech off: the popup opens on a silent anchor so nothing is highlighted
   // yet. It leaves the focus order as soon as you move off it.
   const [focusAnchorActive, setFocusAnchorActive] = useState(!speechMode);
-  // Dialog name carries open alt once; blanked after so zoom/settings/idle
-  // restore does not make NVDA re-speak the alt.
+  // Dialog name carries "{title} opened." once; blanked after so zoom/settings/
+  // idle restore does not make NVDA re-speak the open line.
   const [dialogAriaLabel, setDialogAriaLabel] = useState(() =>
-    getArtifactAltText(artifact)
+    artifact ? `${artifact.title} opened.` : "\u00a0"
   );
   const focusAnchorActiveRef = useRef(!speechMode);
   const focusAnchorRef = useRef(null);
@@ -1175,7 +1175,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayDoneRef.current = false;
     storyParkedRef.current = false;
     popupInitialFocusDoneRef.current = false;
-    setDialogAriaLabel(getArtifactAltText(artifact));
+    setDialogAriaLabel(artifact ? `${artifact.title} opened.` : "\u00a0");
     clearTranscriptDwell();
     clearStoryTransition();
   }, [artifactId, artifact, clearTranscriptDwell, clearStoryTransition]);
@@ -1196,11 +1196,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, [artifactId, speechMode, focusAnchorActive]);
 
   useEffect(() => {
-    if (artifact && !speechMode) {
-      const alt = getArtifactAltText(artifact);
-      announce(`${alt}. ${artifact.title} opened.`, { politeness: "assertive" });
-      setDialogAriaLabel("\u00a0");
-    }
+    if (!artifact || speechMode) return;
+
+    const openTitle = `${artifact.title} opened.`;
+    const openAlt = getArtifactAltText(artifact);
+    announce(openTitle, { politeness: "assertive" });
+    setDialogAriaLabel("\u00a0");
+
+    const altDelay = estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS;
+    const t = window.setTimeout(() => {
+      announce(openAlt, { politeness: "assertive" });
+    }, altDelay);
+    return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1230,7 +1237,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (chunks.length === 0) return;
 
     const openAlt = getArtifactAltText(artifact);
-    const openTitle = artifact.title;
+    const openTitle = `${artifact.title} opened.`;
 
     let chunkIndex = 0;
     autoplayingRef.current = true;
@@ -1278,29 +1285,29 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       autoplayTimeoutRef.current = setTimeout(playNext, delay);
     };
 
-    // Dialog aria-label speaks short alt first. Then title, then story chunks.
-    // Blank the dialog name once alt is consumed so later focus (zoom/settings/
+    // Dialog aria-label speaks "{title} opened." first. Then Image: alt, then story.
+    // Blank the dialog name once title is consumed so later focus (zoom/settings/
     // idle restore) does not re-speak it.
-    const announceTitleThenStory = () => {
+    const announceAltThenStory = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
       setDialogAriaLabel("\u00a0");
-      announce(openTitle, { politeness: "assertive" });
-      const titleDelay = autoReadDelayMs(
-        estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS,
+      announce(openAlt, { politeness: "assertive" });
+      const altDelay = autoReadDelayMs(
+        estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
         autoReadFastRef.current
       );
       autoplayPlayNextRef.current = playNext;
-      autoplayDeadlineRef.current = Date.now() + titleDelay;
-      autoplayTimeoutRef.current = setTimeout(playNext, titleDelay);
+      autoplayDeadlineRef.current = Date.now() + altDelay;
+      autoplayTimeoutRef.current = setTimeout(playNext, altDelay);
     };
 
-    const altDelay = autoReadDelayMs(
-      estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
+    const titleDelay = autoReadDelayMs(
+      estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS,
       autoReadFastRef.current
     );
-    autoplayPlayNextRef.current = announceTitleThenStory;
-    autoplayDeadlineRef.current = Date.now() + altDelay;
-    autoplayTimeoutRef.current = setTimeout(announceTitleThenStory, altDelay);
+    autoplayPlayNextRef.current = announceAltThenStory;
+    autoplayDeadlineRef.current = Date.now() + titleDelay;
+    autoplayTimeoutRef.current = setTimeout(announceAltThenStory, titleDelay);
 
     return () => {
       if (autoplayingRef.current) {
@@ -2378,8 +2385,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     });
     return map;
   })();
-  // Short alt first — auto-read then announces title, then story.
-  // dialogAriaLabel state is blanked after that open alt is consumed.
+  // Title opened first — auto-read then announces Image: alt, then story.
+  // dialogAriaLabel state is blanked after that open title is consumed.
 
   const autoplayBtnClass = (section) =>
     visualActiveSection === section ? " carousel-btn--autoplay-active" : "";
