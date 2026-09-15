@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppState, DEFAULT_PREFS } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
-import { scheduleFocus } from "../state/useSceneManager";
 
 const textSizeOptions = [
   { value: "small", label: "Small" },
@@ -28,31 +27,21 @@ const screenReaderOptions = [
 
 const MENU_ITEM_COUNT = 4;
 
-const SECTION_OPTION_IDS = {
-  screenReader: "access-screen-reader-options",
-  textSize: "access-text-size-options",
-  theme: "access-theme-options",
-  brightness: "access-brightness-options",
-};
-
-const SECTION_NAMES = {
-  screenReader: "Screen Reader",
-  textSize: "Text Size",
-  theme: "Contrast",
-  brightness: "Brightness",
-};
+const SELECT_HINT_ID = "settings-select-hint";
+const SELECT_HINT = "Press select to change.";
+// Leading period nudges a brief pause after NVDA says "button".
+const SELECT_HINT_DESCRIPTION = `. ${SELECT_HINT}`;
 
 const ONBOARDING_BLURB =
-  "By default, the screen reader is on. Press Skip to continue, or use the left and right keys to customize. Press the settings key to access this menu at any time.";
+  "By default, the screen reader is on. Press Skip to continue, or use the left and right keys to move between settings and press Select to change. Press the settings key to access this menu at any time.";
 
 // Single spoken open line (dialog title + blurb) so NVDA does not stack
 // dialog aria-label + intro aria-label into a double read.
 const ONBOARDING_INTRO_SR_LABEL = `Accessibility Settings. ${ONBOARDING_BLURB}`;
 
 const SKIP_TIP =
-  "Tip: Press the Select key to stick with these settings, or press the right key to toggle screen reader or adjust text size, contrast, or brightness.";
+  "Tip: Press the Select key to stick with these settings, or press the right key to move between settings and press Select to change screen reader, text size, contrast, or brightness.";
 
-// Folded into aria-label after a period so NVDA pauses before the tip (not after "button").
 const SCREEN_READER_TIP =
   "Tip: Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
 
@@ -66,20 +55,67 @@ function prefsMatchDefaults(prefs) {
   );
 }
 
-function menuItemLabel(name, valueLabel, index, optionCount) {
-  return `${name}, set to ${valueLabel}, ${index} of ${MENU_ITEM_COUNT} menu items, ${optionCount} available ${name.toLowerCase()} options.`;
+function menuItemLabel(name, valueLabel, index) {
+  return `${name}, ${valueLabel}, ${index} of ${MENU_ITEM_COUNT}`;
 }
 
-function optionLabel(label, selected, index, total) {
-  return `${label}, ${selected ? "selected" : "unselected"}, option ${index} of ${total}`;
+function cycleOption(options, currentValue) {
+  const idx = options.findIndex((o) => o.value === currentValue);
+  const nextIdx = idx === -1 ? 0 : (idx + 1) % options.length;
+  return options[nextIdx];
 }
 
-// Must not vary with expanded state: NVDA re-reads the whole button when the
-// accessible name of the focused element changes, which doubled up the close
-// announcement. aria-expanded already conveys expanded/collapsed.
-function triggerAriaLabel(name, valueLabel, index, optionCount, tip) {
-  const label = menuItemLabel(name, valueLabel, index, optionCount);
-  return tip ? `${label} ${tip}` : label;
+/**
+ * One settings row: Select cycles values in place.
+ * aria-label is frozen while focused so NVDA does not re-read the whole
+ * name when the value changes — cycle feedback is a live-region value only.
+ */
+function SettingToggle({ name, index, valueLabel, onCycle, id }) {
+  const liveLabel = menuItemLabel(name, valueLabel, index);
+  const btnRef = useRef(null);
+  const liveLabelRef = useRef(liveLabel);
+  liveLabelRef.current = liveLabel;
+  const [spokenLabel, setSpokenLabel] = useState(liveLabel);
+
+  // Sync accessible name to the live value only when this row is not focused.
+  useEffect(() => {
+    if (document.activeElement !== btnRef.current) {
+      setSpokenLabel(liveLabel);
+    }
+  }, [liveLabel]);
+
+  // Also sync when focus moves elsewhere (blur can be skipped if the node is
+  // replaced, or in some programmatic focus paths).
+  useEffect(() => {
+    const onFocusIn = () => {
+      if (document.activeElement !== btnRef.current) {
+        setSpokenLabel(liveLabelRef.current);
+      }
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, []);
+
+  return (
+    <div className="setting-group">
+      <button
+        ref={btnRef}
+        type="button"
+        className="setting-section-trigger"
+        id={id}
+        data-settings-layer="menu"
+        data-settings-menu-item
+        onClick={onCycle}
+        onFocus={() => setSpokenLabel(liveLabelRef.current)}
+        onBlur={() => setSpokenLabel(liveLabelRef.current)}
+        aria-label={spokenLabel}
+        aria-describedby={SELECT_HINT_ID}
+      >
+        <span className="setting-section-label" aria-hidden="true">{name}</span>
+        <span className="setting-section-value" aria-hidden="true">{valueLabel}</span>
+      </button>
+    </div>
+  );
 }
 
 export default function AccessibilityMenu({ onboarding = false }) {
@@ -93,83 +129,66 @@ export default function AccessibilityMenu({ onboarding = false }) {
     setSpeechModePreference,
   } = useAppState();
   const announce = useAnnounce();
-  const [expandedSection, setExpandedSection] = useState(null);
-  const introRef = useRef(null);
-  const sectionRefs = useRef({});
+  const resetBtnRef = useRef(null);
 
-  // After Select opens a section, move focus to the first option once it's mounted.
-  useEffect(() => {
-    if (!expandedSection) return;
-    const root = document.getElementById(SECTION_OPTION_IDS[expandedSection]);
-    const first = root?.querySelector("button:not([disabled])");
-    if (!first) return undefined;
-    return scheduleFocus(first);
-  }, [expandedSection]);
-
-  const closeSection = (section) => {
-    const name = SECTION_NAMES[section];
-
-    setExpandedSection(null);
-    // Focus stays on the trigger, so the full menu-item label is still one
-    // Next/Prev away — the confirmation only needs to say what closed.
-    announce(`${name} closed.`, {
-      politeness: "assertive",
-      source: "settings-section-close",
-    });
-  };
-
-  const toggleSection = (section) => {
-    if (expandedSection === section) {
-      closeSection(section);
-      return;
-    }
-    setExpandedSection(section);
-  };
-
-  const returnToMenuItem = (section) => {
-    setExpandedSection(null);
-    const focusTrigger = () => {
-      sectionRefs.current[section]?.focus({ preventScroll: true });
-    };
-    requestAnimationFrame(focusTrigger);
-    window.setTimeout(focusTrigger, 50);
-  };
-
-  const currentTextSizeLabel = textSizeOptions.find((o) => o.value === prefs.textSize)?.label ?? prefs.textSize;
-  const currentThemeLabel = themeOptions.find((o) => o.value === prefs.theme)?.label ?? prefs.theme;
-  const currentBrightnessLabel = brightnessOptions.find((o) => o.value === prefs.brightness)?.label ?? String(prefs.brightness);
+  const currentTextSizeLabel =
+    textSizeOptions.find((o) => o.value === prefs.textSize)?.label ?? prefs.textSize;
+  const currentThemeLabel =
+    themeOptions.find((o) => o.value === prefs.theme)?.label ?? prefs.theme;
+  const currentBrightnessLabel =
+    brightnessOptions.find((o) => o.value === prefs.brightness)?.label ??
+    String(prefs.brightness);
   const currentScreenReaderLabel = speechMode ? "On" : "Off";
 
   const isAtDefaults = prefsMatchDefaults(prefs) && speechMode === true;
 
-  const handleScreenReader = (enabled) => {
-    if (enabled !== speechMode) {
-      setSpeechModePreference(enabled);
-    }
-    returnToMenuItem("screenReader");
+  const announceCycleValue = (label, tip) => {
+    announce(tip ? `${label}. ${tip}` : label, {
+      politeness: "assertive",
+      source: "settings-cycle",
+    });
   };
 
-  const handlePrefOption = (section, key, value) => {
-    setPref(key, value);
-    returnToMenuItem(section);
+  const handleScreenReaderCycle = () => {
+    const next = cycleOption(screenReaderOptions, speechMode);
+    setSpeechModePreference(next.value);
+    announceCycleValue(
+      next.label,
+      next.value === false ? SCREEN_READER_TIP : null
+    );
+  };
+
+  const handlePrefCycle = (key, options, currentValue) => {
+    const next = cycleOption(options, currentValue);
+    setPref(key, next.value);
+    announceCycleValue(next.label);
   };
 
   const handleResetToDefaults = () => {
+    if (isAtDefaults) return;
     resetPrefs();
-    setExpandedSection(null);
     announce(RESET_RESTORED_ANNOUNCEMENT, {
       politeness: "assertive",
       source: "settings-reset",
     });
+    // Keep focus on Reset (aria-disabled, not native disabled) so Next → Close
+    // and Prev → last setting. Re-assert after paint in case anything steals it.
+    const el = resetBtnRef.current;
+    if (el) {
+      requestAnimationFrame(() => el.focus({ preventScroll: true }));
+    }
   };
 
   return (
     <div className="accessibility-menu">
+      <p id={SELECT_HINT_ID} className="sr-only">
+        {SELECT_HINT_DESCRIPTION}
+      </p>
+
       <div
         className={`settings-intro-block${onboarding ? " settings-intro-block--onboarding" : ""}`}
       >
         <div
-          ref={introRef}
           className="settings-intro"
           tabIndex={0}
           data-autofocus
@@ -205,209 +224,50 @@ export default function AccessibilityMenu({ onboarding = false }) {
         )}
       </div>
 
-      <div className="setting-group">
-        <button
-          type="button"
-          className="setting-section-trigger"
-          ref={(el) => {
-            sectionRefs.current.screenReader = el;
-          }}
-          data-settings-layer="menu"
-          data-settings-menu-item
-          onClick={() => toggleSection("screenReader")}
-          aria-expanded={expandedSection === "screenReader"}
-          aria-controls="access-screen-reader-options"
-          id="access-screen-reader-trigger"
-          aria-label={triggerAriaLabel(
-            "Screen Reader",
-            currentScreenReaderLabel,
-            1,
-            screenReaderOptions.length,
-            SCREEN_READER_TIP
-          )}
-        >
-          <span className="setting-section-label" aria-hidden="true">Screen Reader</span>
-          <span className="setting-section-value" aria-hidden="true">{currentScreenReaderLabel}</span>
-        </button>
-        {/* No role/label on the options wrappers: a labelled group makes NVDA
-            re-read the trigger's whole label when focus enters it. */}
-        {expandedSection === "screenReader" && (
-          <div id="access-screen-reader-options" className="setting-options">
-            {screenReaderOptions.map((option, i) => {
-              const base = optionLabel(
-                option.label,
-                speechMode === option.value,
-                i + 1,
-                screenReaderOptions.length
-              );
-              return (
-              <button
-                key={String(option.value)}
-                type="button"
-                className={`setting-btn ${speechMode === option.value ? "active" : ""}`}
-                data-settings-layer="options"
-                onClick={() => handleScreenReader(option.value)}
-                aria-pressed={speechMode === option.value}
-                aria-label={
-                  option.value === false ? `${base}. ${SCREEN_READER_TIP}` : base
-                }
-              >
-                <span aria-hidden="true">{option.label}</span>
-              </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <SettingToggle
+        name="Screen Reader"
+        index={1}
+        valueLabel={currentScreenReaderLabel}
+        onCycle={handleScreenReaderCycle}
+        id="access-screen-reader-trigger"
+      />
 
-      <div className="setting-group">
-        <button
-          type="button"
-          className="setting-section-trigger"
-          ref={(el) => {
-            sectionRefs.current.textSize = el;
-          }}
-          data-settings-layer="menu"
-          data-settings-menu-item
-          onClick={() => toggleSection("textSize")}
-          aria-expanded={expandedSection === "textSize"}
-          aria-controls="access-text-size-options"
-          id="access-text-size-trigger"
-          aria-label={triggerAriaLabel(
-            "Text Size",
-            currentTextSizeLabel,
-            2,
-            textSizeOptions.length
-          )}
-        >
-          <span className="setting-section-label" aria-hidden="true">Text Size</span>
-          <span className="setting-section-value" aria-hidden="true">{currentTextSizeLabel}</span>
-        </button>
-        {expandedSection === "textSize" && (
-          <div id="access-text-size-options" className="setting-options">
-            {textSizeOptions.map((option, i) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`setting-btn ${prefs.textSize === option.value ? "active" : ""}`}
-                data-settings-layer="options"
-                onClick={() => handlePrefOption("textSize", "textSize", option.value)}
-                aria-pressed={prefs.textSize === option.value}
-                aria-label={optionLabel(
-                  option.label,
-                  prefs.textSize === option.value,
-                  i + 1,
-                  textSizeOptions.length
-                )}
-              >
-                <span aria-hidden="true">{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <SettingToggle
+        name="Text Size"
+        index={2}
+        valueLabel={currentTextSizeLabel}
+        onCycle={() =>
+          handlePrefCycle("textSize", textSizeOptions, prefs.textSize)
+        }
+        id="access-text-size-trigger"
+      />
 
-      <div className="setting-group">
-        <button
-          type="button"
-          className="setting-section-trigger"
-          ref={(el) => {
-            sectionRefs.current.theme = el;
-          }}
-          data-settings-layer="menu"
-          data-settings-menu-item
-          onClick={() => toggleSection("theme")}
-          aria-expanded={expandedSection === "theme"}
-          aria-controls="access-theme-options"
-          id="access-theme-trigger"
-          aria-label={triggerAriaLabel(
-            "Contrast",
-            currentThemeLabel,
-            3,
-            themeOptions.length
-          )}
-        >
-          <span className="setting-section-label" aria-hidden="true">Contrast</span>
-          <span className="setting-section-value" aria-hidden="true">{currentThemeLabel}</span>
-        </button>
-        {expandedSection === "theme" && (
-          <div id="access-theme-options" className="setting-options">
-            {themeOptions.map((option, i) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`setting-btn ${prefs.theme === option.value ? "active" : ""}`}
-                data-settings-layer="options"
-                onClick={() => handlePrefOption("theme", "theme", option.value)}
-                aria-pressed={prefs.theme === option.value}
-                aria-label={optionLabel(
-                  option.label,
-                  prefs.theme === option.value,
-                  i + 1,
-                  themeOptions.length
-                )}
-              >
-                <span aria-hidden="true">{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <SettingToggle
+        name="Contrast"
+        index={3}
+        valueLabel={currentThemeLabel}
+        onCycle={() => handlePrefCycle("theme", themeOptions, prefs.theme)}
+        id="access-theme-trigger"
+      />
 
-      <div className="setting-group">
-        <button
-          type="button"
-          className="setting-section-trigger"
-          ref={(el) => {
-            sectionRefs.current.brightness = el;
-          }}
-          data-settings-layer="menu"
-          data-settings-menu-item
-          onClick={() => toggleSection("brightness")}
-          aria-expanded={expandedSection === "brightness"}
-          aria-controls="access-brightness-options"
-          id="access-brightness-trigger"
-          aria-label={triggerAriaLabel(
-            "Brightness",
-            currentBrightnessLabel,
-            4,
-            brightnessOptions.length
-          )}
-        >
-          <span className="setting-section-label" aria-hidden="true">Brightness</span>
-          <span className="setting-section-value" aria-hidden="true">{currentBrightnessLabel}</span>
-        </button>
-        {expandedSection === "brightness" && (
-          <div id="access-brightness-options" className="setting-options">
-            {brightnessOptions.map((option, i) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`setting-btn ${prefs.brightness === option.value ? "active" : ""}`}
-                data-settings-layer="options"
-                onClick={() => handlePrefOption("brightness", "brightness", option.value)}
-                aria-pressed={prefs.brightness === option.value}
-                aria-label={optionLabel(
-                  option.label,
-                  prefs.brightness === option.value,
-                  i + 1,
-                  brightnessOptions.length
-                )}
-              >
-                <span aria-hidden="true">{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <SettingToggle
+        name="Brightness"
+        index={4}
+        valueLabel={currentBrightnessLabel}
+        onCycle={() =>
+          handlePrefCycle("brightness", brightnessOptions, prefs.brightness)
+        }
+        id="access-brightness-trigger"
+      />
 
       <div className="settings-footer">
         <button
+          ref={resetBtnRef}
           type="button"
           className="setting-btn settings-reset-btn"
           data-settings-layer="chrome"
           onClick={handleResetToDefaults}
-          disabled={isAtDefaults}
+          aria-disabled={isAtDefaults ? true : undefined}
         >
           Reset to Defaults
         </button>
