@@ -687,13 +687,13 @@ export function getThemeCarouselName(themeLabel, index, total) {
 }
 
 /**
- * Description after role "button". Leading period nudges a brief pause.
+ * Description after role "button". Leading " , " nudges a brief pause.
  * Returns null when there is no icon alt.
  */
 export function getThemeCarouselDescription(themeId) {
   const iconAlt = themes[themeId]?.iconAlt;
-  if (!iconAlt) return `. ${THEME_SELECT_CTA}`;
-  return `. ${iconAlt}. ${THEME_SELECT_CTA}`;
+  if (!iconAlt) return ` , ${THEME_SELECT_CTA}`;
+  return ` , ${iconAlt}. ${THEME_SELECT_CTA}`;
 }
 
 /** @deprecated Prefer getThemeCarouselName + getThemeCarouselDescription */
@@ -716,7 +716,7 @@ export function getArtifactCircleName(artifact, index, total) {
 }
 
 export function getArtifactCircleDescription(artifact) {
-  return `. ${getArtifactAltText(artifact)}. ${ARTIFACT_SELECT_CTA}`;
+  return ` , ${getArtifactAltText(artifact)}. ${ARTIFACT_SELECT_CTA}`;
 }
 
 export function getThemeArtifacts(themeId) {

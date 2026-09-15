@@ -29,8 +29,8 @@ const MENU_ITEM_COUNT = 4;
 
 const SELECT_HINT_ID = "settings-select-hint";
 const SELECT_HINT = "Press select to change.";
-// Leading period nudges a brief pause after NVDA says "button".
-const SELECT_HINT_DESCRIPTION = `. ${SELECT_HINT}`;
+// Leading " , " nudges a brief pause after NVDA says "button".
+const SELECT_HINT_DESCRIPTION = ` , ${SELECT_HINT}`;
 
 const ONBOARDING_BLURB =
   "By default, the screen reader is on. Press Skip to continue, or use the left and right keys to move between settings and press Select to change. Press the settings key to access this menu at any time.";
