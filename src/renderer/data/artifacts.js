@@ -40,8 +40,6 @@ Male audio description: Helen gently touches the man’s hair and face. The man 
 Female narrator: Meeting Helen, seeing what she has made of her life, gives them more courage to reshape their own.
 Male audio description: Polly translates into Helen’s hand as they stand near the men.
 Female narrator: For her services she was cited at the close of World War II.`,
-        guidedDescription:
-          "Men sit in two hospital beds with simple metal frames while Helen speaks, shakes one man\u2019s hand, and touches the other\u2019s face. Helen then embraces the right hand of a young, bedridden man whose other hand is being held by young woman at his bedside. Helen is briefly shown speaking to a young man with short dark hair and dark skin. Finally, Helen stands between two veterans in beds as three other veterans in wheelchairs gather around them."
       },
       {
         id: "1A2",
@@ -300,8 +298,6 @@ Male audio description: In old, black and white footage, elegantly-dressed women
 Male audio description: She also wears a tight leather helmet on her head. An airplane drives across a field and takes off into the air. On the ground, Helen’s friends watch excitedly as the plane flies high in the sky.
 [uplifting orchestral music]
 Male audio description: Helen rides in the front and a pilot steers in the back of the two-seater aircraft. Wind flies over their heads in the open, roofless plane. The airplane safely lands on the flat, grassy ground. Dozens of people rush to the parked plane and assist Helen out of the sunken seat. Helen smiles broadly and hugs her teacher Anne Sullivan Macy.`,
-        guidedDescription:
-          "In grainy, black-and-white film, Anne Sullivan and Polly Thomson, Helen's teacher and assistant, respectively, help Helen gear up to board the biplane. Helen’s brother Phillips Brooks Keller, a US Army World War I aviator, is wearing his military uniform as he watches alongside Helen’s mother. Anne and Polly help Helen board the open front cockpit of the biplane, while the pilot sits in the rear cockpit. Groundcrew spins the propeller to start the engine, and the biplane makes a wobbly takeoff from a dusty field. The biplane is shown high in the sky, followed by a shot of Helen's friends and family watching from the ground. The plane lands smoothly on the grass, and Helen is assisted out of the biplane and gives Anne a hug."
       },
       {
         id: "3A2",

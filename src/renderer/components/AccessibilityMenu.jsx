@@ -33,7 +33,7 @@ const SELECT_HINT = "Press select to change.";
 const SELECT_HINT_DESCRIPTION = ` , ${SELECT_HINT}`;
 
 const ONBOARDING_BLURB =
-  "By default, the screen reader is on. Press Skip to continue, or use the left and right keys to move between settings and press Select to change. Press the settings key to access this menu at any time.";
+  "Screen reader is on by default. Press Skip to continue, or left and right to change settings. Press Settings anytime to reopen this menu.";
 
 // Single spoken open line (dialog title + blurb) so NVDA does not stack
 // dialog aria-label + intro aria-label into a double read.

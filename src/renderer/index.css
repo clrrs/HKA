@@ -79,6 +79,10 @@
   --btn-focus-bg: var(--color-white);
   --btn-focus-text: var(--color-black);
   --btn-focus-border: var(--color-black);
+  /* Buttons: text-nav source (selected, focus elsewhere) */
+  --btn-nav-source-bg: #6b6b6b;
+  --btn-nav-source-text: var(--color-white);
+  --btn-nav-source-border: #6b6b6b;
   /* Icons: black SVGs inverted to white; on focus back to black */
   --icon-filter: invert(1);
   --icon-focus-filter: none;
@@ -103,6 +107,10 @@
   --btn-focus-bg: var(--color-black);
   --btn-focus-text: var(--color-white);
   --btn-focus-border: var(--color-white);
+  /* Buttons: text-nav source (selected, focus elsewhere) */
+  --btn-nav-source-bg: #8a8a8a;
+  --btn-nav-source-text: var(--color-white);
+  --btn-nav-source-border: #8a8a8a;
   /* Icons: black SVGs stay black; on focus invert to white */
   --icon-filter: none;
   --icon-focus-filter: invert(1);
@@ -535,6 +543,15 @@ h1[tabindex]:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Selected while focus is in overflow text snap-scroll (muted, not gold) */
+.carousel-btn.is-text-nav-source {
+  background-color: var(--btn-nav-source-bg);
+  border-color: var(--btn-nav-source-border);
+  color: var(--btn-nav-source-text);
+  outline: none;
+  box-shadow: none;
 }
 
 /* Hover / keyboard focus / selected / autoplay: gold fill */

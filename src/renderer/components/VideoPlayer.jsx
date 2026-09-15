@@ -4,25 +4,17 @@ import { stopNvdaSpeechForMediaStart } from "../audio/nvdaSpeechControl";
 import { textOrMissing } from "../data/contentPlaceholder";
 import { useStepScroll } from "./useStepScroll";
 
-export default function VideoPlayer({ src, poster, transcriptText, guidedDescription }) {
+export default function VideoPlayer({ src, poster, transcriptText }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [showGuided, setShowGuided] = useState(false);
   const {
     bodyRef: transcriptBodyRef,
     closeButtonRef: transcriptCloseRef,
     handleKeyDown: handleTranscriptKeyDown,
     resetAnchors: resetTranscriptAnchors,
   } = useStepScroll();
-  const {
-    bodyRef: guidedBodyRef,
-    closeButtonRef: guidedCloseRef,
-    handleKeyDown: handleGuidedKeyDown,
-    resetAnchors: resetGuidedAnchors,
-  } = useStepScroll();
   const transcriptButtonRef = useRef(null);
-  const guidedButtonRef = useRef(null);
 
   useHeadphoneSinkEffect(videoRef, src);
 
@@ -49,9 +41,6 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
       if (showTranscript) {
         event.preventDefault();
         setShowTranscript(false);
-      } else if (showGuided) {
-        event.preventDefault();
-        setShowGuided(false);
       }
     };
 
@@ -59,11 +48,11 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showTranscript, showGuided]);
+  }, [showTranscript]);
 
   return (
     <div className="video-container">
-      <video 
+      <video
         ref={videoRef}
         src={src}
         poster={poster}
@@ -88,7 +77,6 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
           <button
             type="button"
             onClick={() => {
-              setShowGuided(false);
               setShowTranscript(true);
               setTimeout(() => {
                 resetTranscriptAnchors();
@@ -98,20 +86,6 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
             ref={transcriptButtonRef}
           >
             Transcript
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowTranscript(false);
-              setShowGuided(true);
-              setTimeout(() => {
-                resetGuidedAnchors();
-              }, 0);
-            }}
-            aria-label="Open description"
-            ref={guidedButtonRef}
-          >
-            Description
           </button>
         </div>
       </div>
@@ -143,40 +117,6 @@ export default function VideoPlayer({ src, poster, transcriptText, guidedDescrip
           </div>
         </div>
       )}
-      {showGuided && (
-        <div
-          className="video-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Description"
-        >
-          <div className="video-overlay-body" onKeyDown={handleGuidedKeyDown}>
-            <button
-              type="button"
-              className="video-overlay-close"
-              onClick={() => {
-                setShowGuided(false);
-                if (guidedButtonRef.current) {
-                  guidedButtonRef.current.focus();
-                }
-              }}
-              aria-label="Close description"
-              ref={guidedCloseRef}
-            >
-              Exit
-            </button>
-            <h2>Description</h2>
-            <div
-              className="artifact-document-transcript-text"
-              ref={guidedBodyRef}
-              tabIndex={0}
-            >
-              <p>{textOrMissing(guidedDescription)}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-

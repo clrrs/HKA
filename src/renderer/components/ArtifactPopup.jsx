@@ -42,7 +42,6 @@ const GUIDED_HEADINGS = {
   photograph: "Photograph Description",
   document: "Document Description",
   object: "Object Description",
-  video: "Video Description",
 };
 const GUIDED_HEADING_FALLBACK = "Description";
 
@@ -218,6 +217,9 @@ function buildTextBlocks(artifact, images, isCombined) {
   }));
 
   if (isCombined) return blocks;
+
+  // Videos have no guided / video-description panel — story body only.
+  if (artifact.type === "video") return blocks;
 
   const heading = GUIDED_HEADINGS[artifact.type] ?? GUIDED_HEADING_FALLBACK;
 
@@ -447,6 +449,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const [activeBlockKey, setActiveBlockKey] = useState(null);
   const [scrollMarkers, setScrollMarkers] = useState([]);
   const [textNavActive, setTextNavActive] = useState(false);
+  // Which toolbar button handed focus into overflow text (muted selected look).
+  const [textNavSourceId, setTextNavSourceId] = useState(null);
   const [textScrollable, setTextScrollable] = useState(false);
   const [storyBtnFocused, setStoryBtnFocused] = useState(false);
   const [guidedDescBtnFocused, setGuidedDescBtnFocused] = useState(false);
@@ -458,6 +462,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // Speech off: the popup opens on a silent anchor so nothing is highlighted
   // yet. It leaves the focus order as soon as you move off it.
   const [focusAnchorActive, setFocusAnchorActive] = useState(!speechMode);
+  // Dialog name carries open alt once; blanked after so zoom/settings/idle
+  // restore does not make NVDA re-speak the alt.
+  const [dialogAriaLabel, setDialogAriaLabel] = useState(() =>
+    getArtifactAltText(artifact)
+  );
   const focusAnchorActiveRef = useRef(!speechMode);
   const focusAnchorRef = useRef(null);
   const popupRef = useRef(null);
@@ -669,6 +678,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     textNavActiveRef.current = false;
     setTextNavActive(false);
     textNavSourceRef.current = null;
+    setTextNavSourceId(null);
     textSnapIndexRef.current = 0;
     activeBlockKeyRef.current = null;
     setActiveBlockKey(null);
@@ -970,15 +980,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const getPopupFocusables = useCallback(() => {
     const hasTranscriptLocal = showsTranscriptButton(artifact, isVideo);
     if (isVideo) {
-      const playEl = playBtnRef.current;
-      const pauseEl = pauseBtnRef.current;
-      const includePlay = playEl && (!isVideoPlaying || heldVideoBtn === "play");
-      const includePause = pauseEl && (isVideoPlaying || heldVideoBtn === "pause");
+      // Always include Play and Pause so greyed (aria-disabled) controls remain
+      // reachable; Select/click no-ops when aria-disabled.
       return [
         prevArrowRef.current,
         showStoryButton ? storyBtnRef.current : null,
-        includePlay ? playEl : null,
-        includePause ? pauseEl : null,
+        playBtnRef.current,
+        pauseBtnRef.current,
         showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
         hasTranscriptLocal ? transcriptBtnRef.current : null,
         nextArrowRef.current,
@@ -1001,8 +1009,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     isVideo,
     showStoryButton,
     showGuidedDescriptionButton,
-    isVideoPlaying,
-    heldVideoBtn,
   ]);
 
   const getToolbarNeighbor = useCallback(
@@ -1169,9 +1175,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayDoneRef.current = false;
     storyParkedRef.current = false;
     popupInitialFocusDoneRef.current = false;
+    setDialogAriaLabel(getArtifactAltText(artifact));
     clearTranscriptDwell();
     clearStoryTransition();
-  }, [artifactId, clearTranscriptDwell, clearStoryTransition]);
+  }, [artifactId, artifact, clearTranscriptDwell, clearStoryTransition]);
 
   // Hold the inactivity timer while auto-read is reading. Pausing counts as idle
   // again, so a paused read cannot keep the timer suppressed indefinitely.
@@ -1181,16 +1188,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
 
+  // Park focus on open / artifact change only — not when returning from zoom
+  // or transcript (restoreMainFocus handles those).
   useEffect(() => {
-    if (!mainPopupActive) return;
     if (!speechMode && !focusAnchorActive) return;
     focusAnchorRef.current?.focus({ preventScroll: true });
-  }, [artifactId, speechMode, mainPopupActive, focusAnchorActive]);
+  }, [artifactId, speechMode, focusAnchorActive]);
 
   useEffect(() => {
     if (artifact && !speechMode) {
       const alt = getArtifactAltText(artifact);
       announce(`${alt}. ${artifact.title} opened.`, { politeness: "assertive" });
+      setDialogAriaLabel("\u00a0");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1270,8 +1279,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     };
 
     // Dialog aria-label speaks short alt first. Then title, then story chunks.
+    // Blank the dialog name once alt is consumed so later focus (zoom/settings/
+    // idle restore) does not re-speak it.
     const announceTitleThenStory = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
+      setDialogAriaLabel("\u00a0");
       announce(openTitle, { politeness: "assertive" });
       const titleDelay = autoReadDelayMs(
         estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS,
@@ -1474,6 +1486,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     textNavActiveRef.current = false;
     setTextNavActive(false);
     textNavSourceRef.current = null;
+    setTextNavSourceId(null);
     textSnapIndexRef.current = 0;
     activeBlockKeyRef.current = null;
     setActiveBlockKey(null);
@@ -1815,6 +1828,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     );
   }, [images.length, currentImageIndex, goToImage]);
 
+  // Manual Story: show/announce story only. Never restarts auto-read or
+  // auto-advances into guided description (open auto-read is one-shot).
   const handleStory = useCallback(() => {
     markAutoplayEnded();
     clearStoryTransition();
@@ -1828,10 +1843,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       .join(" ");
     const introKey = introBlocks[0]?.key ?? null;
 
+    // Active text block only — do not set visualActiveSection here or Story
+    // stays gold via autoplayBtnClass after focus moves to another control.
     if (introKey) {
       activeBlockKeyRef.current = introKey;
       setActiveBlockKey(introKey);
-      setVisualSection("description", introKey);
     }
 
     if (speechMode && introSpeech) {
@@ -1839,53 +1855,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     }
 
     scheduleOverflowTextNavRef.current?.(storyBtnRef);
-
-    const imageIndexAtStart = currentImageIndex;
-    const speechWaitMs = speechMode ? estimateSpeechDurationMs(introSpeech || "") : 0;
-    const delay = autoReadDelayMs(
-      speechWaitMs + SECTION_TRANSITION_MS,
-      autoReadFastRef.current
-    );
-
-    const showGuided = () => {
-      storyTransitionTimeoutRef.current = null;
-      storyTransitionDeadlineRef.current = null;
-      storyTransitionRemainingRef.current = null;
-      storyTransitionActiveRef.current = false;
-      storyTransitionPlayRef.current = null;
-
-      setTextMode("guided");
-      const guided = getGuidedBlockForImage(imageIndexAtStart);
-      if (!guided) return;
-
-      activeBlockKeyRef.current = guided.key;
-      setActiveBlockKey(guided.key);
-      setVisualSection("guided", guided.key);
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollBlockToTop(guided.key);
-          scheduleOverflowTextNavRef.current?.(storyBtnRef, { onlyIfStillOnPath: true });
-        });
-      });
-
-      if (speechMode) {
-        announce(getBlockSpeech(guided, false), { politeness: "assertive", dedupeMs: 0 });
-      }
-    };
-
-    storyTransitionPlayRef.current = showGuided;
-    storyTransitionActiveRef.current = true;
-    storyTransitionDeadlineRef.current = Date.now() + delay;
-    storyTransitionTimeoutRef.current = setTimeout(showGuided, delay);
   }, [
     announce,
     clearStoryTransition,
-    currentImageIndex,
-    getGuidedBlockForImage,
     markAutoplayEnded,
-    scrollBlockToTop,
-    setVisualSection,
     speechMode,
     textBlocks,
   ]);
@@ -1898,9 +1871,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const guided = getGuidedBlockForImage(currentImageIndex);
     if (!guided) return;
 
+    // Active text block only — leave visualActiveSection alone so toolbar
+    // autoplay gold does not stick after focus moves on.
     activeBlockKeyRef.current = guided.key;
     setActiveBlockKey(guided.key);
-    setVisualSection("guided", guided.key);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         scrollBlockToTop(guided.key);
@@ -1918,7 +1892,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     getGuidedBlockForImage,
     markAutoplayEnded,
     scrollBlockToTop,
-    setVisualSection,
     speechMode,
   ]);
 
@@ -1950,7 +1923,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     restoreMainFocus(zoomOrPlayRef);
   }, [announce, restoreMainFocus]);
 
-  const handleVideoToggle = useCallback(() => {
+  const handleVideoToggle = useCallback((e) => {
+    const btn = e?.currentTarget ?? document.activeElement;
+    if (btn?.getAttribute?.("aria-disabled") === "true") return;
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -2036,6 +2012,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       textNavActiveRef.current = true;
       setTextNavActive(true);
       textNavSourceRef.current = sourceRef || null;
+      let sourceId = null;
+      if (sourceRef === storyBtnRef) sourceId = "story";
+      else if (sourceRef === guidedDescBtnRef) sourceId = "description";
+      else if (sourceRef === nextImageRef) sourceId = "nextImage";
+      else if (sourceRef === prevImageRef) sourceId = "prevImage";
+      setTextNavSourceId(sourceId);
 
       let index = 0;
       const currentKey = activeBlockKeyRef.current;
@@ -2396,7 +2378,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     return map;
   })();
   // Short alt first — auto-read then announces title, then story.
-  const dialogAriaLabel = getArtifactAltText(artifact);
+  // dialogAriaLabel state is blanked after that open alt is consumed.
 
   const autoplayBtnClass = (section) =>
     visualActiveSection === section ? " carousel-btn--autoplay-active" : "";
@@ -2470,7 +2452,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={storyBtnRef}
                 className={`carousel-btn${
                   storyBtnFocused ? " is-selected" : ""
-                }${autoplayBtnClass("description")}`}
+                }${textNavSourceId === "story" ? " is-text-nav-source" : ""}${autoplayBtnClass("description")}`}
                 onClick={handleStory}
                 onFocus={() => setStoryBtnFocused(true)}
                 onBlur={() => setStoryBtnFocused(false)}
@@ -2489,7 +2471,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   }`}
                   onClick={handleVideoToggle}
                   onFocus={() => setHeldVideoBtn("play")}
-                  tabIndex={!isVideoPlaying || heldVideoBtn === "play" ? 0 : -1}
+                  tabIndex={0}
                   aria-disabled={isVideoPlaying ? true : undefined}
                   aria-label={toolbarLabels.play}
                 >
@@ -2503,7 +2485,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   }`}
                   onClick={handleVideoToggle}
                   onFocus={() => setHeldVideoBtn("pause")}
-                  tabIndex={isVideoPlaying || heldVideoBtn === "pause" ? 0 : -1}
+                  tabIndex={0}
                   aria-disabled={!isVideoPlaying ? true : undefined}
                   aria-label={toolbarLabels.pause}
                 >
@@ -2520,7 +2502,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   (isAutoplaying && visualActiveSection === "guided")
                     ? " is-selected"
                     : ""
-                }`}
+                }${textNavSourceId === "description" ? " is-text-nav-source" : ""}`}
                 onClick={handleGuidedDescription}
                 onFocus={() => setGuidedDescBtnFocused(true)}
                 onBlur={() => setGuidedDescBtnFocused(false)}
@@ -2533,7 +2515,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               <button
                 type="button"
                 ref={prevImageRef}
-                className="carousel-btn"
+                className={`carousel-btn${
+                  textNavSourceId === "prevImage" ? " is-text-nav-source" : ""
+                }`}
                 onClick={handlePrevImage}
                 aria-label={toolbarLabels.prevImage}
               >
@@ -2544,7 +2528,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               <button
                 type="button"
                 ref={nextImageRef}
-                className={`carousel-btn${autoplayBtnClass("nextImage")}`}
+                className={`carousel-btn${
+                  textNavSourceId === "nextImage" ? " is-text-nav-source" : ""
+                }${autoplayBtnClass("nextImage")}`}
                 onClick={handleNextImage}
                 aria-label={toolbarLabels.nextImage}
               >
