@@ -1897,8 +1897,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const closeTranscript = useCallback(() => {
     setTranscriptOpen(false);
-    announce("Transcript closed.");
-    restoreMainFocus(transcriptBtnRef);
+    announce("Transcript closed.", { politeness: "assertive", dedupeMs: 0 });
+    // Delay focus so the live region lands before the restored control is read.
+    window.setTimeout(() => restoreMainFocus(transcriptBtnRef), 60);
   }, [announce, restoreMainFocus]);
 
   const openTranscript = useCallback(() => {

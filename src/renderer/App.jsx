@@ -199,7 +199,7 @@ export default function App() {
       if (wasWarning) {
         playEarcon(EARCON.popupClose);
         announce(IDLE_DISMISSED_ANNOUNCEMENT, {
-          politeness: "polite",
+          politeness: "assertive",
           source: "idle-dismiss",
           dedupeMs: 0,
         });
@@ -226,7 +226,7 @@ export default function App() {
       if (wasWarning) {
         playEarcon(EARCON.popupClose);
         announce(IDLE_DISMISSED_ANNOUNCEMENT, {
-          politeness: "polite",
+          politeness: "assertive",
           source: "idle-dismiss",
           dedupeMs: 0,
         });
@@ -314,9 +314,10 @@ export default function App() {
         settingsReturnFocusRef.current = active;
       }
     } else if (!showSettings && prevShowSettingsRef.current) {
-      // Status only — focus restore below is unchanged.
+      // Assertive + delayed restore so "Settings closed." speaks before the
+      // restored control (polite waited behind focus; immediate focus raced the live region).
       announce(SETTINGS_CLOSED_ANNOUNCEMENT, {
-        politeness: "polite",
+        politeness: "assertive",
         source: "settings-closed",
         dedupeMs: 0,
       });
@@ -329,11 +330,13 @@ export default function App() {
         const target = usable || getActiveSceneFocusTarget();
         target?.focus({ preventScroll: true });
       };
-      restore();
-      const t1 = window.setTimeout(restore, 50);
-      const t2 = window.setTimeout(restore, 150);
+      // Live region writes at 50ms; restore after that so close wins the race.
+      const t0 = window.setTimeout(restore, 60);
+      const t1 = window.setTimeout(restore, 120);
+      const t2 = window.setTimeout(restore, 220);
       prevShowSettingsRef.current = showSettings;
       return () => {
+        window.clearTimeout(t0);
         window.clearTimeout(t1);
         window.clearTimeout(t2);
       };
@@ -384,9 +387,16 @@ export default function App() {
     idleReturnFocusRef.current = null;
     const usable =
       restoreEl && document.contains(restoreEl) && !restoreEl.closest("[inert]");
-    return scheduleFocus(usable ? restoreEl : getActiveSceneFocusTarget(), {
-      stealWindow: true,
-    });
+    const target = usable ? restoreEl : getActiveSceneFocusTarget();
+    // Live region writes at 50ms; delay restore so dismiss speaks before focus.
+    let cancelFocus = () => {};
+    const t = window.setTimeout(() => {
+      cancelFocus = scheduleFocus(target, { stealWindow: true });
+    }, 60);
+    return () => {
+      window.clearTimeout(t);
+      cancelFocus();
+    };
   }, [idleCountdown]);
 
   useEffect(() => {
