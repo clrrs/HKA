@@ -268,6 +268,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           data-settings-layer="chrome"
           onClick={handleResetToDefaults}
           aria-disabled={isAtDefaults ? true : undefined}
+          tabIndex={isAtDefaults ? -1 : undefined}
         >
           Reset to Defaults
         </button>
