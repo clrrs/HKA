@@ -18,7 +18,7 @@ export const themes = {
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CThe power of effecting changes for the better is within ourselves\u2026\u201D",
     description: "Helen Keller was a life-long advocate for change across society. Beginning with her fundraising campaign as a 10-year-old student, Helen was an advocate for voting, labor, and economic rights, in addition to working for several decades to advocate for people who were blind and deafblind.",
-    iconAlt: "TODO_ALT: Short visual description for Change theme icon",
+    iconAlt: "A black and white photo layered over documents shows Helen visiting veterans at a military hospital.",
     artifacts: [
       {
         id: "1A1",
@@ -143,7 +143,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CTogether we can do so much.\u201D",
     description: "Relationships were an essential part of Helen Keller\u2019s growth, education, and her accomplishments. Through friends across both society and the globe, known and unknown, Helen knew that collaboration was the key to success.",
-    iconAlt: "TODO_ALT: Short visual description for Together theme icon",
+    iconAlt: "Helen's gold door knocker is layered over handwritten notecards.",
     artifacts: [
       {
         id: "2A1",
@@ -279,7 +279,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CLife is either a daring adventure or nothing at all.\u201D",
     description: "Whether exploring one of the 39 different countries she traveled to, or piloting an airplane over Europe, Helen\u2019s lust for adventure was an inspiration to the world. Each of her travels left a lasting impression on the people and nations that she visited.",
-    iconAlt: "TODO_ALT: Short visual description for Adventure theme icon",
+    iconAlt: "A black and white image of Helen with a Bantu chief is layered with a Japanese luncheon set and travel documents.",
     artifacts: [
       {
         id: "3A1",
@@ -291,7 +291,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
         type: "video",
         videoSrc: "3A1Biplane.mp4",
         posterSrc: "3A1Biplane_frame.png",
-        alt: "TODO_ALT: Short visual description for Helen Keller Takes a Ride in an Airplane",
+        alt: "A black and white image shows Helen preparing to ride in an airplane.",
         images: [],
         transcriptTitle: "Transcript",
         transcriptText: `Female narrator: It showed her first airplane ride. A daring feat at that time.
@@ -311,6 +311,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         description:
           "Kazuo Honma, a blind Japanese activist, educator, and founder of the National Library for the Blind in Japan, gifted Helen a black lacquer New Year's luncheon set in 1948. Two photos show the luncheon set in detail.",
         type: "object",
+        alt: "A Japanese luncheon set is unassembled to show all of its contents.",
         images: [
           {
             src: "3A2Lunch1.jpeg",
@@ -323,7 +324,6 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
               "The luncheon set fits neatly back together, with all items inside the carrying stand with the brass top."
           }
         ],
-        
         guidedDescription:
           "All items in the luncheon set feature gold decorations showing plants, symbols, and designs. Golden and carved abalone inlays show birds facing each other in a triangular pattern. An outer carrying stand with brass top handle holds six drawers, each with a red interior. One medium sized tray, five smaller trays, a removable bottle holder, and a pair of pewter cylinder bottles all fit into the carrying stand."
       },
@@ -335,6 +335,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         description:
           "Helen traveled to East London, South Africa to open the Duncan Village Community Center for Bantu People on April 11, 1951. Like other segregated locations in other South African cities, Duncan Village demonstrated the extreme inequality between black and white residents under the country’s system of apartheid.",
         type: "photograph",
+        alt: "A black and white image shows Helen with a Bantu chief and his wife.",
         images: [
           { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
           {
@@ -344,7 +345,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
               "The back of the photo has handwritten text in pencil that describes the image. Additional information about the size of the photograph is written in red ink. A rectangular stamp says “Wyndon Photos,” where the image was printed."
           }
         ],
-          transcriptTitle: "Transcript",
+        transcriptTitle: "Transcript",
           transcriptText: `Taken outdoors in the sunshine during Helen Keller's visit to South Africa. Photographed standing left to right are a Bantu Chieftan, Keller, the Bantu Chieftan's wife and Polly Thomson. Keller was there to open the Duncan Village Community Center for Bantu People, East London, Cape Province. They are standing in front of a wall. Keller has her hand on the tip of the sword the chieftan is holding. The Bantu couple are wearing traditional beaded garments and head pieces. Keller and Thomson wear hats and identical long sleeve dresses with horizontal stripes. [Typed caption: Helen Keller opened the Duncan Village Community Center for the Bantu people, East London, Cape Province. Her picture was taken with a tribal chief and his wife.]
 
 [Stamped: "WYNDON PHOTOS" S.A.N.L.A.M. BLDGS., FOR REPRINT QUOTE (followed by a blank line) EAST LONDON. PHONE 2633]
@@ -362,11 +363,11 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         description:
           "This travel itinerary details Helen’s travels from March of 1948 to April 1949, when she embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
         type: "document",
+        alt: "A typed document outlines Helen's travels from 1948-1949.",
         images: [
           { src: "3A4_TentativeShedKeller.jpeg", alt: "Helen Keller's global travel schedule from 1948-49" }
         ],
-        transcriptTitle:
-          'Transcript',
+        transcriptTitle: "Transcript",
         transcriptText: `TENTATIVE ITINERARY OF HELEN KELLER'S VISIT
 
 TO COUNTRIES OF THE ORIENT AND NEAR EAST (March \u201948 - April '49)
@@ -411,6 +412,7 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         description:
           "In this black-and-white photograph, Helen dances with an Italian veteran at the Roman Institute for War Blind during her 1946 postwar trip for the American Foundation for Overseas Blind.",
         type: "photograph",
+        alt: "A black and white photograph shows Helen dancing with a blind man.",
         images: [
           { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
           {
@@ -431,6 +433,7 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         description:
           "In the spring of 1952, a 72-year-old Helen met with future Prime Minister of Israel, Golda Meir. Helen spent a total of two weeks in Israel on an international advocacy tour for people who are blind or deaf.",
         type: "photograph",
+        alt: "A black and white photograph shows Helen sitting with Israeli Prime Minister Golda Meir and others around a table.",
         images: [
           { src: "3A6Israel1.jpeg", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
           {
@@ -456,6 +459,7 @@ Transcript: Black-and-white photograph showing Helen Keller seated on a sofa bes
         description:
           "This travel itinerary details Helen travels to the Middle East in 1952, during which she spent 5 days in Syria to raise awareness for people who are blind or deaf and visit local communities.",
         type: "document",
+        alt: "A typed document with handwriting in blue and red ink outlines Helen's travel to Syria.",
         images: [
           { src: "3A7Syria1.jpeg", alt: "Helen Keller's Syria travel itinerary from 1952" }
         ],
@@ -557,7 +561,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
     quote: "\u201CIf we do not like our work, and do not try to get happiness out of it, we are a menace to our profession as well as to ourselves.\u201D",
     description: "No less a fixture in Vaudeville than in the Cambridge School for Young Ladies, Helen had an extremely diverse life in both education and employment. Her work in literary circles, Radcliffe College, and even in Hollywood no doubt contributed to her incredible ability to prevail in the most challenging of endeavors.",
-    iconAlt: "TODO_ALT: Short visual description for Work theme icon",
+    iconAlt: "A Corona typewriter is layered over documents and a black and white photo of Helen with Charlie Chaplin.",
     artifacts: [
       {
         id: "4A1",
@@ -670,8 +674,8 @@ export function getTheme(themeId) {
 }
 
 /** Short icon/poster alt for selection buttons and artifact-open speech. */
-export function getArtifactAltText(_artifact) {
-  return "TODO: placeholder alt text";
+export function getArtifactAltText(artifact) {
+  return artifact?.alt || "TODO: placeholder alt text";
 }
 
 const THEME_SELECT_CTA = "Press select key to view the artifacts in this theme.";
