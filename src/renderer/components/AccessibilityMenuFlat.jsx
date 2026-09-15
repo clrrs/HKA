@@ -6,13 +6,7 @@ import {
   themeOptions,
   brightnessOptions,
   screenReaderOptions,
-  FLAT_MENU_ITEM_COUNT,
 } from "../data/settingsOptions";
-
-const SELECT_HINT_ID = "settings-select-hint-flat";
-const SELECT_HINT = "Press select to change.";
-// Leading " , " nudges a brief pause after NVDA says "button".
-const SELECT_HINT_DESCRIPTION = ` , ${SELECT_HINT}`;
 
 const ONBOARDING_BLURB =
   "Screen reader is on by default. Press Skip to continue, or left and right to change settings. Press Settings anytime to reopen this menu.";
@@ -32,36 +26,36 @@ function prefsMatchDefaults(prefs) {
   );
 }
 
-function headerLabel(name, valueLabel, index) {
-  return `${name}, ${valueLabel}, ${index} of ${FLAT_MENU_ITEM_COUNT}`;
+function headerLabel(name, valueLabel) {
+  return `${name}, ${valueLabel}`;
 }
 
-function valueLabel(settingName, optionLabel, selected, index) {
+function valueLabel(optionLabel, selected, index, optionCount) {
   const selectedPart = selected ? ", selected" : "";
-  return `${settingName}, ${optionLabel}${selectedPart}, ${index} of ${FLAT_MENU_ITEM_COUNT}`;
+  return `${optionLabel}${selectedPart}, ${index} of ${optionCount} options`;
 }
 
 /** Focusable section label — looks like plain text, not a button. */
-function SettingHeader({ name, valueLabel: currentValue, index, id }) {
+function SettingHeader({ name, valueLabel: currentValue, id }) {
   return (
-    <button
-      type="button"
+    <div
       className="setting-flat-header"
       id={id}
+      tabIndex={0}
       data-settings-layer="menu"
       data-settings-menu-item
-      aria-label={headerLabel(name, currentValue, index)}
+      aria-label={headerLabel(name, currentValue)}
     >
       <span aria-hidden="true">{name}</span>
-    </button>
+    </div>
   );
 }
 
 function SettingValueOption({
-  settingName,
   option,
   selected,
   index,
+  optionCount,
   onSelect,
   id,
 }) {
@@ -73,8 +67,7 @@ function SettingValueOption({
       data-settings-layer="menu"
       data-settings-menu-item
       onClick={onSelect}
-      aria-label={valueLabel(settingName, option.label, selected, index)}
-      aria-describedby={SELECT_HINT_ID}
+      aria-label={valueLabel(option.label, selected, index, optionCount)}
     >
       <span aria-hidden="true">{option.label}</span>
     </button>
@@ -84,33 +77,29 @@ function SettingValueOption({
 function SettingFlatGroup({
   name,
   headerId,
-  headerIndex,
   currentValueLabel,
   options,
   currentValue,
   onSelectValue,
   optionIdPrefix,
-  startIndex,
 }) {
   return (
     <div className="setting-group setting-flat-group">
       <SettingHeader
         name={name}
         valueLabel={currentValueLabel}
-        index={headerIndex}
         id={headerId}
       />
       <div className="setting-flat-options">
         {options.map((option, i) => {
-          const index = startIndex + i;
           const selected = option.value === currentValue;
           return (
             <SettingValueOption
               key={String(option.value)}
-              settingName={name}
               option={option}
               selected={selected}
-              index={index}
+              index={i + 1}
+              optionCount={options.length}
               id={`${optionIdPrefix}-${String(option.value)}`}
               onSelect={() => onSelectValue(option)}
             />
@@ -145,45 +134,6 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
   const currentScreenReaderLabel = speechMode ? "On" : "Off";
 
   const isAtDefaults = prefsMatchDefaults(prefs) && speechMode === true;
-
-  // Index map: header + options for each group (15 total).
-  // SR: 1 + 2–3 | Text: 4 + 5–7 | Contrast: 8 + 9–10 | Brightness: 11 + 12–15
-  const idx = {
-    srHeader: 1,
-    srOptions: 2,
-    textHeader: 1 + 1 + screenReaderOptions.length,
-    textOptions: 1 + 1 + screenReaderOptions.length + 1,
-    themeHeader:
-      1 +
-      1 +
-      screenReaderOptions.length +
-      1 +
-      textSizeOptions.length,
-    themeOptions:
-      1 +
-      1 +
-      screenReaderOptions.length +
-      1 +
-      textSizeOptions.length +
-      1,
-    brightnessHeader:
-      1 +
-      1 +
-      screenReaderOptions.length +
-      1 +
-      textSizeOptions.length +
-      1 +
-      themeOptions.length,
-    brightnessOptions:
-      1 +
-      1 +
-      screenReaderOptions.length +
-      1 +
-      textSizeOptions.length +
-      1 +
-      themeOptions.length +
-      1,
-  };
 
   const announceSelectValue = (label, tip) => {
     announce(tip ? `${label}. ${tip}` : label, {
@@ -228,10 +178,6 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
 
   return (
     <div className="accessibility-menu accessibility-menu--flat">
-      <p id={SELECT_HINT_ID} className="sr-only">
-        {SELECT_HINT_DESCRIPTION}
-      </p>
-
       <div
         className={`settings-intro-block${onboarding ? " settings-intro-block--onboarding" : ""}`}
       >
@@ -268,11 +214,9 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
       <SettingFlatGroup
         name="Screen Reader"
         headerId="access-screen-reader-header"
-        headerIndex={idx.srHeader}
         currentValueLabel={currentScreenReaderLabel}
         options={screenReaderOptions}
         currentValue={speechMode}
-        startIndex={idx.srOptions}
         optionIdPrefix="access-screen-reader"
         onSelectValue={handleScreenReaderSelect}
       />
@@ -280,11 +224,9 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
       <SettingFlatGroup
         name="Text Size"
         headerId="access-text-size-header"
-        headerIndex={idx.textHeader}
         currentValueLabel={currentTextSizeLabel}
         options={textSizeOptions}
         currentValue={prefs.textSize}
-        startIndex={idx.textOptions}
         optionIdPrefix="access-text-size"
         onSelectValue={(option) => handlePrefSelect("textSize", option)}
       />
@@ -292,11 +234,9 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
       <SettingFlatGroup
         name="Contrast"
         headerId="access-theme-header"
-        headerIndex={idx.themeHeader}
         currentValueLabel={currentThemeLabel}
         options={themeOptions}
         currentValue={prefs.theme}
-        startIndex={idx.themeOptions}
         optionIdPrefix="access-theme"
         onSelectValue={(option) => handlePrefSelect("theme", option)}
       />
@@ -304,11 +244,9 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
       <SettingFlatGroup
         name="Brightness"
         headerId="access-brightness-header"
-        headerIndex={idx.brightnessHeader}
         currentValueLabel={currentBrightnessLabel}
         options={brightnessOptions}
         currentValue={prefs.brightness}
-        startIndex={idx.brightnessOptions}
         optionIdPrefix="access-brightness"
         onSelectValue={(option) => handlePrefSelect("brightness", option)}
       />

@@ -5,7 +5,7 @@ export const textSizeOptions = [
 ];
 
 export const themeOptions = [
-  { value: "dark", label: "Dark (Default)" },
+  { value: "dark", label: "Dark" },
   { value: "light", label: "Light" },
 ];
 
@@ -26,14 +26,3 @@ export function cycleOption(options, currentValue) {
   const nextIdx = idx === -1 ? 0 : (idx + 1) % options.length;
   return options[nextIdx];
 }
-
-/** Total focusable setting rows in Option A (headers + value options). */
-export const FLAT_MENU_ITEM_COUNT =
-  1 +
-  screenReaderOptions.length +
-  1 +
-  textSizeOptions.length +
-  1 +
-  themeOptions.length +
-  1 +
-  brightnessOptions.length;

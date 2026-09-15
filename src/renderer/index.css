@@ -499,6 +499,8 @@ html[data-speech-mode="off"] [tabindex]:focus-visible {
 .artifact-document-transcript-text:focus-visible,
 .settings-intro:focus,
 .settings-intro:focus-visible,
+.setting-flat-header:focus,
+.setting-flat-header:focus-visible,
 h1[tabindex]:focus,
 h1[tabindex]:focus-visible {
   outline: none;
@@ -846,6 +848,12 @@ h1[tabindex]:focus-visible {
   font-size: 18px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+.idle-disabled-badge--closing {
+  opacity: 0;
 }
 
 /* Speech mode toggle HUD (visual only) */
@@ -909,16 +917,17 @@ h1[tabindex]:focus-visible {
 }
 
 .setting-flat-header {
+  position: relative;
   display: block;
   width: auto;
   max-width: 100%;
   margin: 0 0 8px 0;
-  padding: 2px 6px;
+  padding: 2px 6px 2px 14px;
   margin-left: -6px;
   background: transparent;
   color: var(--btn-text);
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   font-family: 'APHb2', Arial, sans-serif;
   font-size: calc(22px * var(--text-scale));
   font-weight: 500;
@@ -927,11 +936,24 @@ h1[tabindex]:focus-visible {
   cursor: default;
 }
 
-.setting-flat-header:hover,
+.setting-flat-header:focus,
 .setting-flat-header:focus-visible {
-  background-color: var(--accent);
-  color: var(--color-black);
   outline: none;
+  background: transparent;
+  color: var(--btn-text);
+}
+
+/* Gold bar — same cue as artifact popup text blocks (not a selectable pill) */
+.setting-flat-header:focus::before,
+.setting-flat-header:focus-visible::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
 .setting-flat-options {

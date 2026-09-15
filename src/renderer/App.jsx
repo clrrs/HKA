@@ -97,6 +97,13 @@ export default function App() {
     closing: false,
     enabled: true,
   });
+  const settingsVariantHudSeenFirstRef = useRef(false);
+  const settingsVariantHudFadeTimeoutRef = useRef(null);
+  const settingsVariantHudHideTimeoutRef = useRef(null);
+  const [settingsVariantHud, setSettingsVariantHud] = useState({
+    visible: false,
+    closing: false,
+  });
 
   useEffect(() => {
     if (!testEasterEgg) return;
@@ -464,12 +471,44 @@ export default function App() {
   }, [speechMode]);
 
   useEffect(() => {
+    if (!settingsVariantHudSeenFirstRef.current) {
+      settingsVariantHudSeenFirstRef.current = true;
+      return;
+    }
+
+    if (settingsVariantHudFadeTimeoutRef.current) {
+      window.clearTimeout(settingsVariantHudFadeTimeoutRef.current);
+      settingsVariantHudFadeTimeoutRef.current = null;
+    }
+    if (settingsVariantHudHideTimeoutRef.current) {
+      window.clearTimeout(settingsVariantHudHideTimeoutRef.current);
+      settingsVariantHudHideTimeoutRef.current = null;
+    }
+
+    setSettingsVariantHud({ visible: true, closing: false });
+
+    settingsVariantHudFadeTimeoutRef.current = window.setTimeout(() => {
+      setSettingsVariantHud((prev) => ({ ...prev, closing: true }));
+    }, SPEECH_HUD_VISIBLE_MS - SPEECH_HUD_FADE_MS);
+
+    settingsVariantHudHideTimeoutRef.current = window.setTimeout(() => {
+      setSettingsVariantHud({ visible: false, closing: false });
+    }, SPEECH_HUD_VISIBLE_MS);
+  }, [settingsMenuVariant]);
+
+  useEffect(() => {
     return () => {
       if (speechHudFadeTimeoutRef.current) {
         window.clearTimeout(speechHudFadeTimeoutRef.current);
       }
       if (speechHudHideTimeoutRef.current) {
         window.clearTimeout(speechHudHideTimeoutRef.current);
+      }
+      if (settingsVariantHudFadeTimeoutRef.current) {
+        window.clearTimeout(settingsVariantHudFadeTimeoutRef.current);
+      }
+      if (settingsVariantHudHideTimeoutRef.current) {
+        window.clearTimeout(settingsVariantHudHideTimeoutRef.current);
       }
     };
   }, []);
@@ -596,9 +635,15 @@ export default function App() {
           {autoReadFast && (
             <div className="idle-disabled-badge">Auto-read 6x</div>
           )}
-          <div className="idle-disabled-badge">
-            Settings {settingsMenuVariant}
-          </div>
+          {settingsVariantHud.visible && (
+            <div
+              className={`idle-disabled-badge${
+                settingsVariantHud.closing ? " idle-disabled-badge--closing" : ""
+              }`}
+            >
+              Settings {settingsMenuVariant}
+            </div>
+          )}
         </div>
         {speechHud.visible && (
           <div
