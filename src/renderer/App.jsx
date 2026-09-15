@@ -22,6 +22,9 @@ const TOTAL_WARNING_SEC =
 const SPEECH_HUD_VISIBLE_MS = 2000;
 const SPEECH_HUD_FADE_MS = 280;
 
+const IDLE_DISMISSED_ANNOUNCEMENT = "Idle warning dismissed.";
+const SETTINGS_CLOSED_ANNOUNCEMENT = "Accessibility Settings closed.";
+
 function isParagraphFocus() {
   return document.activeElement?.tagName === "P";
 }
@@ -35,18 +38,6 @@ function getActiveSceneFocusTarget() {
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
   );
-}
-
-function getIdleDismissAnnouncement(el) {
-  if (!el || el === document.body || el === document.documentElement) return null;
-  const label = el.getAttribute("aria-label");
-  if (label) return label;
-  const labelledbyId = el.getAttribute("aria-labelledby");
-  if (labelledbyId) {
-    const ref = document.getElementById(labelledbyId);
-    if (ref) return ref.textContent?.trim();
-  }
-  return (el.textContent || "").trim() || null;
 }
 
 export default function App() {
@@ -202,7 +193,14 @@ export default function App() {
       lastActivityRef.current = Date.now();
       setIdleCountdown(null);
       warningVisibleRef.current = false;
-      if (wasWarning) playEarcon(EARCON.popupClose);
+      if (wasWarning) {
+        playEarcon(EARCON.popupClose);
+        announce(IDLE_DISMISSED_ANNOUNCEMENT, {
+          politeness: "polite",
+          source: "idle-dismiss",
+          dedupeMs: 0,
+        });
+      }
     };
 
     const handlePassiveActivity = (e) => {
@@ -224,22 +222,17 @@ export default function App() {
 
       if (wasWarning) {
         playEarcon(EARCON.popupClose);
+        announce(IDLE_DISMISSED_ANNOUNCEMENT, {
+          politeness: "polite",
+          source: "idle-dismiss",
+          dedupeMs: 0,
+        });
         const key = e.key.toLowerCase();
         if (key === "s" || key === "home") {
           return;
         }
         e.preventDefault();
         e.stopImmediatePropagation();
-        requestAnimationFrame(() => {
-          const text = getIdleDismissAnnouncement(document.activeElement);
-          if (text) {
-            announce(text, {
-              politeness: "assertive",
-              source: "idle-dismiss",
-              dedupeMs: 0,
-            });
-          }
-        });
       }
     };
 
@@ -318,6 +311,12 @@ export default function App() {
         settingsReturnFocusRef.current = active;
       }
     } else if (!showSettings && prevShowSettingsRef.current) {
+      // Status only — focus restore below is unchanged.
+      announce(SETTINGS_CLOSED_ANNOUNCEMENT, {
+        politeness: "polite",
+        source: "settings-closed",
+        dedupeMs: 0,
+      });
       const el = settingsReturnFocusRef.current;
       settingsReturnFocusRef.current = null;
       const restore = () => {
@@ -337,7 +336,7 @@ export default function App() {
       };
     }
     prevShowSettingsRef.current = showSettings;
-  }, [showSettings]);
+  }, [showSettings, announce]);
 
   useLayoutEffect(() => {
     if (!showSettings) return;
