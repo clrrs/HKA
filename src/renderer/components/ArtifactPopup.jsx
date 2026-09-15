@@ -32,7 +32,7 @@ const SECTION_TRANSITION_MS = 1000;
 const AUTO_READ_THEME_END_PROMPT =
   "End of artifacts in this theme. Press Select to return to the start of the theme.";
 const TOOLBAR_NAV_HINT =
-  "Use left and right keys to navigate artifact toolbar.";
+  "Use left and right keys to navigate artifact tool bar.";
 const VIDEO_END_DWELL_MS = 1000;
 /** Covers NVDA's "dialog" role preamble before it reaches the spoken dialog label. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;

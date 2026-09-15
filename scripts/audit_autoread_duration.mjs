@@ -24,7 +24,7 @@ const MISSING_COPY = "MISSING COPY";
 const WORDS_PER_SEC = 2.4;
 const SECTION_TRANSITION_MS = 1000;
 const TOOLBAR_NAV_HINT =
-  "Use left and right keys to navigate artifact toolbar.";
+  "Use left and right keys to navigate artifact tool bar.";
 const DIALOG_TITLE_PREAMBLE_MS = 500;
 const HIDE_MISSING_GUIDED_SECTIONS = false;
 
