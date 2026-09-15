@@ -41,6 +41,7 @@ const AppState = createContext();
 // window/capture order, ahead of anything a component effect can attach.
 const idleTimeoutToggleRef = { current: null };
 const autoReadFastToggleRef = { current: null };
+const settingsMenuVariantToggleRef = { current: null };
 
 if (typeof window !== "undefined") {
   window.addEventListener(
@@ -59,6 +60,13 @@ if (typeof window !== "undefined") {
         e.preventDefault();
         e.stopImmediatePropagation();
         autoReadFastToggleRef.current();
+        return;
+      }
+      if (e.key === "8" || e.code === "Digit8" || e.code === "Numpad8") {
+        if (!settingsMenuVariantToggleRef.current) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        settingsMenuVariantToggleRef.current();
         return;
       }
       const key = e.key.toLowerCase();
@@ -155,6 +163,13 @@ export default function StateProvider({ children }) {
   const showSettingsRef = useRef(showSettings);
   showSettingsRef.current = showSettings;
 
+  // Pending layout for next Settings open; active is frozen when the panel opens.
+  const [settingsMenuVariant, setSettingsMenuVariant] = useState("B");
+  const [settingsMenuVariantActive, setSettingsMenuVariantActive] =
+    useState("B");
+  const settingsMenuVariantRef = useRef(settingsMenuVariant);
+  settingsMenuVariantRef.current = settingsMenuVariant;
+
   const dismissSettings = useCallback(() => {
     if (showSettingsRef.current) {
       playEarcon(EARCON.popupClose);
@@ -168,6 +183,7 @@ export default function StateProvider({ children }) {
     if (!showSettingsRef.current) {
       playEarcon(EARCON.popupOpen);
     }
+    setSettingsMenuVariantActive(settingsMenuVariantRef.current);
     setSettingsOnboarding(true);
     setShowSettings(true);
   }, []);
@@ -175,6 +191,9 @@ export default function StateProvider({ children }) {
   const toggleSettings = () => {
     const opening = !showSettingsRef.current;
     playEarcon(opening ? EARCON.popupOpen : EARCON.popupClose);
+    if (opening) {
+      setSettingsMenuVariantActive(settingsMenuVariantRef.current);
+    }
     setShowSettings((prev) => {
       if (prev && settingsOnboarding) {
         setSettingsOnboarding(false);
@@ -268,6 +287,17 @@ export default function StateProvider({ children }) {
     return () => {
       if (autoReadFastToggleRef.current === toggle) {
         autoReadFastToggleRef.current = null;
+      }
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const toggle = () =>
+      setSettingsMenuVariant((prev) => (prev === "A" ? "B" : "A"));
+    settingsMenuVariantToggleRef.current = toggle;
+    return () => {
+      if (settingsMenuVariantToggleRef.current === toggle) {
+        settingsMenuVariantToggleRef.current = null;
       }
     };
   }, []);
@@ -395,6 +425,8 @@ export default function StateProvider({ children }) {
       homeArrivalNonce,
       idleTimeoutDisabled,
       autoReadFast,
+      settingsMenuVariant,
+      settingsMenuVariantActive,
       testEasterEgg,
       triggerTestEasterEgg,
       dismissTestEasterEgg

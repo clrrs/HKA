@@ -72,8 +72,8 @@ function inferProducerScenario(row) {
   if (location === "App" && msg.includes("returning to start in")) {
     return "After the idle pre-warning, before numbers start ticking, the screen reader announces that the return-to-start countdown is about to begin.";
   }
-  if (location === "App" && message === "Accessibility Settings") {
-    return "Visitor opens Accessibility Settings (Settings key); NVDA reads the dialog title.";
+  if (location === "App" && message === "Settings") {
+    return "Visitor opens Settings (Settings key); NVDA reads the dialog title.";
   }
   if (location === "App" && notes.includes("test-easter-egg-message")) {
     return "Developer test easter egg only — not part of the public visitor experience.";

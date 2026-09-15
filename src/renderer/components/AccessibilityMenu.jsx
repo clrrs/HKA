@@ -1,29 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAppState, DEFAULT_PREFS } from "../state/StateProvider";
 import { useAnnounce } from "../state/AnnouncerProvider";
-
-const textSizeOptions = [
-  { value: "small", label: "Small" },
-  { value: "medium", label: "Medium" },
-  { value: "large", label: "Large" }
-];
-
-const themeOptions = [
-  { value: "dark", label: "Dark (Default)" },
-  { value: "light", label: "Light" }
-];
-
-const brightnessOptions = [
-  { value: 0.5, label: "50%" },
-  { value: 0.75, label: "75%" },
-  { value: 1, label: "100%" },
-  { value: 1.25, label: "125%" }
-];
-
-const screenReaderOptions = [
-  { value: true, label: "On" },
-  { value: false, label: "Off" },
-];
+import {
+  textSizeOptions,
+  themeOptions,
+  brightnessOptions,
+  screenReaderOptions,
+  cycleOption,
+} from "../data/settingsOptions";
 
 const MENU_ITEM_COUNT = 4;
 
@@ -37,7 +21,7 @@ const ONBOARDING_BLURB =
 
 // Single spoken open line (dialog title + blurb) so NVDA does not stack
 // dialog aria-label + intro aria-label into a double read.
-const ONBOARDING_INTRO_SR_LABEL = `Accessibility Settings. ${ONBOARDING_BLURB}`;
+const ONBOARDING_INTRO_SR_LABEL = `Settings. ${ONBOARDING_BLURB}`;
 
 const SCREEN_READER_TIP =
   "Tip: Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
@@ -54,12 +38,6 @@ function prefsMatchDefaults(prefs) {
 
 function menuItemLabel(name, valueLabel, index) {
   return `${name}, ${valueLabel}, ${index} of ${MENU_ITEM_COUNT}`;
-}
-
-function cycleOption(options, currentValue) {
-  const idx = options.findIndex((o) => o.value === currentValue);
-  const nextIdx = idx === -1 ? 0 : (idx + 1) % options.length;
-  return options[nextIdx];
 }
 
 /**
@@ -196,7 +174,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             id="accessibility-settings-title"
             aria-hidden="true"
           >
-            Accessibility Settings
+            Settings
           </h2>
           {onboarding && (
             <p

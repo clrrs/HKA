@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from "react";
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
+import AccessibilityMenuFlat from "./components/AccessibilityMenuFlat";
 import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
@@ -23,7 +24,7 @@ const SPEECH_HUD_VISIBLE_MS = 2000;
 const SPEECH_HUD_FADE_MS = 280;
 
 const IDLE_DISMISSED_ANNOUNCEMENT = "Idle warning dismissed.";
-const SETTINGS_CLOSED_ANNOUNCEMENT = "Accessibility Settings closed.";
+const SETTINGS_CLOSED_ANNOUNCEMENT = "Settings closed.";
 
 function isParagraphFocus() {
   return document.activeElement?.tagName === "P";
@@ -62,6 +63,8 @@ export default function App() {
     speechMode,
     idleTimeoutDisabled,
     autoReadFast,
+    settingsMenuVariant,
+    settingsMenuVariantActive,
     testEasterEgg,
     dismissTestEasterEgg,
   } = useAppState();
@@ -488,9 +491,9 @@ export default function App() {
               role="dialog"
               aria-modal="true"
               // Onboarding: name lives only on the focused intro so NVDA does not
-              // announce "Accessibility Settings" here and again on the blurb.
+              // announce "Settings" here and again on the blurb.
               aria-label={
-                settingsOnboarding ? undefined : "Accessibility Settings"
+                settingsOnboarding ? undefined : "Settings"
               }
             >
               <div
@@ -498,12 +501,20 @@ export default function App() {
                 onClick={settingsOnboarding ? dismissSettings : toggleSettings}
               />
               <div
-                className="settings-panel"
+                className={`settings-panel${
+                  settingsMenuVariantActive === "A"
+                    ? " settings-panel--flat"
+                    : ""
+                }`}
                 ref={settingsPanelRef}
                 role="document"
                 onKeyDown={handleSettingsKeyDown}
               >
-                <AccessibilityMenu onboarding={settingsOnboarding} />
+                {settingsMenuVariantActive === "A" ? (
+                  <AccessibilityMenuFlat onboarding={settingsOnboarding} />
+                ) : (
+                  <AccessibilityMenu onboarding={settingsOnboarding} />
+                )}
               </div>
             </div>
           )}
@@ -568,16 +579,17 @@ export default function App() {
             </div>
           </div>
         )}
-        {(idleTimeoutDisabled || autoReadFast) && (
-          <div className="test-shortcut-badges" aria-hidden="true">
-            {idleTimeoutDisabled && (
-              <div className="idle-disabled-badge">Idle timer off</div>
-            )}
-            {autoReadFast && (
-              <div className="idle-disabled-badge">Auto-read 6x</div>
-            )}
+        <div className="test-shortcut-badges" aria-hidden="true">
+          {idleTimeoutDisabled && (
+            <div className="idle-disabled-badge">Idle timer off</div>
+          )}
+          {autoReadFast && (
+            <div className="idle-disabled-badge">Auto-read 6x</div>
+          )}
+          <div className="idle-disabled-badge">
+            Settings {settingsMenuVariant}
           </div>
-        )}
+        </div>
         {speechHud.visible && (
           <div
             className={`speech-mode-hud ${speechHud.closing ? "speech-mode-hud--closing" : ""}`}
