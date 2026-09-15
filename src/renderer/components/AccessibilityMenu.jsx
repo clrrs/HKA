@@ -39,9 +39,6 @@ const ONBOARDING_BLURB =
 // dialog aria-label + intro aria-label into a double read.
 const ONBOARDING_INTRO_SR_LABEL = `Accessibility Settings. ${ONBOARDING_BLURB}`;
 
-const SKIP_TIP =
-  "Tip: Press the Select key to stick with these settings, or press the right key to move between settings and press Select to change screen reader, text size, contrast, or brightness.";
-
 const SCREEN_READER_TIP =
   "Tip: Speech stays on in Settings. Press Settings anytime to turn the screen reader back on.";
 
@@ -217,7 +214,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
             className="setting-btn settings-onboarding-skip"
             data-settings-layer="chrome"
             onClick={dismissSettings}
-            aria-label={`Skip. ${SKIP_TIP}`}
+            aria-label="Skip"
           >
             Skip
           </button>
