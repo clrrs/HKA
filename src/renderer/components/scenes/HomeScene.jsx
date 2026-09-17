@@ -8,6 +8,7 @@ import {
 import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { useAppState } from "../../state/StateProvider";
+import { scheduleFocus } from "../../state/useSceneManager";
 import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 
 const TESTING_ADVENTURE_ONLY = false;
@@ -135,34 +136,34 @@ export default function HomeScene({ isActive = false }) {
     if (!showVideo || !modalRef.current) return;
 
     const container = modalRef.current;
-    const focusableSelector =
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+    const focusExit = () => {
+      container.querySelector(".start-video-exit-btn")?.focus();
+    };
+    const focusVideo = () => {
+      videoRef.current?.focus();
+    };
+
+    // Two stops only: from either control, next/back both go to the other.
     const handleKeyDown = (e) => {
       if (e.repeat) return;
-      if (e.key !== "Tab") return;
+      const key = e.key.toLowerCase();
+      const isNext = (e.key === "Tab" && !e.shiftKey) || key === "l";
+      const isBack = (e.key === "Tab" && e.shiftKey) || key === "k";
+      if (!isNext && !isBack) return;
 
-      const focusables = container.querySelectorAll(focusableSelector);
-      if (focusables.length === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
 
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
+      if (document.activeElement === videoRef.current) {
+        focusExit();
+      } else {
+        focusVideo();
       }
     };
 
     container.addEventListener("keydown", handleKeyDown);
-
-    const focusables = container.querySelectorAll(focusableSelector);
-    if (focusables.length > 0) {
-      focusables[0].focus();
-    }
+    focusVideo();
 
     return () => {
       container.removeEventListener("keydown", handleKeyDown);
@@ -177,9 +178,8 @@ export default function HomeScene({ isActive = false }) {
   const closeVideo = () => {
     setShowVideo(false);
     setVideoOverlayOpen(false);
-    if (helpButtonRef.current) {
-      helpButtonRef.current.focus();
-    }
+    // After inert teardown, Chromium often ignores a same-turn .focus().
+    scheduleFocus(helpButtonRef.current);
   };
 
   // Home / S must close the help video so it can't block the home page.
@@ -327,92 +327,98 @@ export default function HomeScene({ isActive = false }) {
   return (
     <div className="home-scene" onKeyDown={handleSceneKeyDown}>
       <div className="home-bg" aria-hidden="true" />
-      <button
-        ref={helpButtonRef}
-        type="button"
-        className="nav-btn icon-btn home-help-btn"
-        aria-label="Watch instructional video"
-        onClick={openVideo}
+      <div
+        className="home-scene-main"
+        aria-hidden={showVideo ? true : undefined}
+        inert={showVideo ? "" : undefined}
       >
-        <img src="./InformationIcon.svg" alt="" aria-hidden="true" />
-      </button>
-
-      <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
-        <div
-          className="home-heading-inner"
-          ref={headingRef}
-          tabIndex={-1}
-          data-autofocus
-          onFocus={handleHeadingFocus}
-          onBlur={handleHeadingBlur}
-          aria-label={
-            speechMode
-              ? announceHomeArrival
-                ? `Home. ${HOME_HEADING_LABEL}`
-                : HOME_HEADING_LABEL
-              : undefined
-          }
+        <button
+          ref={helpButtonRef}
+          type="button"
+          className="nav-btn icon-btn home-help-btn"
+          aria-label="Watch instructional video"
+          onClick={openVideo}
         >
-          <p className="home-heading-text" aria-hidden={speechMode ? true : undefined}>
-            Choose a theme from Helen&nbsp;Keller&#8217;s life journey
-          </p>
-          <p className="home-heading-cta" aria-hidden={speechMode ? true : undefined}>
-            Use left and right keys to view themes.
-            <br />
-            Press the select key to enter a theme.
-            <br />
-            Use the home key to return to this page.
-          </p>
+          <img src="./InformationIcon.svg" alt="" aria-hidden="true" />
+        </button>
+
+        <div className={`home-heading ${hasFocus ? "home-heading--hidden" : ""}`}>
+          <div
+            className="home-heading-inner"
+            ref={headingRef}
+            tabIndex={-1}
+            data-autofocus
+            onFocus={handleHeadingFocus}
+            onBlur={handleHeadingBlur}
+            aria-label={
+              speechMode
+                ? announceHomeArrival
+                  ? `Home. ${HOME_HEADING_LABEL}`
+                  : HOME_HEADING_LABEL
+                : undefined
+            }
+          >
+            <p className="home-heading-text" aria-hidden={speechMode ? true : undefined}>
+              Choose a theme from Helen&nbsp;Keller&#8217;s life journey
+            </p>
+            <p className="home-heading-cta" aria-hidden={speechMode ? true : undefined}>
+              Use left and right keys to view themes.
+              <br />
+              Press the select key to enter a theme.
+              <br />
+              Use the home key to return to this page.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div ref={carouselRef} className="home-carousel" aria-hidden="true">
-        <div
-          role="list"
-          aria-label="Theme selection"
-          className="theme-circles"
-          style={{ transform: `translateX(${getTrackTranslateX(focusedIndex)}px)` }}
-        >
-          {themes.map((theme, i) => (
-            <div role="listitem" key={theme.id}>
-              <button
-                ref={(el) => { circleRefs.current[i] = el; }}
-                className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""} ${theme.disabledForTesting ? "theme-circle--disabled" : ""}`}
-                onFocus={() => handleFocus(i)}
-                onBlur={handleBlur}
-                onClick={() => {
-                  if (!theme.disabledForTesting && theme.scene) {
-                    clearThemeDescAnnounce();
-                    goToScene(theme.scene, { theme: theme.id });
+        <div ref={carouselRef} className="home-carousel" aria-hidden="true">
+          <div
+            role="list"
+            aria-label="Theme selection"
+            className="theme-circles"
+            style={{ transform: `translateX(${getTrackTranslateX(focusedIndex)}px)` }}
+          >
+            {themes.map((theme, i) => (
+              <div role="listitem" key={theme.id}>
+                <button
+                  ref={(el) => { circleRefs.current[i] = el; }}
+                  className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""} ${theme.disabledForTesting ? "theme-circle--disabled" : ""}`}
+                  onFocus={() => handleFocus(i)}
+                  onBlur={handleBlur}
+                  onClick={() => {
+                    if (!theme.disabledForTesting && theme.scene) {
+                      clearThemeDescAnnounce();
+                      goToScene(theme.scene, { theme: theme.id });
+                    }
+                  }}
+                  aria-label={
+                    speechMode && !theme.disabledForTesting
+                      ? getThemeCarouselName(theme.label, i, themes.length)
+                      : `${theme.label}, ${i + 1} of ${themes.length}`
                   }
-                }}
-                aria-label={
-                  speechMode && !theme.disabledForTesting
-                    ? getThemeCarouselName(theme.label, i, themes.length)
-                    : `${theme.label}, ${i + 1} of ${themes.length}`
-                }
-                aria-disabled={theme.disabledForTesting ? true : undefined}
-                tabIndex={0}
-              >
-                <span className="theme-circle-inner" aria-hidden="true" />
-                <img className="theme-circle-img" src={theme.image} alt="" aria-hidden="true" />
-                <span className="theme-label" aria-hidden="true">{theme.label}</span>
-              </button>
-            </div>
-          ))}
+                  aria-disabled={theme.disabledForTesting ? true : undefined}
+                  tabIndex={0}
+                >
+                  <span className="theme-circle-inner" aria-hidden="true" />
+                  <img className="theme-circle-img" src={theme.image} alt="" aria-hidden="true" />
+                  <span className="theme-label" aria-hidden="true">{theme.label}</span>
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {hasFocus && (
-        <div className="theme-indicators" aria-hidden="true">
-          {themes.map((theme, i) => (
-            <span
-              key={theme.id}
-              className={`theme-indicator ${focusedIndex === i ? "active" : ""}`}
-            />
-          ))}
-        </div>
-      )}
+        {hasFocus && (
+          <div className="theme-indicators" aria-hidden="true">
+            {themes.map((theme, i) => (
+              <span
+                key={theme.id}
+                className={`theme-indicator ${focusedIndex === i ? "active" : ""}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {showVideo && (
         <div

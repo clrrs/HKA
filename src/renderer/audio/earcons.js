@@ -1,6 +1,10 @@
 /**
  * Short UI earcons (headphone-routed when AudioRoutingProvider is ready).
  * Does not stop NVDA speech — clips are brief and should not cut VO.
+ *
+ * Uses a reused <audio> element. Sink is applied after src is set and before
+ * play(), matching persistent media elements. Ephemeral `new Audio(src)` often
+ * falls back to the default sink on Windows/Electron.
  */
 
 export const EARCON = {
@@ -11,7 +15,6 @@ export const EARCON = {
   nextArtifact: "nextArtifact",
   previousArtifact: "previousArtifact",
   darkLightMode: "darkLightMode",
-  scrollText: "scrollText",
   volumeTone: "volumeTone",
 };
 
@@ -23,43 +26,46 @@ const EARCON_SRC = {
   [EARCON.nextArtifact]: "/sfx/nextArtifact2.mp3",
   [EARCON.previousArtifact]: "/sfx/previousArtifact.mp3",
   [EARCON.darkLightMode]: "/sfx/darkLightMode.mp3",
-  [EARCON.scrollText]: "/sfx/scrollText.wav",
   [EARCON.volumeTone]: "/sfx/volumeTone2.mp3",
 };
 
 let applySink = null;
-let current = null;
+/** Reused element so headphone routing stays consistent across plays. */
+let sharedAudio = null;
+let playGeneration = 0;
+
+function getSharedAudio() {
+  if (!sharedAudio) {
+    sharedAudio = new Audio();
+    sharedAudio.preload = "auto";
+  }
+  return sharedAudio;
+}
 
 /** Register headphone sink binder from AudioRoutingProvider. */
 export function bindEarconSink(fn) {
   applySink = typeof fn === "function" ? fn : null;
+  if (!applySink) return;
+  Promise.resolve(applySink(getSharedAudio())).catch(() => {});
 }
 
 export function playEarcon(id) {
   const src = EARCON_SRC[id];
   if (!src) return;
 
-  if (current) {
-    current.pause();
-    current.src = "";
-    current = null;
-  }
+  const audio = getSharedAudio();
+  const gen = ++playGeneration;
 
-  const audio = new Audio(src);
-  current = audio;
-  audio.addEventListener(
-    "ended",
-    () => {
-      if (current === audio) current = null;
-    },
-    { once: true }
-  );
+  audio.pause();
+  audio.src = src;
 
   const start = () => {
+    if (gen !== playGeneration) return;
     audio.play().catch(() => {});
   };
 
   if (applySink) {
+    // Apply sink after src so a source change cannot wipe headphone routing.
     Promise.resolve(applySink(audio)).then(start).catch(start);
   } else {
     start();

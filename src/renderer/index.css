@@ -1360,6 +1360,15 @@ h1[tabindex]:focus-visible {
   height: 100px;
 }
 
+.start-video-exit-btn:hover,
+.start-video-exit-btn:focus-visible {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--color-black);
+  outline: none;
+  box-shadow: none;
+}
+
 .start-video-exit-btn img {
   width: 36px;
   height: 36px;
@@ -1380,6 +1389,12 @@ h1[tabindex]:focus-visible {
   max-height: 100%;
   background: #000;
 }
+
+.start-video-body video:focus,
+.start-video-body video:focus-visible {
+  outline: none;
+}
+
 
 /* ============================================
    Home Scene (theme selection)
@@ -2137,14 +2152,10 @@ h1[tabindex]:focus-visible {
   transition: border-color 0.2s;
 }
 
-/* Navigated to: the whole section reads as the selected control */
+/* No gold focus ring on the text panel — selection is shown via toolbar
+   button state, left overflow bar, and scroll markers. */
 .artifact-popup-text:focus,
-.artifact-popup-text:focus-within {
-  border-color: var(--accent);
-}
-
-/* Once inside the section — or while auto-read drives it — the indicators
-   carry the state on their own and the border drops away. */
+.artifact-popup-text:focus-within,
 .artifact-popup-text.is-entered,
 .artifact-popup-text.is-entered:focus,
 .artifact-popup-text.is-entered:focus-within,
@@ -2220,9 +2231,11 @@ h1[tabindex]:focus-visible {
   position: relative;
 }
 
-/* Gold bar marks the block the auto-read is currently on */
-.artifact-popup-guided-section.is-active::before,
-.artifact-popup-text-body > .artifact-popup-description.is-active::before {
+/* Gold bar only when the text body actually overflows (scrollable) */
+.artifact-popup-text-body.artifact-popup-text--scrollable
+  .artifact-popup-guided-section.is-active::before,
+.artifact-popup-text-body.artifact-popup-text--scrollable
+  > .artifact-popup-description.is-active::before {
   content: "";
   position: absolute;
   left: -28px;

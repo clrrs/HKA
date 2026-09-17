@@ -59,8 +59,8 @@ function autoReadDelayMs(ms, fast) {
   return fast ? Math.max(50, Math.round(ms / 6)) : ms;
 }
 
-/** Treat sub-pixel / padding noise as "no overflow" so short panels don't trap or show a scrollbar. */
-const SCROLL_OVERFLOW_THRESHOLD_PX = 2;
+/** Ignore only sub-pixel / rounding noise — not a full line of clipped text. */
+const SCROLL_OVERFLOW_THRESHOLD_PX = 8;
 
 function getScrollOverflowPx(el) {
   if (!el) return 0;
@@ -71,9 +71,9 @@ function hasScrollOverflow(el) {
   return getScrollOverflowPx(el) > SCROLL_OVERFLOW_THRESHOLD_PX;
 }
 
-function showsTranscriptButton(_artifact, isVideo) {
-  // Transcript is video-only; image/document copy now lives in the story text.
-  return Boolean(isVideo);
+function showsTranscriptButton(artifact, isVideo) {
+  // Video + documents; photograph/object copy stays in story/guided text only.
+  return Boolean(isVideo || artifact?.type === "document");
 }
 
 function getNodeOffsetTop(panel, node) {
@@ -94,9 +94,12 @@ function getBlockScrollStops(panel, blockKey, offset, height) {
   const stepPx = Math.floor(panel.clientHeight * SCROLL_STEP_RATIO) || panel.clientHeight;
   const scrollLimit = Math.max(0, panel.scrollHeight - panel.clientHeight);
   const startTop = Math.min(offset, scrollLimit);
+  // Include padding-bottom so the last line can clear the content box (padding
+  // is inside clientHeight with border-box, but not part of the readable area).
+  const padBottom = parseFloat(getComputedStyle(panel).paddingBottom) || 0;
   const maxTop = Math.min(
     scrollLimit,
-    Math.max(0, offset + height - panel.clientHeight)
+    Math.max(0, offset + height - panel.clientHeight + padBottom)
   );
   const snaps = [{ blockKey, scrollTop: startTop }];
   const overflow = maxTop - startTop;
@@ -108,6 +111,13 @@ function getBlockScrollStops(panel, blockKey, offset, height) {
       blockKey,
       scrollTop: Math.min(maxTop, startTop + i * stepPx),
     });
+  }
+  // Guarantee the final stop lands on maxTop so a short leftover line is reachable.
+  const last = snaps[snaps.length - 1];
+  if (last && maxTop - last.scrollTop > SCROLL_OVERFLOW_THRESHOLD_PX) {
+    snaps.push({ blockKey, scrollTop: maxTop });
+  } else if (last && last.scrollTop !== maxTop) {
+    last.scrollTop = maxTop;
   }
   return snaps;
 }
@@ -392,14 +402,12 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
       e.preventDefault();
       e.stopPropagation();
       body.scrollTo({ top: Math.min(maxScroll, body.scrollTop + step), behavior: "auto" });
-      playEarcon(EARCON.scrollText);
       return true;
     }
     if (loop) {
       e.preventDefault();
       e.stopPropagation();
       body.scrollTo({ top: 0, behavior: "auto" });
-      playEarcon(EARCON.scrollText);
       onLoop?.();
       return true;
     }
@@ -409,7 +417,6 @@ function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
     e.preventDefault();
     e.stopPropagation();
     body.scrollTo({ top: Math.max(0, body.scrollTop - step), behavior: "auto" });
-    playEarcon(EARCON.scrollText);
     return true;
   }
   return false;
@@ -753,13 +760,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         const blockHeight = blockKey ? getBlockHeight(blockKey) : el.scrollHeight;
 
         // Bring the block being read to the top of the panel, then scroll only
-        // far enough to reveal the rest of that block.
+        // far enough to reveal the rest of that block (including bottom padding).
         const startTop = Math.min(blockTop, scrollLimit);
         el.scrollTop = startTop;
 
+        const padBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0;
         const maxTop = Math.min(
           scrollLimit,
-          Math.max(0, blockTop + blockHeight - el.clientHeight)
+          Math.max(0, blockTop + blockHeight - el.clientHeight + padBottom)
         );
         const overflow = maxTop - startTop;
         if (overflow <= SCROLL_OVERFLOW_THRESHOLD_PX) return;
@@ -1511,7 +1519,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (!el) return;
 
     const measure = () => {
-      const needsScroll = hasScrollOverflow(el);
+      const { snaps, markers } = buildTextSnapsAndMarkers(el, visibleBlocks);
+      textSnapsRef.current = snaps;
+      // Real step-scroll only when there is more than one snap (not phantom overflow).
+      const needsScroll = snaps.length > 1;
       // Only touch layout when something actually changed; toggling the class
       // changes overflow, which would otherwise retrigger the ResizeObserver.
       if (el.classList.contains("artifact-popup-text--scrollable") !== needsScroll) {
@@ -1525,8 +1536,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         sourceEl?.focus({ preventScroll: true });
       }
 
-      const { snaps, markers } = buildTextSnapsAndMarkers(el, visibleBlocks);
-      textSnapsRef.current = snaps;
       setScrollMarkers((prev) => {
         const same =
           prev.length === markers.length &&
@@ -1802,7 +1811,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
       const block = textBlocks.find((b) => b.kind === "guided" && b.imageIndex === next);
       const position = `Image ${next + 1} of ${images.length}.`;
-      announce(block ? `${position} ${getBlockSpeech(block, false)}` : position, {
+      // Keep one "Image N of M" (position); omit tagline so getBlockSpeech does not repeat it.
+      const guidedSpeech = block
+        ? [block.heading, block.text].filter(Boolean).join(". ")
+        : null;
+      announce(guidedSpeech ? `${position} ${guidedSpeech}` : position, {
         dedupeMs: 200,
       });
       revealGuided(block || null);
@@ -1995,27 +2008,29 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     (direction) => {
       const sourceEl = textNavSourceRef.current?.current;
       resetTextScroll();
+      if (direction === "next") {
+        const nextEl =
+          getToolbarNeighbor(sourceEl, true) || getFirstToolbarButton();
+        nextEl?.focus({ preventScroll: true });
+        return;
+      }
       if (sourceEl) {
         sourceEl.focus({ preventScroll: true });
         return;
       }
-      // Panel is no longer in the L/K ring; exit goes to the toolbar or back arrow.
-      if (direction === "next") {
-        getFirstToolbarButton()?.focus({ preventScroll: true });
-      } else {
-        prevArrowRef.current?.focus({ preventScroll: true });
-      }
+      // Panel is no longer in the L/K ring; back exits to the prev artifact arrow.
+      prevArrowRef.current?.focus({ preventScroll: true });
     },
-    [resetTextScroll, getFirstToolbarButton]
+    [resetTextScroll, getFirstToolbarButton, getToolbarNeighbor]
   );
 
   const enterTextNav = useCallback(
     ({ announceBlock = true, focus = false, sourceRef = null } = {}) => {
-      const panel = textBodyRef.current;
-      if (!hasScrollOverflow(panel)) return false;
-
       const snaps = refreshTextSnaps();
-      if (snaps.length === 0) return false;
+      // One snap means nowhere to step — don't trap focus in the text panel.
+      // (Do not gate on hasScrollOverflow alone; a short clipped line can be
+      // under a large padding threshold but still need a second snap.)
+      if (snaps.length <= 1) return false;
 
       textNavActiveRef.current = true;
       setTextNavActive(true);
@@ -2053,9 +2068,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (autoplayingRef.current || transcriptDwellActiveRef.current) return;
-        const overflow = hasScrollOverflow(textBodyRef.current);
-        setTextScrollable(overflow);
-        if (!overflow) return;
+        const snaps = refreshTextSnaps();
+        const canStepScroll = snaps.length > 1;
+        setTextScrollable(canStepScroll);
+        if (!canStepScroll) return;
         const active = document.activeElement;
         const stillOnPath =
           textNavActiveRef.current ||
@@ -2078,13 +2094,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (direction === "next") {
         if (index + 1 < snaps.length) {
           applyTextSnap(index + 1, { announceBlock: true });
-          playEarcon(EARCON.scrollText);
         } else {
           exitTextNav("next");
         }
       } else if (index > 0) {
         applyTextSnap(index - 1, { announceBlock: true });
-        playEarcon(EARCON.scrollText);
       } else {
         exitTextNav("back");
       }
@@ -2321,7 +2335,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (atSnapTop) return;
     const nextIndex = Math.max(0, snapIndex - 1);
     setSnapIndex(nextIndex);
-    playEarcon(EARCON.scrollText);
     if (nextIndex === 0) {
       announce("Top of image.", { politeness: "assertive" });
     } else {
@@ -2333,7 +2346,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (atSnapBottom) return;
     const nextIndex = Math.min(totalSteps - 1, snapIndex + 1);
     setSnapIndex(nextIndex);
-    playEarcon(EARCON.scrollText);
     if (nextIndex === totalSteps - 1) {
       announce("Bottom of image.", { politeness: "assertive" });
     } else {
@@ -2507,10 +2519,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 ref={guidedDescBtnRef}
                 className={`carousel-btn${
                   guidedDescBtnFocused ||
+                  textNavSourceId === "description" ||
                   (isAutoplaying && visualActiveSection === "guided")
                     ? " is-selected"
                     : ""
-                }${textNavSourceId === "description" ? " is-text-nav-source" : ""}`}
+                }`}
                 onClick={handleGuidedDescription}
                 onFocus={() => setGuidedDescBtnFocused(true)}
                 onBlur={() => setGuidedDescBtnFocused(false)}
@@ -2524,7 +2537,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 type="button"
                 ref={prevImageRef}
                 className={`carousel-btn${
-                  textNavSourceId === "prevImage" ? " is-text-nav-source" : ""
+                  textNavSourceId === "prevImage" ? " is-selected" : ""
                 }`}
                 onClick={handlePrevImage}
                 aria-label={toolbarLabels.prevImage}
@@ -2537,7 +2550,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 type="button"
                 ref={nextImageRef}
                 className={`carousel-btn${
-                  textNavSourceId === "nextImage" ? " is-text-nav-source" : ""
+                  textNavSourceId === "nextImage" ? " is-selected" : ""
                 }${autoplayBtnClass("nextImage")}`}
                 onClick={handleNextImage}
                 aria-label={toolbarLabels.nextImage}
