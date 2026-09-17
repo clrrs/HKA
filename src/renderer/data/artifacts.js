@@ -338,7 +338,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
             src: "3A3Bantu2.jpeg",
             alt: "Another view of Helen Keller's meeting with the Bantu Chief",
             guidedDescription:
-              "The back of the photo has handwritten text in pencil that describes the image. Additional information about the size of the photograph is written in red ink. A rectangular stamp says “Wyndon Photos,” where the image was printed."
+              "The back of the photo has handwritten text in pencil that says \"Helen Keller opened the Duncan Village Community Center for Bantu people, East London, Cape Province. Her picture was taken with a tribal chieftain and his wife.\" Additional information about the size of the photograph is written in red ink, reading \"14 1/2 picas\" with a drawn arrow indicating that width. Additional text in pencil reads, \"Please return to American Foundation.\" A rectangular stamp says “Wyndon Photos,” where the image was printed."
           }
         ],
         transcriptTitle: "Transcript",
@@ -415,7 +415,7 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
             src: "3A5ItalyVet2.jpeg",
             alt: "Another view of Helen Keller with the Italian veteran",
             guidedDescription:
-              "The back of the photograph shows a purple-ink stamp of an Italian Ministry. Type in black in features the photograph’s date and location and a brief description of the photograph’s contents."
+              "The back of the photograph shows a purple-ink stamp of an Italian Ministry in Italian. Below the stamp, type in black in features the photograph’s date and location and a brief description of the photograph’s contents in Italian. Overlaid typed text says the original photograph belongs to the Helen Keller Archives at the American Foundation for the Blind in New York, and that the photograph is not to be reproduced or quoted without permission."
           }
         ],
         guidedDescription:
@@ -436,7 +436,7 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
             src: "3A6Israel2.jpeg",
             alt: "Another photograph from Helen Keller's meeting with Golda Meir",
             guidedDescription:
-              "The back of the photo has a purple stamp of the State of Israel in Hebrew and English, and handwritten notes in pencil."
+              "In handwritten text, the top of the back of the photo says \"Helen Keller, Polly Thompson, Golda Myerson, and Mrs. Zypora Sharett, 1952.\" Below is a purple stamp of the State of Israel in Hebrew and English, reading, \"State of Israel, Government Press Division.\""
           }
         ],
         transcriptTitle: "Transcript",
