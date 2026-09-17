@@ -92,19 +92,19 @@ export default function StateProvider({ children }) {
   const [artifactId, setArtifactId] = useState(null);
   const [currentTheme, setCurrentTheme] = useState(null);
   
-  const [prefs, setPrefs] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("prefs")) || {};
-      // Drop removed speechRate key if still present in older saves.
-      delete stored.speechRate;
-      return { ...DEFAULT_PREFS, ...stored };
-    } catch {
-      return DEFAULT_PREFS;
-    }
-  });
+  // Kiosk: always start from defaults. Do not rehydrate prefs across refresh/restart
+  // so the next visitor never inherits the previous session's contrast/size.
+  const [prefs, setPrefs] = useState(() => ({ ...DEFAULT_PREFS }));
 
   useEffect(() => {
-    localStorage.setItem("prefs", JSON.stringify(prefs));
+    try {
+      localStorage.removeItem("prefs");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = prefs.theme;
     document.documentElement.dataset.textSize = prefs.textSize;
     document.documentElement.style.setProperty("--brightness", prefs.brightness);
@@ -229,7 +229,12 @@ export default function StateProvider({ children }) {
   }, []);
 
   const resetPrefs = useCallback(() => {
-    setPrefs(DEFAULT_PREFS);
+    setPrefs({ ...DEFAULT_PREFS });
+    try {
+      localStorage.removeItem("prefs");
+    } catch {
+      // ignore
+    }
     setSpeechMode((prev) => {
       if (!prev) {
         // Settings holds TTS unmuted; don't toggle or we'd mute while the overlay is open.
@@ -334,7 +339,12 @@ export default function StateProvider({ children }) {
     setSubscene(null);
     setArtifactId(null);
     setCurrentTheme(null);
-    setPrefs(DEFAULT_PREFS);
+    setPrefs({ ...DEFAULT_PREFS });
+    try {
+      localStorage.removeItem("prefs");
+    } catch {
+      // ignore
+    }
     setShowSettings(false);
     setSettingsOnboarding(false);
     setPendingAccessibilityOnboarding(true);
