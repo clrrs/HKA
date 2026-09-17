@@ -1006,8 +1006,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
       hasPrevImageButton ? prevImageRef.current : null,
       hasMultipleImages ? nextImageRef.current : null,
-      zoomOrPlayRef.current,
       hasTranscriptLocal ? transcriptBtnRef.current : null,
+      zoomOrPlayRef.current,
       nextArrowRef.current,
     ].filter(Boolean);
   }, [
@@ -1055,8 +1055,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
           hasPrevImageButton ? prevImageRef.current : null,
           hasMultipleImages ? nextImageRef.current : null,
-          zoomOrPlayRef.current,
           transcriptBtnRef.current,
+          zoomOrPlayRef.current,
         ];
     return focusables.filter(Boolean)[0] || null;
   }, [
@@ -2382,8 +2382,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (showGuidedDescriptionButton) entries.push({ id: "description", base: "Description" });
     if (!isVideo && hasPrevImageButton) entries.push({ id: "prevImage", base: "Previous image" });
     if (!isVideo && hasMultipleImages) entries.push({ id: "nextImage", base: "Next image" });
-    if (!isVideo) entries.push({ id: "zoom", base: "Zoom" });
     if (hasTranscript) entries.push({ id: "transcript", base: "Transcript" });
+    if (!isVideo) entries.push({ id: "zoom", base: "Zoom" });
     const total = entries.length;
     const map = {};
     entries.forEach((entry, i) => {
@@ -2558,17 +2558,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 Next Image
               </button>
             )}
-            {!isVideo && (
-              <button
-                type="button"
-                ref={zoomOrPlayRef}
-                className={`carousel-btn${zoomOpen ? " is-selected" : ""}`}
-                onClick={handlePrimaryAction}
-                aria-label={toolbarLabels.zoom}
-              >
-                Zoom
-              </button>
-            )}
             {hasTranscript && (
               <button
                 type="button"
@@ -2580,6 +2569,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 aria-label={toolbarLabels.transcript}
               >
                 Transcript
+              </button>
+            )}
+            {!isVideo && (
+              <button
+                type="button"
+                ref={zoomOrPlayRef}
+                className={`carousel-btn${zoomOpen ? " is-selected" : ""}`}
+                onClick={handlePrimaryAction}
+                aria-label={toolbarLabels.zoom}
+              >
+                Zoom
               </button>
             )}
           </div>
