@@ -37,9 +37,19 @@ export default function InstructionScene({ isActive }) {
     if (advancingRef.current) return;
     advancingRef.current = true;
     clearAutoContinueTimer();
-    goToScene("home");
     if (pendingAccessibilityOnboarding) {
+      // Open Settings over the instruction video first, then swap to Home
+      // under the overlay after paint. Hiding the <video> in the same frame
+      // as the scene change flashes on Windows Chromium; Close then reveals
+      // Home (already active), not the video.
       openSettingsOnboarding();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          goToScene("home", { keepSettings: true });
+        });
+      });
+    } else {
+      goToScene("home");
     }
   }, [goToScene, pendingAccessibilityOnboarding, openSettingsOnboarding]);
 

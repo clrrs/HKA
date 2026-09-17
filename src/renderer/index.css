@@ -1123,6 +1123,12 @@ h1[tabindex]:focus-visible {
   background: rgba(0, 0, 0, 0.6);
 }
 
+/* Cover the instruction video fully during first-run onboarding so the
+   Windows video teardown (and the Home swap under the overlay) stay hidden. */
+.settings-backdrop--opaque {
+  background: #050505;
+}
+
 .settings-panel {
   position: relative;
   background: var(--bg-primary);

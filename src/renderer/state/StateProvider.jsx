@@ -375,8 +375,10 @@ export default function StateProvider({ children }) {
       setPreviousScene(scene);
     }
     // Prefs are live-saved, so closing settings here is the same as Close.
+    // keepSettings: instruction→onboarding opens Settings first, then swaps
+    // Home underneath without dismissing the panel.
     if (sceneName === "home") {
-      if (showSettingsRef.current) {
+      if (showSettingsRef.current && !options.keepSettings) {
         setShowSettings(false);
         setSettingsOnboarding(false);
         setPendingAccessibilityOnboarding(false);

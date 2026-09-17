@@ -546,7 +546,9 @@ export default function App() {
               }
             >
               <div
-                className="settings-backdrop"
+                className={`settings-backdrop${
+                  settingsOnboarding ? " settings-backdrop--opaque" : ""
+                }`}
                 onClick={settingsOnboarding ? dismissSettings : toggleSettings}
               />
               <div
