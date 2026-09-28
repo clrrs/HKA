@@ -399,7 +399,7 @@ export default function ThemeScene() {
                     <span className="artifact-circle-inner" aria-hidden="true" />
                     {thumbSrc && (
                       <img
-                        className={`artifact-circle-img ${artifact.id === "3A4" ? "artifact-circle-img--full-visible" : ""}`}
+                        className={`artifact-circle-img ${["2A4", "3A4"].includes(artifact.id) ? "artifact-circle-img--full-visible" : ""}`}
                         src={thumbSrc}
                         alt=""
                         aria-hidden="true"

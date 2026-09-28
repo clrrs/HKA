@@ -49,11 +49,11 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "In one of her most passionate political writings, Helen\u2019s 1918 speech defending The Industrial Workers of the World, a labor union and \u201Cmovement of revolt,\u201D states that opponents of the movement did everything from labeling them as \u201Cdangerous foreigners\u201D to accusing them of kidnapping and murder.",
         type: "document",
         images: [
-          { src: "1A2IWW1.jpeg", alt: "Page 1 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
-          { src: "1A2IWW2.jpeg", alt: "Page 2 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
-          { src: "1A2IWW3.jpeg", alt: "Page 3 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
-          { src: "1A2IWW4.jpeg", alt: "Page 4 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
-          { src: "1A2IWW5.jpeg", alt: "Page 5 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" }
+          { src: "1A2IWW1.png", alt: "Page 1 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
+          { src: "1A2IWW2.png", alt: "Page 2 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
+          { src: "1A2IWW3.png", alt: "Page 3 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
+          { src: "1A2IWW4.png", alt: "Page 4 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" },
+          { src: "1A2IWW5.png", alt: "Page 5 of Helen Keller\u2019s IWW Conspiracy Speech, 1918" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -68,8 +68,8 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Helen argues in this 1920 speech about women\u2019s suffrage that women\u2019s right to vote, along with all other rights, are only earned when we are strong enough to claim them for ourselves: \u201CToday women are asserting their rights, tomorrow nobody will be foolhardy enough to question them.\u201D",
         type: "document",
         images: [
-          { src: "1A3Suffrage1.jpeg", alt: "Page 1 of Helen Keller\u2019s Women\u2019s Suffrage Speech, 1920" },
-          { src: "1A3Suffrage2.jpeg", alt: "Page 2 of Helen Keller\u2019s Women\u2019s Suffrage Speech, 1920" }
+          { src: "1A3Suffrage1.png", alt: "Page 1 of Helen Keller\u2019s Women\u2019s Suffrage Speech, 1920" },
+          { src: "1A3Suffrage2.png", alt: "Page 2 of Helen Keller\u2019s Women\u2019s Suffrage Speech, 1920" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -84,8 +84,8 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "In this correspondence between Helen and The National Civil Liberties Bureau, now known as the American Civil Liberties Union, and the National Association for the Advancement of Colored People, Helen shows her early support for the founding of both organizations and their missions.",
         type: "document",
         images: [
-          { src: "1A4ACLU1.jpeg", alt: "Page 1 of Helen Keller\u2019s letter to the ACLU, 1919" },
-          { src: "1A4ACLU2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter to the ACLU, 1919" }
+          { src: "1A4ACLU1.png", alt: "Page 1 of Helen Keller\u2019s letter to the ACLU, 1919" },
+          { src: "1A4ACLU2.png", alt: "Page 2 of Helen Keller\u2019s letter to the ACLU, 1919" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -100,14 +100,14 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Helen wrote to Mr. Oswald Garrisen Villard, then-Vice President of the National Association for the Advancement of Colored People, in 1916 to express her solidarity with their movement. In this letter, she says, \u201CIt should bring the blush of shame to the face of every true American to know that ten of millions of his countrymen are denied the equal protection of the laws.\u201D",
         type: "document",
         images: [
-          { src: "1A5NAACP1.jpeg", alt: "Page 1 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP3.jpeg", alt: "Page 3 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP4.jpeg", alt: "Page 4 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP5.jpeg", alt: "Page 5 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP6.jpeg", alt: "Page 6 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP7.jpeg", alt: "Page 7 of Helen Keller\u2019s letter to the NAACP, 1916" },
-          { src: "1A5NAACP8.jpeg", alt: "Page 8 of Helen Keller\u2019s letter to the NAACP, 1916" }
+          { src: "1A5NAACP1.png", alt: "Page 1 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP2.png", alt: "Page 2 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP3.png", alt: "Page 3 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP4.png", alt: "Page 4 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP5.png", alt: "Page 5 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP6.png", alt: "Page 6 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP7.png", alt: "Page 7 of Helen Keller\u2019s letter to the NAACP, 1916" },
+          { src: "1A5NAACP8.png", alt: "Page 8 of Helen Keller\u2019s letter to the NAACP, 1916" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -122,9 +122,9 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Published in \u201CThe Nurse\u201D in 1914, Helen\u2019s article candidly discusses women who are forced into prostitution by poverty, and children who were born blind due to sexually transmitted infections. She also laments the modesty in language that prevents discussion, and ultimately prevention, of the problem.",
         type: "document",
         images: [
-          { src: "1A6PrevBlind1.jpeg", alt: "Page 1 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
-          { src: "1A6PrevBlind2.jpeg", alt: "Page 2 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
-          { src: "1A6PrevBlind3.jpeg", alt: "Page 3 of Helen Keller\u2019s Blindness Prevention Article, 1914" }
+          { src: "1A6PrevBlind1.png", alt: "Page 1 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
+          { src: "1A6PrevBlind2.png", alt: "Page 2 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
+          { src: "1A6PrevBlind3.png", alt: "Page 3 of Helen Keller\u2019s Blindness Prevention Article, 1914" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -151,8 +151,8 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Eugene Debs, a former socialist presidential candidate and Southern Indiana native, wrote this letter to Helen while serving six months on federal charges after President Cleveland used the US Army to break the \u201CPullman Strike,\u201D led by Debs through the American Railway Union.",
         type: "document",
         images: [
-          { src: "2A1Debs1.jpeg", alt: "Page 1 of letter from Eugene Debs to Helen Keller, 1919" },
-          { src: "2A1Debs2.jpeg", alt: "Page 2 of letter from Eugene Debs to Helen Keller, 1919" }
+          { src: "2A1Debs1.png", alt: "Page 1 of letter from Eugene Debs to Helen Keller, 1919" },
+          { src: "2A1Debs2.png", alt: "Page 2 of letter from Eugene Debs to Helen Keller, 1919" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -167,10 +167,10 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Although Helen and General MacArthur, a top US general during WWII, could not have been more dissimilar in their career paths or politics, the two worked closely and successfully during her post-war trip to Occupied Japan. In this warm and cordial letter, Helen thanks him for bringing international attention to the needs of blind and disabled people in the post-WWII-ravaged nation.",
         type: "document",
         images: [
-          { src: "2A2MacA1.jpeg", alt: "Page 1 of Helen Keller\u2019s letter to General MacArthur, 1949" },
-          { src: "2A2MacA2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter to General MacArthur, 1949" },
+          { src: "2A2MacA1.png", alt: "Page 1 of Helen Keller\u2019s letter to General MacArthur, 1949" },
+          { src: "2A2MacA2.png", alt: "Page 2 of Helen Keller\u2019s letter to General MacArthur, 1949" },
           { src: "2A2MacA3.jpeg", alt: "Page 3 of Helen Keller\u2019s letter to General MacArthur, 1949" },
-          { src: "2A2MacA4.jpeg", alt: "Page 4 of Helen Keller\u2019s letter to General MacArthur, 1949" }
+          { src: "2A2MacA4.png", alt: "Page 4 of Helen Keller\u2019s letter to General MacArthur, 1949" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -185,8 +185,8 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Despite a 40-year age difference, Helen Keller and Mark Twain maintained a lengthy friendship. In this handwritten letter of thanks from Mark Twain on his 70th birthday, he adds a very personal note to Helen on the back, signing off with both \u201Cloves\u201D, and his real name, Samuel L. Clemens.",
         type: "document",
         images: [
-          { src: "2A3Twain1.jpeg", alt: "Front of handwritten letter from Mark Twain to Helen Keller, 1905" },
-          { src: "2A3Twain2.jpeg", alt: "Back of handwritten letter from Mark Twain to Helen Keller, 1905" }
+          { src: "2A3Twain1.png", alt: "Front of handwritten letter from Mark Twain to Helen Keller, 1905" },
+          { src: "2A3Twain2.png", alt: "Back of handwritten letter from Mark Twain to Helen Keller, 1905" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -201,21 +201,21 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "After reading about the talking book program at the American Foundation for the Blind, third- and fourth-grade students from Wrangell, Alaska wrote Helen about publishing a small pamphlet of their own writing. They sold each copy for 2 cents and donated the money to the American Foundation for the Blind to show the spirit of giving during the holidays. Their daily lives were also detailed as only students of that age could.",
         type: "document",
         images: [
-          { src: "2A4Student1.jpeg", alt: "Student Christmas letter to Helen Keller, page 1" },
-          { src: "2A4Student2.jpeg", alt: "Student Christmas letter to Helen Keller, page 2" },
-          { src: "2A4Student3.jpeg", alt: "Student Christmas letter to Helen Keller, page 3" },
-          { src: "2A4Student4.jpeg", alt: "Student Christmas letter to Helen Keller, page 4" },
-          { src: "2A4Student5.jpeg", alt: "Student Christmas letter to Helen Keller, page 5" },
-          { src: "2A4Student6.jpeg", alt: "Student Christmas letter to Helen Keller, page 6" },
-          { src: "2A4Student7.jpeg", alt: "Student Christmas letter to Helen Keller, page 7" },
-          { src: "2A4Student8.jpeg", alt: "Student Christmas letter to Helen Keller, page 8" },
-          { src: "2A4Student9.jpeg", alt: "Student Christmas letter to Helen Keller, page 9" },
-          { src: "2A4Student10.jpeg", alt: "Student Christmas letter to Helen Keller, page 10" },
-          { src: "2A4Student11.jpeg", alt: "Student Christmas letter to Helen Keller, page 11" },
-          { src: "2A4Student12.jpeg", alt: "Student Christmas letter to Helen Keller, page 12" },
-          { src: "2A4Student13.jpeg", alt: "Student Christmas letter to Helen Keller, page 13" },
-          { src: "2A4Student14.jpeg", alt: "Student Christmas letter to Helen Keller, page 14" },
-          { src: "2A4Student15.jpeg", alt: "Student Christmas letter to Helen Keller, page 15" }
+          { src: "2A4Student1.png", alt: "Student Christmas letter to Helen Keller, page 1" },
+          { src: "2A4Student2.png", alt: "Student Christmas letter to Helen Keller, page 2" },
+          { src: "2A4Student3.png", alt: "Student Christmas letter to Helen Keller, page 3" },
+          { src: "2A4Student4.png", alt: "Student Christmas letter to Helen Keller, page 4" },
+          { src: "2A4Student5.png", alt: "Student Christmas letter to Helen Keller, page 5" },
+          { src: "2A4Student6.png", alt: "Student Christmas letter to Helen Keller, page 6" },
+          { src: "2A4Student7.png", alt: "Student Christmas letter to Helen Keller, page 7" },
+          { src: "2A4Student8.png", alt: "Student Christmas letter to Helen Keller, page 8" },
+          { src: "2A4Student9.png", alt: "Student Christmas letter to Helen Keller, page 9" },
+          { src: "2A4Student10.png", alt: "Student Christmas letter to Helen Keller, page 10" },
+          { src: "2A4Student11.png", alt: "Student Christmas letter to Helen Keller, page 11" },
+          { src: "2A4Student12.png", alt: "Student Christmas letter to Helen Keller, page 12" },
+          { src: "2A4Student13.png", alt: "Student Christmas letter to Helen Keller, page 13" },
+          { src: "2A4Student14.png", alt: "Student Christmas letter to Helen Keller, page 14" },
+          { src: "2A4Student15.png", alt: "Student Christmas letter to Helen Keller, page 15" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -246,7 +246,7 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "This knocker hung on the door of Helen\u2019s Easton home on Arcan Ridge from 1946 to 1968. What important visitors may have used it over those decades, visiting Helen with important work or exuberant celebrations?",
         type: "object",
         images: [
-          { src: "2A5DoorKnock.jpeg", alt: "Door knocker from Helen Keller\u2019s Arcan Ridge home" }
+          { src: "2A5DoorKnock.png", alt: "Door knocker from Helen Keller\u2019s Arcan Ridge home" }
         ],
         guidedDescription:
           "A cast brass door knocker shaped like an urn has finials on its top and bottom. A flat faceplate near the middle of the urn is engraved with \"HELEN KELLER.\" A swinging, horseshoe-shaped striker hangs from the sides of the faceplate."
@@ -259,8 +259,8 @@ Female narrator: For her services she was cited at the close of World War II.`,
         description: "Having received a typewritten letter from Gov. Franklin D. Roosevelt declining membership in the American Foundation for the Blind, Helen replied on the reverse with a handwritten note requesting his autograph. The only autograph she had ever asked for, she wanted to make her request before he became the President of the United States. Four years later, he was elected to that position.",
         type: "document",
         images: [
-          { src: "2A6FDR1.jpeg", alt: "Page 1 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" },
-          { src: "2A6FDR2.jpeg", alt: "Page 2 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" }
+          { src: "2A6FDR1.png", alt: "Page 1 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" },
+          { src: "2A6FDR2.png", alt: "Page 2 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -310,11 +310,11 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         alt: "A Japanese luncheon set is unassembled to show all of its contents.",
         images: [
           {
-            src: "3A2Lunch1.jpeg",
+            src: "3A2Lunch1.png",
             alt: "Black lacquer Japanese luncheon set with gold decorative symbols, shown from the front view displaying the carrying stand with brass handle"
           },
           {
-            src: "3A2Lunch2.jpeg",
+            src: "3A2Lunch2.png",
             alt: "Close-up view of the Japanese luncheon set showing the intricate carved abalone inlays and gold detailing on the black lacquer surface",
             guidedDescription:
               "The luncheon set fits neatly back together, with all items inside the carrying stand with the brass top."
@@ -333,9 +333,9 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         type: "photograph",
         alt: "A black and white image shows Helen with a Bantu chief and his wife.",
         images: [
-          { src: "3A3Bantu1.jpeg", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
+          { src: "3A3Bantu1.png", alt: "Helen Keller meeting with a Bantu Chief in 1951" },
           {
-            src: "3A3Bantu2.jpeg",
+            src: "3A3Bantu2.png",
             alt: "Another view of Helen Keller's meeting with the Bantu Chief",
             guidedDescription:
               "The back of the photo has handwritten text in pencil that says \"Helen Keller opened the Duncan Village Community Center for Bantu people, East London, Cape Province. Her picture was taken with a tribal chieftain and his wife.\" Additional information about the size of the photograph is written in red ink, reading \"14 1/2 picas\" with a drawn arrow indicating that width. Additional text in pencil reads, \"Please return to American Foundation.\" A rectangular stamp says “Wyndon Photos,” where the image was printed."
@@ -361,7 +361,7 @@ Male audio description: Helen rides in the front and a pilot steers in the back 
         type: "document",
         alt: "A typed document outlines Helen's travels from 1948-1949.",
         images: [
-          { src: "3A4_TentativeShedKeller.jpeg", alt: "Helen Keller's global travel schedule from 1948-49" }
+          { src: "3A4_TentativeShedKeller.png", alt: "Helen Keller's global travel schedule from 1948-49" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: `TENTATIVE ITINERARY OF HELEN KELLER'S VISIT
@@ -410,9 +410,9 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         type: "photograph",
         alt: "A black and white photograph shows Helen dancing with a blind man.",
         images: [
-          { src: "3A5ItalyVet1.jpeg", alt: "Helen Keller dancing with an Italian veteran in 1946" },
+          { src: "3A5ItalyVet1.png", alt: "Helen Keller dancing with an Italian veteran in 1946" },
           {
-            src: "3A5ItalyVet2.jpeg",
+            src: "3A5ItalyVet2.png",
             alt: "Another view of Helen Keller with the Italian veteran",
             guidedDescription:
               "The back of the photograph shows a purple-ink stamp of an Italian Ministry in Italian. Below the stamp, type in black in features the photograph’s date and location and a brief description of the photograph’s contents in Italian. Overlaid typed text says the original photograph belongs to the Helen Keller Archives at the American Foundation for the Blind in New York, and that the photograph is not to be reproduced or quoted without permission."
@@ -431,9 +431,9 @@ There will be at least 4 in the party - Miss Helen Keller, Miss Polly Thomson, h
         type: "photograph",
         alt: "A black and white photograph shows Helen sitting with Israeli Prime Minister Golda Meir and others around a table.",
         images: [
-          { src: "3A6Israel1.jpeg", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
+          { src: "3A6Israel1.png", alt: "Helen Keller meeting with Golda Meir in Israel, 1952" },
           {
-            src: "3A6Israel2.jpeg",
+            src: "3A6Israel2.png",
             alt: "Another photograph from Helen Keller's meeting with Golda Meir",
             guidedDescription:
               "In handwritten text, the top of the back of the photo says \"Helen Keller, Polly Thompson, Golda Myerson, and Mrs. Zypora Sharett, 1952.\" Below is a purple stamp of the State of Israel in Hebrew and English, reading, \"State of Israel, Government Press Division.\""
@@ -457,7 +457,7 @@ Transcript: Black-and-white photograph showing Helen Keller seated on a sofa bes
         type: "document",
         alt: "A typed document with handwriting in blue and red ink outlines Helen's travel to Syria.",
         images: [
-          { src: "3A7Syria1.jpeg", alt: "Helen Keller's Syria travel itinerary from 1952" }
+          { src: "3A7Syria1.png", alt: "Helen Keller's Syria travel itinerary from 1952" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: `[Handwritten note in blue ink: Pages 1-6 - Egypt Pages 6-8 Lebanon Page 9 - Syria Pages 10-13 - Jordan (a grouping brace) all each country]
@@ -567,8 +567,8 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         description: "Helen took her Corona travel typewriter everywhere with her. People would ask her to type out quotations and sign her name for them. What adventures might Helen have taken this on, and what thoughts might have she communicated with the world through its keys?",
         type: "object",
         images: [
-          { src: "4A1Typewriter1.jpeg", alt: "Helen Keller\u2019s Corona portable typewriter, front view" },
-          { src: "4A1Typewriter2.jpeg", alt: "Helen Keller\u2019s Corona portable typewriter, alternate view" }
+          { src: "4A1Typewriter1.png", alt: "Helen Keller\u2019s Corona portable typewriter, front view" },
+          { src: "4A1Typewriter2.png", alt: "Helen Keller\u2019s Corona portable typewriter, alternate view" }
         ],
         guidedDescription:
           "A metal typewriter with a glossy black finish and a standard \"QWERTY\" keyboard. Each of the keys is circular, with a chrome edge, black pad, and white characters on the surface. \"SILENT\" is printed on the upper paper tray and \"CORONA\" is printed on the face of the typewriter, both in gold. Black roller handles are on each side of the cylinder, and a chrome return arm on its left side."
@@ -581,8 +581,8 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         description: "In this photograph, Helen evaluates an electro braillewriter while working at American Foundation for the Blind. In the photo with her are AFB Director Robert Barnett, Marta Sobieski, Peter Salmon from the Industrial Home for the Blind, Polly Thomson and Gregor Ziemer. A painting of Helen by Albert H. Munsell hangs in the background.",
         type: "photograph",
         images: [
-          { src: "4A2AFB1.jpeg", alt: "Helen Keller evaluating a braille typewriter at the AFB, 1954" },
-          { src: "4A2AFB2.jpeg", alt: "Another view of Helen Keller at the AFB evaluating equipment, 1954" }
+          { src: "4A2AFB1.png", alt: "Helen Keller evaluating a braille typewriter at the AFB, 1954" },
+          { src: "4A2AFB2.png", alt: "Another view of Helen Keller at the AFB evaluating equipment, 1954" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -597,12 +597,12 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         description: "Between her work as an author and employment at the American Foundation for the Blind, Helen and her companions worked the Vaudeville circuit. While it wasn\u2019t steady work, Helen enjoyed it. This script is from a show she performed with her lifelong instructor and friend, Anne Sullivan.",
         type: "document",
         images: [
-          { src: "4A3Vaudeville1.jpeg", alt: "Page 1 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville2.jpeg", alt: "Page 2 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville3.jpeg", alt: "Page 3 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville4.jpeg", alt: "Page 4 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville5.jpeg", alt: "Page 5 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville6.jpeg", alt: "Page 6 of Helen Keller\u2019s Vaudeville script" }
+          { src: "4A3Vaudeville1.png", alt: "Page 1 of Helen Keller\u2019s Vaudeville script" },
+          { src: "4A3Vaudeville2.png", alt: "Page 2 of Helen Keller\u2019s Vaudeville script" },
+          { src: "4A3Vaudeville3.png", alt: "Page 3 of Helen Keller\u2019s Vaudeville script" },
+          { src: "4A3Vaudeville4.png", alt: "Page 4 of Helen Keller\u2019s Vaudeville script" },
+          { src: "4A3Vaudeville5.png", alt: "Page 5 of Helen Keller\u2019s Vaudeville script" },
+          { src: "4A3Vaudeville6.png", alt: "Page 6 of Helen Keller\u2019s Vaudeville script" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -617,8 +617,8 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         description: "Helen and companions Polly Thomson and Anne Sullivan took this photograph with Charlie Chaplin in a Hollywood film studio while she was filming the 1919 movie \u201CDeliverance.\u201D A camera and film set are visible behind the four of them. Keller has her left hand on Chaplin\u2019s right shoulder and her right hand on Sullivan\u2019s lips.",
         type: "photograph",
         images: [
-          { src: "4A4Chaplin1.jpeg", alt: "Helen Keller with Charlie Chaplin in a Hollywood studio, 1918" },
-          { src: "4A4Chaplin2.jpeg", alt: "Another photograph of Helen Keller with Charlie Chaplin, 1918" }
+          { src: "4A4Chaplin1.png", alt: "Helen Keller with Charlie Chaplin in a Hollywood studio, 1918" },
+          { src: "4A4Chaplin2.png", alt: "Another photograph of Helen Keller with Charlie Chaplin, 1918" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -633,7 +633,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         description: "Helen was admitted to Radcliffe College in 1899. Radcliffe was originally a women\u2019s college that was administered by Harvard before women were admitted there, some 50 years after Helen attended.",
         type: "document",
         images: [
-          { src: "4A5Radcliffe.jpeg", alt: "Helen Keller\u2019s letter of admission to Radcliffe College, 1899" }
+          { src: "4A5Radcliffe.png", alt: "Helen Keller\u2019s letter of admission to Radcliffe College, 1899" }
         ],
         transcriptTitle: "Transcript",
         transcriptText: "Missing transcript copy",
@@ -648,7 +648,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         description: "In this 1886 letter, Perkins School Director Michael Anagnos asked Annie Sullivan if she was interested in \u201Ca position in the family of Mr. Keller as governess of his little deaf-mute and blind daughter.\u201D Helen is not even mentioned by name, a stark contrast to the closeness of the pair once they were together.",
         type: "document",
         images: [
-          { src: "4A6Perkins.jpeg", alt: "Letter from Perkins School Director to Annie Sullivan about Helen Keller, 1886" }
+          { src: "4A6Perkins.png", alt: "Letter from Perkins School Director to Annie Sullivan about Helen Keller, 1886" }
         ],
         guidedDescription:
           "A handwritten letter on Perkins Institution for the Blind stationary. Institutional and date information is printed in red, calligraphy-style script on the top of the page. Lines to write along are printed in light blue. Anagnos' ornate, cursive handwriting is in black ink, and his message fills the entire page.",

@@ -608,6 +608,7 @@ h1[tabindex]:focus-visible {
   display: flex;
   justify-content: center;
   align-items: stretch;
+  background: rgba(0, 0, 0, 0.95);
 }
 
 .zoom-container {
@@ -1829,7 +1830,7 @@ h1[tabindex]:focus-visible {
   transform: translate(-50%, -46%) scale(1.2);
 }
 
-/* Keep Global Travel Schedule fully visible even when focused */
+/* Keep wide/tall thumbnails (e.g. Student Letters, Global Travel Schedule) inside the bubble when focused */
 .artifact-circle--focused .artifact-circle-img--full-visible {
   transform: translate(-50%, -47%) scale(1.08);
 }
