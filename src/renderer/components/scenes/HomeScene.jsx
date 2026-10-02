@@ -440,7 +440,7 @@ export default function HomeScene({ isActive = false }) {
             <div className="start-video-body">
               <video
                 ref={videoRef}
-                src="3HK7_Instructional_v05-260710_1080p.mp4"
+                src="3HK7_Instructional_v06-260929.mp4"
                 onEnded={closeVideo}
                 tabIndex={0}
               />

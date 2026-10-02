@@ -10,13 +10,16 @@ export const DESCRIPTION_MODE_SECTIONS = "sections";
 /** Per-letter guided sections (e.g. student letters); each entry is one letter. */
 export const GUIDED_DESCRIPTION_MODE_LETTERS = "letters";
 
+/** Per-image guided sections for multi-page docs with distinct page copy. */
+export const GUIDED_DESCRIPTION_MODE_PER_IMAGE = "per-image";
+
 export const themes = {
   change: {
     id: "change",
     number: 1,
     label: "Change",
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
-    quote: "\u201CThe power of effecting changes for the better is within ourselves\u2026\u201D",
+    quote: "\u201CThe power of effecting changes for the better is within ourselves, not in the favorableness of circumstances.\u201D - Helen Keller, 1923",
     description: "Helen Keller was a life-long advocate for change across society. Beginning with her fundraising campaign as a 10-year-old student, Helen was an advocate for voting, labor, and economic rights, in addition to working for several decades to advocate for people who were blind and deafblind.",
     iconAlt: "A black and white photo layered over documents shows Helen visiting veterans at a military hospital.",
     artifacts: [
@@ -212,17 +215,55 @@ $100.00
         title: "Blindness Prevention Article, 1914",
         displayTitle: "Blindness Prevention Article",
         year: "1914",
-        description: "Published in \u201CThe Nurse\u201D in 1914, Helen\u2019s article candidly discusses women who are forced into prostitution by poverty, and children who were born blind due to sexually transmitted infections. She also laments the modesty in language that prevents discussion, and ultimately prevention, of the problem.",
+        description: 'Published in “The Nurse” in 1914, Helen’s article candidly discusses women who are forced into prostitution by poverty, and children who were born blind due to sexually transmitted infections. She also laments the modesty in language that prevents discussion — and ultimately prevention — of the problem.',
         type: "document",
+        alt: 'A yellowed magazine page with a torn edge shows the first page of an article written by Helen.',
         images: [
-          { src: "1A6PrevBlind1.png", alt: "Page 1 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
-          { src: "1A6PrevBlind2.png", alt: "Page 2 of Helen Keller\u2019s Blindness Prevention Article, 1914" },
-          { src: "1A6PrevBlind3.png", alt: "Page 3 of Helen Keller\u2019s Blindness Prevention Article, 1914" }
+          {
+            src: "1A6PrevBlind1.png",
+            alt: "Page 1 of Helen Keller\u2019s Blindness Prevention Article, 1914",
+            guidedDescription: 'A yellowed magazine page, page 90, shows a black-and-white portrait of Helen in a large feathered hat and white lace blouse with a ribbon brooch, looking downward beside dark flowers. Below, the title "A Plea from Helen Keller" heads two columns of text. Pencil notes fill the top margin.',
+          },
+          {
+            src: "1A6PrevBlind2.png",
+            alt: "Page 2 of Helen Keller\u2019s Blindness Prevention Article, 1914",
+            guidedDescription: 'A yellowed magazine page, page 91, shows two columns of printed text under the running title "A Plea from Helen Keller." Two bold section headings, "True and False Modesty" and "The Cause of the Disease," break up the text. The left edge is ragged.',
+          },
+          {
+            src: "1A6PrevBlind3.png",
+            alt: "Page 3 of Helen Keller\u2019s Blindness Prevention Article, 1914",
+            guidedDescription: 'A yellowed magazine page, page 92, shows two columns of printed text under the running title "The Nurse." Two section headings, "How Sight May Be Saved" and "Education Is Necessary," divide the text. The right edge is torn, and "Incomplete" is penciled at bottom right.',
+          }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
-        guidedDescription:
-          "Three pages of an article show torn gaps in the paper where it was ripped from the three staples in a magazine binding. A black and white photograph heads the article, showing Helen in a hat with a large feather on front, a light dress with a bow closing the collar, and a bouquet of leafy flowers. Archivist's cataloging notes near the top of the first page note that this article is incomplete."
+        transcriptText: `[handwritten: incomplete]
+
+[Archivist's annotation: Hk Writing by "A Plea from Helen Keller" 1914?]
+
+A Plea from Helen Keller All readers of The Nurse must be familiar with the history of Miss Helen Keller. Deaf and blind since the age of nineteen months as the result of illness, Miss Keller, as author and lecturer, has become one of the prominent figures in the intellectual life of America. Naturally, her most vital interest is in lessening the terrible evil of blindness. Believing that at least twenty-five per cent of the blind lost their sight through venereal infection at birth, and that to this extent, at least, blindness is preventable, Miss Keller urges rational discussion of the cause which at birth condemns so many babies to sightless lives. She seeks to enlist the newspapers in a campaign of publicity for the prevention of blindness and while on a recent lecture tour she herself wrote the following article on her typewriter, and published it in the Kansas City Star. Miss Keller now authorizes its publication in The Nurse which she “wishes all success in its work of spreading the gospel of prevention.”—The Editor.
+
+The purpose of this article is to discuss one of the most common causes of blindness and its prevention. I am going to tell a few plain truths about something which is a source of real danger to the eyes of new-born babies. Intelligent workers for the sightless know that much blindness is unnecessary, preventable: but many people do not know the cause or the method of preven90
+
+tion. We hear a great deal these days about the a social evil,” but I find that many people whom I talk with do not understand its connection with blindness and other afflictions. They are seized with a spasm of modesty when anyone tries to discuss this subject sensibly. Physicians and workers for the blind in many states have tried to have articles on the subject published, but they have
+
+A PLEA FROM HELEN KELLER
+
+91
+
+invariably found it difficult. They have been informed that the matter they wished to print is “indecent, shocking.” Newspapers and even men who have the public welfare sincerely at heart beat about the bush and resort to all kinds of euphemistic phrases to describe a thing which lies at the root of many terrible evils in the world. TRUE AND FALSE MODESTY Now, I maintain that nothing is indecent which helps to educate the people and arouse an intelligent interest and cooperation in a matter of public welfare. The truth, though unpleasant, is always more desirable than silence regarding an enemy that daily destroys the sight, the hearing, the minds, the morals of men. We may dodge the foe in print: but we have to meet it face to face in our streets and public institutions in the form of sightless eyes, stopped-up ears, crooked limbs, and mindless bodies. Let us put away false modesty and silly prejudices and try to understand the enemy we are fighting. Let us learn all we can about its nature, its forces, and its strongholds. In no other way can we set on foot an intelligent, effective campaign of extermination. I shall, therefore, call a spade a spade in my discussion of ophthalmia neonatorum, the scientific name for the cause of blindness of the new-born. If people are shocked, it will do them no harm. The shock may awaken them to a sense of their responsibility, “a consummation devoutly to be wished.” Not until they do realize their individual and collective responsibility to the unborn can we hope to see the beginning of a fairer race. Not until the world is filled with the light of knowledge shall there be healing for the nations. It is unscientific, unreasonable, to shut our eyes and ears to the facts of life because they happen to be painful or even revolting. The imperative need of our time is
+
+knowledge founded on stern truthfulness. We must all emancipate ourselves. from the shackles of authority. We must look at life for ourselves, look at it honestly, fearlessly, compassionately. Only when we so look at life shall we take the first step towards our salvation. Not by hiding the ignorance, the selfishness, the unholy passions, the inhumanity of man to man, can we bring about our social deliverance. What knowledge steals from us is not modesty, but a convention. THE CAUSE OF THE DISEASE Ophthalmia neonatorum is a venereal infection. Of the one hundred thousand blind people in this country at least twenty-five per cent have lost their sight through this infection. We now know that this “folly of youth” (Miss Keller refers to gonorrheal infection) puts out the eyes of innocent babies. Not only is the infected father the cause of disaster to his child, he also in countless cases makes his wife a lifelong invalid. Physicians say that eighty per cent of the operations performed on the maternal organs are traceable to the same cause. The cruelest link in the chain of consequences is the innocent agency of the mother in the destruction of her baby’s beautiful eyes and the unmerited suffering entailed upon her. It is a pity when things that bring such terrible consequences to the children of men may not be discussed in the public prints for fear of offending somebody’s modesty. We shudder at the mere mention of the dread disease, but we keep on building hospitals and asylums for the blind, the deaf, the feeble-minded, and when we look upon these monuments to our shame, our sensibilities are not shocked. Publicity, education, knowledge, will do much to lessen the evils resulting from venereal infection. Most men do not sin
+
+[handwritten: incomplete]
+
+92
+
+THE NURSE
+
+wantonly. I firmly believe that the majority of mankind wish to be decent towards their offspring, that they earnestly desire to bring into the world physically and mentally sound children. They must know the truth if their heart’s desire is to be fulfilled. HOW SIGHT MAY BE SAVED Ophthalmia neonatorum appears in the baby’s eyes at birth, causing a particular redness that cannot be mistaken. From that moment its cruel work goes forward swiftly, and by the third day the child’s precious sight is gone forever. It has been known for more than twenty-five years that this disease was preventable. But this knowledge has been kept almost exclusively as the possession of physicians. No attempt has been made until recently to educate the people about its cause and the remedy to be applied. Physicians themselves have been criminally careless in this matter. However, they are waking up to their responsibility. The childloving people of the world have sounded the alarm, and a determined fight is beginning to put an end to this appalling waste of human faculties. A number of states and societies are directing their attention to the prevention of infantile blindness. They are distributing literature on the subject and supplying the silver nitrate solution free, with printed directions how to use it. Massachusetts is making a statewide effort to stamp out ophthalmia neonatorum. The Sage Foundation is also doing splendid work, collecting valuable information about this disease, getting sanitary laws passed and seeing that the laws which already exist are enforced. There should be a law in every state heavily fining or imprisoning physicians who cannot show that they have used silver nitrate in the eyes of every baby born under their care, and that they have reported all cases of
+
+ophthalmia neonatorum. This law has been in force in France for years. Perhaps I ought to say a word about the remedy itself. It consists of a silver nitrate solution. It is simple, easy of application and effective in practically all cases where it is used promptly after the birth of the child. The frightful progress of the disease makes it very important to have the remedy immediately accessible. Delay means partial or total blindness. In Massachusetts carefully sealed packages containing the silver nitrate solution, a dropper and a leaflet with directions are placed free in every drug store in every city and town of the commonwealth. It is high time that every state in the Union followed the example of Massachusetts. It is also imperative that the press of the country should break the conspiracy of silence on a subject which concerns the public welfare. EDUCATION IS NECESSARY The question I have been discussing has many ramifications. It leads us quickly into complicated economic problems. It brings us face to face with many phases of social maladjustment. Workers for social improvement understand that most of the afflictions which we have for generations been taught to believe were a visitation of Providence result from wrong economic conditions. Our minds are still fettered by false teaching, false ideals, false standards. The only way to change all this is to educate the people. They must be taught about the things that vitally concern them. Let us banish from our schools dead histories, dead languages, dead philosophies. Let us learn about the things that are near to us—that concern our daily life; the processes of industry, the laws of social development, the growth of great cities, the causes of slums and social disease, sex hygiene and other truths in which lies the`,
+        guidedDescriptionMode: GUIDED_DESCRIPTION_MODE_PER_IMAGE,
       }
     ]
   },
@@ -232,7 +273,7 @@ $100.00
     number: 2,
     label: "Together",
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
-    quote: "\u201CTogether we can do so much.\u201D",
+    quote: "\u201CAlone we can do so little; together we can do so much.\u201D - Helen Keller, 1920",
     description: "Relationships were an essential part of Helen Keller\u2019s growth, education, and her accomplishments. Through friends across both society and the globe, known and unknown, Helen knew that collaboration was the key to success.",
     iconAlt: "Helen's gold door knocker is layered over handwritten notecards.",
     artifacts: [
@@ -249,7 +290,39 @@ $100.00
           { src: "2A1Debs2.png", alt: "Page 2 of letter from Eugene Debs to Helen Keller, 1919" }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
+        transcriptText: `Give full address of your letter here
+Name Helen Keller
+St No 25 Seminole Ave.
+Town Forest Hills
+Co L. I. State New York
+
+Place full name and serial number here
+Name Eugene V. Debs
+Serial No. 2253
+Cells in
+
+818 JEFFERSON AVE.
+MOUNDSVILLE, W. Va April 30th 1919
+
+My dear Helen Keller:
+
+You will, I am sure, excuse my seeming [indecipherable].  My brother, in my absence, acknowledged the [swift] of your beautiful, charming and inspiring letter, now I meant to write and thank you soon after it came into my hands, but I was kept so busy and in such a state of uncertainty on account of daily expectation of arrest + incarceration that I was unable to give attention to my correspondence.  Permit me, my dear comrade, to say to you at this late day that no letter I ever received touched me more deeply or afforded me greater satisfaction.  Coming from you this fine, appreciation, characteristic expression compensates in full for a lifetime of service.
+You have always been [indecipherable], since first I knew of your heroic struggle and your
+
+INSTRUCTIONS TO RELATIVES AND FRIENDS
+MAKE All Letters Brief.  Write Plainly In The English Language only. Confine letters to family or business affairs.  In addressing letters and newspapers, write the prisoner’s full name and serial number plainly on the envelope or wrapper to insure the prisoner receiving them. All incoming and outgoing letters must be first read by an officer before delivery. All papers and packages are closely inspected before delivery. Prisoners will be permitted to see their friends twenty minutes twice each month.
+Prisoners are furnished with coarse shoes, warm woolen outer clothing, comfortable underwear and plenty of plain wholesome food: the sending of food is undesired and may be withheld. Plain shoes, while not necessary are unobjectionable. Daily and weekly papers, magazines and books will be delivered.
+Visitors are admitted to the institution on the payment of a fee of 26 cents on week-days at 10:30 A. M. 1:20 and 4:30 P. M. and conducted through the institution.
+Prisoners will be permitted to write once each week; and special permits will be granted by the Warden only to write other letters in regard to pardon or parole cases or any other urgent business.
+All express packages sent to inmates must be sent prepaid. No drugs of any kind will be permitted
+except on the order of Prison Physician.
+
+J.Z. Terrell Warden
+
+[handwritten]
+insurmountable attainment, the most wonderful of women, and your bold, fearless, uncompromising spousal of the cause of the workers won at once my admiration and respect and endeared you to me beyond words.   You have used all the power you have [soon and] all the means you have achieved to [indecipherable] upon the workers, aye, "the [trail] of three," that they might win the world for the freedom and happiness of all.  You have never faltered, never doubted, and never compromised.  You are the incarnation of the revolutionary spirit now [indecipherable], and humanizing the world.  You continue all that is fine and brave, sweet and strong, enabling an inspiring in your contribution to the cause, and I thank you with all my heart, and with love and all your wishes to you, I am always
+Yours faithfully
+Eugene V. Debs`,
         guidedDescription: 'A document shows the first of two pages of a handwritten letter to Helen from socialist Eugene Debs. West Virginia Penitentiary letterhead has blanks for sender and recipient above a floral design. Blue-lined paper is filled with cursive. Creases and a faint upside-down watermark show.',
       },
       {
@@ -265,7 +338,81 @@ $100.00
           { src: "2A2MacA2.png", alt: "Page 2 of Helen Keller\u2019s letter to General MacArthur, 1949" }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
+        transcriptText: `[Handwritten note: HK Friends and Celebration Mac Arthur ; Douglas Gnl.] Dear General MacArthur, It is with heartfelt pleasure that I write to you about the visit of Dr. and Mrs. Iwahashi to America. Miss Thomson and I are watching with [strikethrough: psx] proud admiration the zeal and understanding with which Dr. Iwahashi is grasping the [handwritten strikethrough over type strikethrough: detailxxxxxx] methods of rehabilitating the blind in this country, and it is a unique [strikethrough: pleasure] privilege for us to have him and his wife in our home week-ends while they are in New York. We have introduced them to our friends and neighbors who themselves are distinguished , and can appreciate Dr. Iwahashi's luminous personality, deep learning and brilliant conversation. It was a genuine satisfaction and an honor to, us the other evening [handwritten strikethrough: wh] when we gave a dinner at the Harvard Club in New York at which > he and his wife were present. Among the other guests he met the [handwritten strikethrough: great, handwritten note: Nobel Prize Winners]
+
+[handwritten strikethrough: scientist] Dr. Yukawa and Prof. Borton who is an authority on Japanese history at Columbia. All of them graced the occasion with great personal charm, ideas, wit and homage to [handwritten strikethrough: Takeo, handwritten note above: Dr. Iwahashi] as a man whose clear-sighted spirit had triumphed over the ills and obstacles of life. You will be glad to hear that the American Foundation for the Blind is supplying Dr. Iwahashi with a considerable number of English Braille books and devices to increase the self-help of the sightless which he will take back to Japan. The chief difficulty is, the books and the apparatus are bulky, and their transportation costly. It will be a precious service indeed if you arrange for Brigadier-General Sams to [handwritten strikethrough: to] persuade the customs officials in Japan to admit the books and devices free, or to reduce the duty on them. That will be another of your memorable contributions to efficiency and economy in administering
+
+*
+
+the funds for the blind of Nippon. No doubt you realize that the expenses arising from blindness are heavier than those of the seeing, and that every measure to circumvent them is a genuine aid to those who must live always in the dark. With deep, lasting thanks for the interest you take in the welfare of [strikethrough: my blind] the blind, I am, with warmest greetings from Miss Thomson and myself to Mrs. MacArthur and your son, I am, Sincerely and cordially yours.
+
+AMERICAN FOUNDATION FOR OVERSEAS BLIND, Inc. 598 Madison Avenue New York 22, N. Y.
+
+GENERAL HEADQUARTERS SUPREME COMMANDER FOR THE ALLIED FORCES Office of The Supreme Commander
+
+24 June 1947
+
+[handwritten note: H.K. friends + Celebs. MacArthur, Douglas]
+
+Dear Miss Keller: I have received your letter of 14 June with the enclosed letter for Mr. Iwahashi. I am sorry that you have had such difficulty in trying to communicate with him and have forwarded the letter to General Mullins, who is in command of our troops at Osaka. I am sure that he will see to its prompt delivery. It will give me the greatest pleasure to see you when you are able to arrange for your mission to the blind of the Orient.
+
+Yours faithfully.
+
+DOUGLAS MacARTHUR
+
+Miss Helen Keller Arcan Ridge Westport, Connecticut
+
+Hq e ABear General MacArthur, Your letter full of gracious warmth and benevolence was a pleasure to me, and I appreciated your kindness in seeing to it that the one I had written Mr. Iwahashi was placed in his hands. When Mr. I. replied to my letter, I was touched by what he said about your helpfulness friendly attitude towards his work and willingness to render Miss T. and me every possible assistance if we undertook a second trip to Japan. He pleaded with us to come, and we were felt a strong urge to accept, but I have not written sooner because I was waiting for information from the A. F. B. that would facilitate Miss T.’s and my planning that trip. Last spring I had started a campaign for the overseas blind, and I am expected to see it through the wintehould [typo] have liked to go to Japan in the spring, but when Mr. I.’s letter came, we had already given our word that we would visit the blind of Australia in March. However, we are sure that we shall arrive in Japan around the end of August. Then we shall be happy if we may still avail ourselves of the help you so generously offered us. My heart is heavy for the blind of Japan. We spent five months with them in 1937, and their response to our efforts [strikethrough: was] is beautiful to remember. But most of the work we did was destroyed when war broke out between China and Japan, and Mr. I. says the Japanese blind need us desperately to lift them from the double tragedy of war and loss of sight to confidence and self-help. That is why we feel so deeply that we must be there again to cheer them on the long road of rehabilitation. Will you kindly forward the enclosed letter to Mr. I.? Miss T. and I send you our cordial greetings, and I am, with best wishes for the accomplishment of your difficult mission,
+
+Sincerely yours,
+
+Dear Gen. MacArthur, Although I have not heard direct from you, yet I know, and rejoice to know that Miss T. and I shall be in Japan next autumn. I was surprised to receive beautiful letters from friends who welcomed us there ten years ago, and I shall be happy indeed if we may mingle with freely the people that gave us such a wonderful reception. Warmly I thank you for making possible our work of love for the blind of Japan this year. They are very near the real darkness from which they were rescued, I fear, and I cannot be at peace until they are comforted and encouraged to persevere. Will you kindly see to it that the enclosed letter reaches Mr. Takeo Iwahashi, Director of the Lighthouse for the Blind, Osaka? With cordial [strikethrough: greetin] Christmas Greetings, in which Miss T. joins, and with the hope that we may see you when we arrive in Japan, I am, Sincerely yours,
+
+[Handwritten note: HK Friends and Celebrities MacArthur, Douglas Gnl.]
+
+Dear General MacArthur, This is a most welcome opportunity for me to write to you. With delight and gratification I have received information of your cordial interest in the travelling exhibit of Japanese paintings that is to be brought to the United States, and I want to thank you especially for your graciousness in encouraging a renewal of artistic sympathy between the [strikethrough: Japan] peoples of Nippon and America. In a real sense you will benefit both countries. America will be [handwritten note: "authority] stimulated through the "aithority of Beauty" to friendship and understanding of the highly gifted Japanese and their sensibilities which it has been my privilege to witness in two visits to their charming land. Also I hope that Nippon may be drawn into closer cooperation with America for their mutual advantage and welfare. How often my thoughts have winged their way to you and Mrs. MacArthur this year! And how my heart throbs with gratitude for smoothing the rough trails under the feet of the blind in Japan and for your continued favorable attitude towards their rehabilitation. Miss Thomson and I are eagerly awaiting Takeo Iwahashi's arrival in this country, about the 9th of December. With the American Foundation and other workers for the blind we will do our best to make his visit a splendid channel of good to the handicapped of Japan and thus pay the deep debt we owe you and the members of your staff.
+
+General MacArthur, [handwritten note above: Douglas]
+
+Tokyo, Japan.
+
+With warmest greetings to Mrs. MacArthur and yourself, in which Miss Thomson joins, and wishes for a Christmas rich in the sense of good you have wrought, I am. Sincerely yours.
+
+Westport, Conn.,
+
+December sixth, [strikethrough: 10x] 1949.
+
+Dear General MacArthur: This is a most welcome opportunity for me to write to you. With delight and gratification I have received information of your cordial interest in the travelling exhibit of Japanese paintings that is to be brought to the United States, and I want to thank you especially for your graciousness in encouraging a renewal of artistic sympathy between the peoples of Nippon and America. In a real sense you will benefit both countries. America will be stimulated through the ’’authority of Beauty” to friendship and understanding of the highly gifted Japanese and their sensibilities which is has been my privilege to witness in two visits to their charming land. Also I hope that Nippon may be drawn into closer cooperation with America for their mutual advantage and welfare. How often my thoughts have winged their way to you and Mrs. MacArthur this year! And how my heart throbs with gratitude for smoothing the rough trails under the feet of the blind in Japan and for your continued favorable attitude towards their rehabilitation. Miss Thomson and I are eagerly awaiting Takeo Iwahashi's arrival in this country, about the 9th of December. With the American Foundation and other workers for the blind we will do our best to make his visit a splendid channel of good to the handicapped of Japan and thus pay the deep debt we owe you and the members of your staff.
+
+With warmest greetings to Mrs. MacArthur and yourself, in which Miss Thomson joins, and wishes for a Christmas rich in the sense of good you have wrought, I am Sincerely yours.
+
+Westport, Conn. December 8th, 1949
+
+39 East 51 Street New York 22, New York
+
+December 29, 1949 Col. Lawrence Bunker Chief Aide to General Douglas MacArthur Supreme Commander for the Allied Powers A.P.O. 500 c/o Post Master San Francisco, California Dear Col. Bunker: During a lengthy conference today with Hon. Eugene H. Dooman he expressed tremendous enthusiasm for our project. and made a number of creative suggestions and tentative plans which are exceedingly arresting, and will have the careful consideration of our organization. As I understand it, he feels that, in order to be at all adequate and significant our exhibition must be as colossal and phenomenal artistically and culturally as the year 1950 is definitely slated to be in Japan's political, sociological and economic history. In fact, is is his unique and original thought that by expanding the exhibition ot the highest possible goals as to quality, quantity, variety, breadth of participation and interest, and the number desirable objectives, this epoch making exhibition shall be to the American people the festive and cultural symbol of and associated with the historic democratic achievement which the year 1950 will mark for the Japanese people. As I explained yesterday, many of our most important members are away from New York, and we must await their return to present Mr. Dooman's views and plans to them. Since he has exceptional knowledge of all the elements involved from every possible angle, his recommendations will no doubt meet their favorable consideration. We bring this matter to your attention even before it comes up for consideration here so you will understand it is now tentatively proposed that the request for the Sesshu paintings be expanded to include other National Treasures and Important Art Objects of equal merit, such as sculptures, pottery, lacquer, etc. in order to achieve greater quantity, variesty, etc. You understand, of course, we wish this to be the only exhibition In the United States. Thanking you in advance for giving this matter your kind attention, we are, Faithfully yours, (Mrs. Yosei) M. Amemiya, Executive Secretary Note: Mr. Dooman was born in Osaka. He has had a long and distinguished career as Counsellor to the American Embassy in Japan, and Advisor on Japanese Affairs to the State Department.
+
+SOCIETY FOR GENERAL MacARTHUR’S SESSHU EXHIBITIONS 39 EAST 51st STREET NEW YORK 22, N. Y.
+
+January 11th,1950
+
+Bear Miss Keller: In furtherance of my talk today with Mrs. Davidson, the Nominating Committee has decided to offer the office of president to the Hon. Eugene H. Dooman. Dean Lawrence Rose, of the General Theological Seminary, a member of our organization, is of the opinion that you must have met him when you were a guest at the American Embassy at Tokyo before the war, as he was then Counsellor to our Embassy there. Subsequently, as you probably know, he acted as Adviser on Japanese Affairs to the State Department here. He is a recent addition to our membership. He was bora at Osaka, and has a very comprehensive knowledge of Japanese culture, as well as the traditional background and psychology of the people themselves. In addition, his long and distinguished career in Japan gives him the advantage of having many friends there in official circles as well as among influential educational, cultural and social groups. He also has the know-how which will make possible the realization of the greatly expanded undertaking envisioned in the enclosed copy of letter to Col. Bunker, which is to commemorate the signing of the Peace Treaty. Though consideration was given as to the advisability of offering the candidacy to two other men of far greater prominence than Mr. Dooman, who seemed likely to accept it, Mr. Dooman was preferred because the others would not be in a position to participate actively. This latter consideration is an urgent need at this time whereas Gen. MacArthur's letter of acceptance particularly indicated, the membership is already replete with the names of distinguished men and women. Mr. Dooman lives in nearby Litchfield and comes but infrequently to New York, devoting himself somewhat to church work there. Though he had seemed somewhat reluctant to vary his accustomed schedule for the purpose of participating actively on this project it was felt that he might view the matter differently if the very considerable honor of being president of this historymaking art movement were offered to him. This is being done today by Dr. L. M. Birkhead, Chairman of our nominating Committee. Dean Rose feels that the approach to Mr. Dooman will be refusal-proof if you would graciously consent to add the very considerable weight of your prestige and influence with the Japanese people by writing to Mr. Dooman and suggest-
+
+SOCIETY FOR GENERAL MacARTHUR’S SESSHU EXHIBITIONS 39 EAST 51st STREET NEW YORK 22, N. Y.
+
+Miss Helen Keller
+
+January 12th, 1950
+
+ing that he has an obligation (Gimu) to his many friends and admirers in Japan to assure them of the many benefits which will redownd to them through this project's success and which can be attained only through his acceptance. Thanking you on behalf of the entire membership for your generous and ready willingness to assist whenever called upon, and with kind personal greetings to you and Miss Thomson, I am,
+
+Sincerely yours,
+
+Enc
+
+Executive Secretary
+
+Miss Helen Keller Arcan Bidge Westport Connecticut.`,
         guidedDescription: 'A yellowed sheet shows page one of two of Helen\'s typed letter to General MacArthur. Two vertical creases and one horizontal crease cross the center. Minor corrections in pen and pencil appear throughout. Holes in the top left corner show where pages were bound.',
       },
       {
@@ -281,7 +428,23 @@ $100.00
           { src: "2A3Twain2.png", alt: "Back of handwritten letter from Mark Twain to Helen Keller, 1905" }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
+        transcriptText: `To you, & to all my other known & unknown friends who have lightened the weight of my seventieth birthday with kind words & good wishes I offer my most grateful thanks, & beg leave to sign myself,
+
+Your & Their obliged friend
+Mark Twain
+
+OVER
+New York, Dec. 6, 1905
+
+It is a lovely letter, Dear Helen & I thank you from my heart for it.
+
+Remain an optimist just as long as you can, dear!   I would not abridge [The Teaun] by a single day. But as for me - ah, That is different!
+
+Do please give my love to her & Mrs. Macy.
+
+Always affectionately
+
+SL Clemens`,
         guidedDescription: 'A sheet of paper shows the first of two pages of a handwritten letter from Mark Twain to Helen. His cursive script fills the page. On this first page, the signature of "Mark Twain" is in a darker ink, along with the phrase "over," indicating text on the back.',
       },
       {
@@ -291,7 +454,7 @@ $100.00
         year: "1934",
         description: 'After reading about the talking book program at the American Foundation for the Blind, third- and fourth-grade students from Wrangell, Alaska wrote Helen about publishing a small pamphlet of their own writing.  They sold each copy for 2 cents and donated the money to the American Foundation for the Blind to show the spirit of giving during the holidays.  Their daily lives were also detailed as only students of that age could.',
         type: "document",
-        alt: 'A quarter sheet of paper shows an envelope of one 15 student letters to Helen from Wrangell, Alaska. A handwritten postcard is addressed to Helen from third and fourth graders at Wrangell Public Schools.',
+        alt: 'A quarter sheet of paper shows an envelope of one of 6 student letters to Helen from Wrangell, Alaska. A handwritten postcard is addressed to Helen from third and fourth graders at Wrangell Public Schools.',
         images: [
           { src: "2A4Student1.png", alt: "Student Christmas letter to Helen Keller, letter 1 of 6" },
           { src: "2A4Student2.png", alt: "Student Christmas letter to Helen Keller, letter 2 of 6" },
@@ -301,10 +464,91 @@ $100.00
           { src: "2A4Student3.png", alt: "Student Christmas letter to Helen Keller, letter 6 of 6" }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
+        transcriptText: `Top left, pencil, with "Endowment Fund" underlined in red: Endowment Fund, as per Mrs. Thomson [remainder illegible] 2/20/33
+Faint gray pencil below: [Mostly illegible. Appears to be a note summarizing Miss Keller's thank-you letter for a gift.]
+
+Stamped, top right: HELEN KELLER
+Stamped, right: RECEIVED / FEB 16 1933 / [partly obscured by the letter text]
+
+Wrangell, Alaska
+January 30, 1933
+
+My dear Miss Keller:
+
+The enclosed letters – sixteen of them – are from the third and fourth grades of Wrangell Public School. Each one wanted to write you and I wish you could have seen these eager, busy people bending over their desks. With the exception of Olga and Jane, and Henry Willard who is fourteen, the children in these grades are eight and nine years of age.
+
+At Christmas time there was so much talk among the children about what they wanted and what was given them that it seemed to me they were missing the joy of giving. So the Two Cent Press, a mimeographed sheet of their own writings, was sold to earn the money they are sending you – and sending with the greatest of pleasure.
+
+Sincerely yours,
+(Miss) Elizabeth Aitken
+
+Other marks: B2289 (near signature); red 236 and a red checkmark (bottom left); additional pencil notes at bottom left [illegible].
+
+Wrangell, Alaska
+May 16, 1934
+
+Dear Miss Keller:
+
+I wish I could talk to you over the radio, I could tell you that I could talk to you, better that way, than any other way. I wish you could see my dog his name is wimpy he will try to chew your clouthes up. He is a [struck-through word, possibly "fox"] terrier.
+
+Sincerly yours
+Robert Shermer
+
+Wrangell Alaska
+May 16, 1934
+
+Dear Miss Keller,
+
+We like your photograph. We had it framed. I would like to see a talking book. I got a bull dog and he is a foxy little dog. I like him very much, and so would you if you saw him.
+
+Sincerely yours,
+Billy Floyd
+
+Pencil, top right: H.K. / P.R.-1934 / STOKES, Richard
+
+Wrangell, Alaska
+December 10, 1934
+
+Dear Miss Keller:
+
+I am in the [struck: third] [inserted above: fourth] Grade now. I hope you are well. We like your picture it is hanging on the wall with some great men like George Washington an admiral Byrd. We all ready had one cover of snow on the ground. We never sent you the basket full of flowers but we sent you a basket. I wish you an merry christmas.
+
+Sincerly yours
+Richard Stokes
+
+Handwritten, top right: PR / Wrangell (Alaska) / Public School
+
+Feb. 24, 1933.
+
+Miss Elizabeth Aitkin
+Wrangell, Alaska.
+
+Stamp: FOR ARCHIVES
+Handwritten beside it: By [illegible initials/name] 2/29/72
+
+Dear Miss Aitkin:
+
+I am enclosing a letter herewith which I wish you would give to the children of your third and fourth grades. It was a fine thing that they did in sending the money which they had earned to Miss Keller to be used in the interest of the blind. It was doubly so, since it represented money that they had actually earned themselves. We, of course, feel that the moving spirit behind the project was undoubtedly the teacher. As you will note in the letter to the children, Miss Keller is sending them an autographed photo.
+
+Let me take this opportunity of thanking you, as well as the children, for this expression of good will and interest toward the blind on the part of you and your school children.
+
+Sincerely yours,
+
+Eber L. Palmer
+Assistant Director.
+
+ELP:FMK
+
+P. S. We are enclosing herewith the receipt for the money sent.
+
+(Transcribed by a blind secretary.)
+
+ENCL.
+
+Faint stamped box, bottom: RETENTION [...] 6 YRS. / 3 YRS. / 1 YR.`,
         guidedDescriptionMode: GUIDED_DESCRIPTION_MODE_LETTERS,
         letterSections: [
-          { imageIndices: [0], guidedDescription: 'A quarter sheet of paper shows an envelope of one 15 student letters to Helen from Wrangell, Alaska. In the upper left corner is the Wrangell Public Schools header. A red ink, 3-cent postage stamp is near the top right corner. Handwritten text under it shows Helen\'s Forest Hills address, where the letters were sent. Additional, illegible handwritten text is on the right side in black and red ink.' },
+          { imageIndices: [0], guidedDescription: 'A quarter sheet of paper shows an envelope of one of 6 student letters to Helen from Wrangell, Alaska. In the upper left corner is the Wrangell Public Schools header. A red ink, 3-cent postage stamp is near the top right corner. Handwritten text under it shows Helen\'s Forest Hills address, where the letters were sent. Additional, illegible handwritten text is on the right side in black and red ink.' },
           { imageIndices: [1], guidedDescription: 'A cream sheet holds a handwritten letter in blue ink, dated January 30, 1933, from Elizabeth Aitken in Wrangell, Alaska, to Miss Keller. A large gray "Helen Keller" stamp and a "Received, February 16, 1933" stamp sit at right. Pencil and red notes cover the margins.' },
           { imageIndices: [2], guidedDescription: 'A cream, blue-lined sheet holds a short letter in blue ink, dated May 16, 1934, from Robert Shermer in Wrangell, Alaska, to Miss Keller. The writer wishes to talk with her by radio and describes his terrier, Wimpy. A crossed-out word interrupts the final line, and a faint brown stain marks the page.' },
           { imageIndices: [3], guidedDescription: 'A yellowed, blue-lined sheet holds a short pencil letter in neat cursive, addressed "Dear Miss Keller" and dated May 16, 1934, from Wrangell, Alaska. A child writes about a framed photograph, a talking book, and a bulldog. A few small holes dot the top left corner.' },
@@ -338,7 +582,20 @@ $100.00
           { src: "2A6FDR2.png", alt: "Page 2 of Helen Keller\u2019s letter requesting FDR\u2019s autograph, 1929" }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
+        transcriptText: `Franklin D. Roosevelt Governor
+STATE OF NEW YORK EXECUTIVE CHAMBER ALBANY
+February 7, 1929.
+Miss Helen Keller, 93 Seminole Ave., Forest Hills, N. Y. My dear Miss Keller: I received your letter of January 1st together with enclosures which I have read with interest and want to extend to you my heartest [sic] good wishes and congratulations.
+At the same time I will
+be unable to become a member of the American
+Foundation for the Blind [Handwritten annotation: ,much to my regret.]
+With kindest personal regards, I am
+Very sincerely yours, [handwritten signature: Franklin D. Roosevelt]
+ 
+[handwritten] Please, dear Mr. Roosevelt sign your Full name. Some thing tells me that you are going to be the next President of the "Land of the Free and the home of the brave", and this seems a good time to get your autograph. It may interest you to know I have never asked for any ones autograph before, With all good wishes
+
+I am, Cordially yours
+Helen Keller`,
         guidedDescription: 'Franklin Roosevelt\'s typed letter to Helen is on State of New York letterhead. A gold seal shows an eagle above a shield with a rising sun and ships, flanked by two robed women, over a scroll reading "Excelsior." Blue office details, one edit, and an ink signature complete it.',
       }
     ]
@@ -349,7 +606,7 @@ $100.00
     number: 3,
     label: "Adventure",
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
-    quote: "\u201CLife is either a daring adventure or nothing at all.\u201D",
+    quote: "\u201CLife is either a daring adventure or nothing.\u201D - Helen Keller, 1940",
     description: "Whether exploring one of the 39 different countries she traveled to, or piloting an airplane over Europe, Helen\u2019s lust for adventure was an inspiration to the world. Each of her travels left a lasting impression on the people and nations that she visited.",
     iconAlt: "A black and white image of Helen with a Bantu chief is layered with a Japanese luncheon set and travel documents.",
     artifacts: [
@@ -593,7 +850,7 @@ by Dr. Taher Muradi, M.D. cancer specialist.
     number: 4,
     label: "Work",
     descriptionMode: DESCRIPTION_MODE_SECTIONS,
-    quote: "\u201CIf we do not like our work, and do not try to get happiness out of it, we are a menace to our profession as well as to ourselves.\u201D",
+    quote: "\u201CIf we do not like our work, and do not try to get happiness out of it, we are a menace to our profession as well as to ourselves.\u201D - Helen Keller, 1930",
     description: "No less a fixture in Vaudeville than in the Cambridge School for Young Ladies, Helen had an extremely diverse life in both education and employment. Her work in literary circles, Radcliffe College, and even in Hollywood no doubt contributed to her incredible ability to prevail in the most challenging of endeavors.",
     iconAlt: "A Corona typewriter is layered over documents and a black and white photo of Helen with Charlie Chaplin.",
     artifacts: [
@@ -625,9 +882,13 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         alt: 'A black-and-white photograph shows a crowd of people around Helen while she uses an electro braillewriter.',
         images: [
           { src: "4A2AFB1.png", alt: 'A black-and-white photograph shows a crowd of people around Helen while she uses an electro braillewriter.' },
-          { src: "4A2AFB2.png", alt: "Back of photograph of Helen Keller evaluating a braille typewriter, 1954" }
+          {
+            src: "4A2AFB2.png",
+            alt: "Back of photograph of Helen Keller evaluating a braille typewriter, 1954",
+            guidedDescription: 'The off-white back of the photograph bears a typed notice, with "Original" underlined in blue, placing the original in the Helen Keller Archives. Faint pencil notes list the people pictured, an Electro Braille demonstration, and 1954. A separate white caption strip below has a handwritten date correction.',
+          }
         ],
-        guidedDescription: 'In this black-and-white photograph, Helen evaluates an electro braillewriter at the American Foundation for the Blind. AFB Director Robert Barnett, Marta Sobieski, Peter Salmon, Polly Thomson, and Gregor Ziemer appear with her. A painting of Helen by Albert H. Munsell hangs behind them.',
+        guidedDescription: 'A black-and-white photograph shows Helen seated at a large table, touching a small metallic box with electrical cords. Polly sits at her side, a woman presses a button on a keyboard-like device, and four formally dressed men look on. An oil painting of young Helen hangs behind.',
       },
       {
         id: "4A3",
@@ -638,16 +899,113 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         type: "document",
         alt: 'A yellowed, torn sheet of paper shows the first page of Helen\'s typed vaudeville script.',
         images: [
-          { src: "4A3Vaudeville1.png", alt: "Page 1 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville2.png", alt: "Page 2 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville3.png", alt: "Page 3 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville4.png", alt: "Page 4 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville5.png", alt: "Page 5 of Helen Keller\u2019s Vaudeville script" },
-          { src: "4A3Vaudeville6.png", alt: "Page 6 of Helen Keller\u2019s Vaudeville script" }
+          {
+            src: "4A3Vaudeville1.png",
+            alt: "Page 1 of Helen Keller\u2019s Vaudeville script",
+            guidedDescription: 'A typed vaudeville script for a sketch featuring Helen and her teacher  Anne Sullivan is printed on yellow paper. Handwritten notes mark the pages, which show folds, tears, and tape repairs.',
+          },
+          {
+            src: "4A3Vaudeville2.png",
+            alt: "Page 2 of Helen Keller\u2019s Vaudeville script",
+            guidedDescription: 'A yellowed sheet shows page two of six of a typed vaudeville script. The page number "-2-" is centered at top. The bottom right corner is torn away, and the edges are worn. Handwritten insertions and a red underline mark the text.',
+          },
+          {
+            src: "4A3Vaudeville3.png",
+            alt: "Page 3 of Helen Keller\u2019s Vaudeville script",
+            guidedDescription: 'A yellowed sheet shows page three of six of a typed vaudeville script. The page number "-3-" sits at top center beneath a large brown stain. Edges are frayed and torn. Pencil marks include a circled phrase, a long curved line, and a checkmark.',
+          },
+          {
+            src: "4A3Vaudeville4.png",
+            alt: "Page 4 of Helen Keller\u2019s Vaudeville script",
+            guidedDescription: 'A yellowed sheet shows page four of six of a typed vaudeville script. The page number "-4-" sits beside a wide strip of brown tape across the top. The left edge is torn and worn. Small handwritten insertions appear in the text.',
+          },
+          {
+            src: "4A3Vaudeville5.png",
+            alt: "Page 5 of Helen Keller\u2019s Vaudeville script",
+            guidedDescription: 'A yellowed sheet shows page five of six of a typed vaudeville script. The page number "-5-" sits beneath a brown stain at top. Handwritten "What I have to say" appears above the first speech, which is heavily struck through and overtyped. Blank space fills the lower page."',
+          },
+          {
+            src: "4A3Vaudeville6.png",
+            alt: "Page 6 of Helen Keller\u2019s Vaudeville script",
+            guidedDescription: 'A yellowed sheet, shown sideways, is the back of page five of the typed vaudeville script. Faint, mirrored type shows through. Pencil in the center reads "Personal matter. Helen Keller." Brown tape covers the right edge, a central crease, and the bottom.',
+          }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
-        guidedDescription: 'A typed vaudeville script for a sketch featuring Helen and her teacher  Anne Sullivan is printed on yellow paper. Handwritten notes mark the pages, which show folds, tears, and tape repairs.',
+        transcriptText: `Curtain rises on drawingroom set. Orchestra [handwritten note in top right corner: SCRIPT]
+Enter G. A. Lewis.
+LEWIS.
+Ladies and Gentlemen: There is no [typed correction: xxxx] more beautiful love story in history or romance than the devotion and loyalty to Helen Keller of her Teacher - that noble woman who has been her constant companion since Helen Keller was seven years old. I have the honor to introduce Helen Keller's Teacher, Mrs. Anne Sullivan Macy.
+MRS MACY:
+All the world knows and loves Helen Keller, the girl with the unconquerable spirit. She has fought her way uncompaining against the greatest obstacles that ever confronted a human being.
+Helen was born a perfectly normal child but at the age of nine-
+teen months an illness left her deaf dumb and blind. When she was nearly seven I came into her life. I had been blind myself until I was eighteen when an operation partially restored my sight. I resolved that Helen too should share the beauty and glory of the world that had been opened to me. Hand in hand Helen and I went out into the world to fight our way. Through years of Helen's childhood and girlhood we studied and worked together [handwritten: ,] until at the age of twenty she entered Radcliffe College. She was the [strikethrough: first, handwritten above: only] deaf and blind person in the world's history to go to college. She wrote her examinations on her typewriter. At the lectures I saw beside her and spelled into her hand [strikethrough: what was said, handwritten above: "word by word what the professor said."] Most books were read to her in the same way. At the end of four years she graduated with honors, receiving her degree of Bachelor of Arts from Radcliffe College and Harvard University.
+Not only has Helen mastered the English language, which is more [strikethrough: than]
+ 
+-2-
+than the majority of us have done, but she can speak and read and write French, German and Italian, and she can also read Latin and Greek. [Strikethrough: Today she is an acomplished woman.] Her writings have been translated into many languages, including Russian and Japanese.
+Mark Twain, her life-long friend, has said: "The two greatest characters in the NIneteen Century are Napoleon and Helen Keller. Napoleon tried to conquer the world by physical force and failed. Helen tried to conquer the world by the power of mind - and succeeded."
+Whittier and Oliver Wendell Holmes were her friends. Caruso has poured his golden notes into her hand. Godowsky has played to her by the hour. Maeterlinck, the poet, has called her "The Living Blue-bird."
+Through every medium possible Helen has tried to bring to the world, and especially to those who dwell in darkness, her message of hope and inspiration. Through the books she [typed correction] has written, through lectures, [handwritten note: through moving pictures,] and now from the stage, she is seeking to tell the wonder story of her life. Today she is the Star of Happiness to all struggling humanity.
+(Piano with orchestra)
+Helen can feel the music not only with her fingertips but with her whole body.
+(Enter Helen. Goes to the piano.)
+HELEN. It is very beautiful!
+(Mrs. Macy takes Helen's hand and leads her down.)
+MRS. MACY. Can you tell when the audience applauds?
+HELEN. Oh, yes. I hear it with my feet.
+ 
+-3-
+MRS. MACY. When people first meet Helen, they almost always ask me: How did you begin to teach her? When I went to Helen her only means of communication were a few primitive motions or signs. A nod of the head meant Yes. A shake ofthe hand, No. When she was hungry she pointed to her mouth. If she wanted bread and butter she made the motions of cutting the bread and spreading the butter. If she wanted ice-cream, she imitated the motion of turning the freezer. If she smacked her lips everybody knew she wanted candy.
+The first word I taught Helen to spell on her hand was "doll." I gave her a pretty new doll. When she had felt it, undressed and dressed it, I took her hand and made the letters, D O L L. She looked puzzled and felt my hand curiously. I repeated the letters several times, pointing to the doll and nodding my head. Then I helped her to form the letters with her own fingers. After two or three attempts she spelled the word, pointed to the doll and nodded her head, just as I had done.
+Helen learned the name of a number of objects, in this way, from imitation, without understanding that every object, every action has a name. One day I trying to make her understand the difference between a cup and the liquid it contained.
+All my efforts had failed. Finally it occurred to me to lead her to the pump. I made her hold her cup while I pumped. As the water gushed forth, I spelled W A T E R. She dropped the mug, went red and pale by turns and trembled. And the light of understanding came into her face. In that moment she realized that the finger motions were the names of things. All that day she quivered with excitement.
+ 
+-4-
+and learned the name of every object she touched. And all that
+day my own heart was ready to burst with joy.
+After that she made rapid progress in all her studies. For three
+years she spelled on her fingers. The next step was learning to [typed correction]
+speak. She had observed that we did not use the hand spelling
+when we talked wit h each other. She felt us moving our lips
+and I told her that we talked with [handwritten caret with note: our] mouths. She wanted to talk
+with her mouth too. This seemed an impossible task. But
+Helen insisted that she wanted to talk like other people.
+I resolved if it was humanly possible she should be taught to
+speak. The first word she learned to speak was the little
+word, "It". She placed [typed correction] her hand so that her thumb
+rests on the throat, the first finger in the lips and, the
+second finger on the nose. That position gives the guttural
+sounds like G and K, the labials, P, B, the nasals M and [typed correction]
+N. With her hand in this position I made the vowel
+I several times, Helen imitating. I then made the con-
+sonants T, T, T, then put them together - IT, and the
+word was learned. After seven lessons she amazed [typed correction]
+me by speaking the words: " I am not dumb now.”
+From that first halting sentence to her speech of
+today has been a [handwritten caret: long] hard road. For years she put her hand on my
+face, her fingers in my mouth, felt my tongue, imitated [handwritten strikethrough of a period]
+the positions and repeated them over and over, until she
+came to speak almost like other people. You [typed correction] will
+now have opportunity to hear [typed correction] her speak. While
+listening you must not forget that she had not heard
+her own voice or any sound since she was a baby.
+ 
+-5-
+HELEN, [handwritten note above caret: "What I have to say"] to you is very simply. My Teacher has told you [handwritten: "a" followed by strikethrough: xxxxxxxxxxxxx xxxxx she taught xx. You have heard how xxxxxx.] word from her [handwritten spacing mark] and touched the darkness of my mind and I awoke to the gladness of life. I was dumb; now I speak. I owe this to the hands and the hearts of others through the love [handwritten strikethrough of: "of others"] I found my soul and God and happiness. Don't you see what [typed correction: xxx] it means? We live by each other and for each other. Alone we can do so little. Together we can do so much. Only love can break down the walls that stand between us and our happiness. [Handwritten strikethrough ineligible] The greatest [handwritten redaction] The greatest commandment is: "Love ye one another". I lift up my voice and thank the Lord for love and joy and the promise of life to come.
+VOICE off Stage:
+Wonderful star of light!
+Out from the darkness of night,
+Sending down a silver ray,
+Turning night-time into day.
+Wonderful star of light,
+Forever shining bright,
+Always send your ray to me,
+Even to eternity.
+HELEN (raising right hand) This is my message of hope and inspiration to all mankind.
+CURTAIN.
+ 
+[Handwritten note in pencil: Personal matter Helen Keller]`,
+        guidedDescriptionMode: GUIDED_DESCRIPTION_MODE_PER_IMAGE,
       },
       {
         id: "4A4",
@@ -659,7 +1017,11 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         alt: 'A black-and-white photograph shows Helen on a movie set next to Charlie Chaplin.',
         images: [
           { src: "4A4Chaplin1.png", alt: 'A black-and-white photograph shows Helen on a movie set next to Charlie Chaplin.' },
-          { src: "4A4Chaplin2.png", alt: "Back of photograph of Helen Keller with Charlie Chaplin, 1918" }
+          {
+            src: "4A4Chaplin2.png",
+            alt: "Back of photograph of Helen Keller with Charlie Chaplin, 1918",
+            guidedDescription: 'A cream-colored photograph back is covered in large pencil writing: "Charlie Chaplin," scattered letters, and "In studio." A typed caption strip at the bottom describes Helen meeting Chaplin in California in 1918, with Polly Thomson and Anne Sullivan Macy. A gray label at top right reads "PHOTO # 30013.',
+          }
         ],
         guidedDescription: 'In this black-and-white photograph, Polly Thomson, Anne Sullivan Macy, Helen Keller, and Charlie Chaplin sit left to right in a Hollywood film studio, with a camera and set behind them. The women wear matching jackets, long skirts, and hats. Helen touches Macy\'s lips and Chaplin\'s shoulder while gazing downward.',
       },
@@ -675,7 +1037,15 @@ by Dr. Taher Muradi, M.D. cancer specialist.
           { src: "4A5Radcliffe.png", alt: 'A Radcliffe College Certificate of Admission shows Helen\'s admission to the institution in 1899.' }
         ],
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy",
+        transcriptText: `[Round ensignia with the words: SIGILLVM ACADEMIAE RADCLIVIANNAE IN NOV ANG" encircle a divided crest with stars on one side and two stripes on the other]
+RADCLIFFE COLLEGE
+CERTIFICATE OF ADMISSION.
+Cambridge, [handwritten: July 4] 1899.
+[handwritten: Helen Adams Keller]
+is admitted to the FRESHMAN CLASS in Radcliffe College.
+[handwritten signature: Agnes Irwin]
+Dean of Radcliffe College
+[handwritten: Miss Keller passed with credit in Advanced Latin.]`,
         guidedDescription: 'A letter of admission from Radcliffe College, dated Cambridge, July 4, 1899, states that Helen Adams Keller is admitted to the freshman class. A round seal at the top shows a divided crest with stars and stripes. Agnes Irwin, Dean, signs it, and a handwritten note records Helen\'s credit in Advanced Latin.',
       },
       {
@@ -691,7 +1061,20 @@ by Dr. Taher Muradi, M.D. cancer specialist.
         ],
         guidedDescription: 'A handwritten letter to Anne Sullivan from Anagnos, asking her to become Helen\'s assistant, is written on Perkins Institution for the Blind stationery. Red calligraphy-style printing at the top gives institutional and date information. Ornate black cursive fills the entire page, following light blue printed lines.',
         transcriptTitle: "Transcript",
-        transcriptText: "Missing transcript copy"
+        transcriptText: `[Printed Text: Perkins Institution and Massachusetts School for the Blind. So. Boston, handwritten text: August 26th 1886]
+
+My dear Annie,
+Please read the enclosed letters carefully and let me know at your earliest convenience whether you would be disposed to consider favorably an offer of a position in the family of Mr. Keller as governess of his little deaf-mute and blind daughter.
+
+I have no other information about the standing and responsibility of the man save that contained in his own letters; but, if you decide to be a candidate for the position, it is an easy matter to write and ask for further particulars.
+
+I remain dear Annie, with kind remembrances to Mrs. Hopkins,
+
+Sincerely your friend,
+M. Anagnos
+
+Miss Annie M. Sullivan
+Brewster, Mass`
       }
     ]
   }

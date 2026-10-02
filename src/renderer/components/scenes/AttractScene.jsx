@@ -7,7 +7,7 @@ import {
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
 
-const ATTRACT_SRC = "3HK7_Attract_v03-260501.mp4";
+const ATTRACT_SRC = "3HK7_Attract_v05-260930.mp4";
 
 export default function AttractScene({ isActive }) {
   const { goToScene } = useAppState();

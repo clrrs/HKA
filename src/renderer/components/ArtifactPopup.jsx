@@ -19,6 +19,7 @@ import {
 import {
   DESCRIPTION_MODE_COMBINED,
   GUIDED_DESCRIPTION_MODE_LETTERS,
+  GUIDED_DESCRIPTION_MODE_PER_IMAGE,
   getArtifact,
   getArtifactAltText,
   getNextArtifact,
@@ -164,11 +165,16 @@ function isLetterGuidedArtifact(artifact) {
   return artifact?.guidedDescriptionMode === GUIDED_DESCRIPTION_MODE_LETTERS;
 }
 
+function isPerImageGuidedArtifact(artifact) {
+  return artifact?.guidedDescriptionMode === GUIDED_DESCRIPTION_MODE_PER_IMAGE;
+}
+
 function isUnifiedDocumentGuided(artifact, images) {
   return (
     artifact?.type === "document" &&
     images.length > 1 &&
-    !isLetterGuidedArtifact(artifact)
+    !isLetterGuidedArtifact(artifact) &&
+    !isPerImageGuidedArtifact(artifact)
   );
 }
 
@@ -268,6 +274,7 @@ function buildTextBlocks(artifact, images, isCombined) {
   }
 
   const total = images.length > 0 ? images.length : 1;
+  const positionLabel = artifact.type === "document" ? "Page" : "Image";
   for (let i = 0; i < total; i++) {
     const text = getGuidedTextForImage(artifact, images, i);
     if (HIDE_MISSING_GUIDED_SECTIONS && text === MISSING_COPY) continue;
@@ -277,7 +284,7 @@ function buildTextBlocks(artifact, images, isCombined) {
       imageIndex: i,
       heading,
       // A single image needs no position cue.
-      tagline: total > 1 ? `Image ${i + 1} of ${total}` : null,
+      tagline: total > 1 ? `${positionLabel} ${i + 1} of ${total}` : null,
       text,
     });
   }
@@ -1810,8 +1817,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }
 
       const block = textBlocks.find((b) => b.kind === "guided" && b.imageIndex === next);
-      const position = `Image ${next + 1} of ${images.length}.`;
-      // Keep one "Image N of M" (position); omit tagline so getBlockSpeech does not repeat it.
+      const position =
+        artifact?.type === "document"
+          ? getDocumentPageAnnounce(artifact, next, images.length)
+          : `Image ${next + 1} of ${images.length}.`;
+      // Keep one position cue; omit tagline so getBlockSpeech does not repeat it.
       const guidedSpeech = block
         ? [block.heading, block.text].filter(Boolean).join(". ")
         : null;

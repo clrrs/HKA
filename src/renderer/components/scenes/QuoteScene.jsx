@@ -8,6 +8,11 @@ import {
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme } from "../../data/artifacts";
+import {
+  QUOTE_THEME_IDS,
+  preloadQuoteScreens,
+  quoteScreenSrc,
+} from "../../data/quoteScreens";
 import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 import { scheduleFocus } from "../../state/useSceneManager";
 
@@ -23,6 +28,8 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
 const QUOTE_INTRO_PAUSE_MS = 1000;
 
+const QUOTE_APPEARANCES = ["dark", "light"];
+
 function quoteVoSrc(themeId) {
   const file = QUOTE_VO_FILE_BY_THEME_ID[themeId];
   if (!file) return "";
@@ -31,13 +38,19 @@ function quoteVoSrc(themeId) {
 }
 
 export default function QuoteScene() {
-  const { currentTheme, goToScene, scene, speechMode } = useAppState();
+  const { currentTheme, goToScene, scene, speechMode, prefs } = useAppState();
   const announce = useAnnounce();
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
   const quoteTextRef = useRef(null);
   const quoteEntryRef = useRef(null);
   const timeoutRef = useRef(null);
+  const appearance = prefs?.theme === "light" ? "light" : "dark";
+  const activeImageSrc = theme ? quoteScreenSrc(theme.id, appearance) : "";
+
+  useEffect(() => {
+    preloadQuoteScreens();
+  }, []);
 
   useHeadphoneSinkEffect(
     audioRef,
@@ -147,35 +160,52 @@ export default function QuoteScene() {
     };
   }, [goToScene, scene, theme]);
 
-  if (!theme) return null;
-
   return (
     <div className="quote-scene">
-      {/* Silent focus park: holds focus off the document so NVDA has nothing
-          to announce before the autoplay intro. */}
-      <div
-        ref={quoteEntryRef}
-        className="sr-only"
-        tabIndex={0}
-        aria-label={"\u00a0"}
-      />
-      <div
-        ref={quoteTextRef}
-        className="quote-scene-text"
-        tabIndex={0}
-      >
-        {theme.quote}
-      </div>
-      <p className="quote-scene-attribution" aria-hidden="true">
-        — Helen Keller
-      </p>
-      <audio
-        key={theme.id}
-        ref={audioRef}
-        src={quoteVoSrc(theme.id)}
-        onPlay={stopNvdaSpeechAggressively}
-        preload="auto"
-      />
+      {/* Keep every mockup mounted so the first theme click never waits on decode. */}
+      {QUOTE_THEME_IDS.map((themeId) =>
+        QUOTE_APPEARANCES.map((mode) => {
+          const src = quoteScreenSrc(themeId, mode);
+          const isActive = Boolean(activeImageSrc) && src === activeImageSrc;
+          return (
+            <img
+              key={`${themeId}-${mode}`}
+              className={`quote-scene-image${isActive ? " quote-scene-image--active" : ""}`}
+              src={src}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+            />
+          );
+        })
+      )}
+      {theme ? (
+        <>
+          {/* Silent focus park: holds focus off the document so NVDA has nothing
+              to announce before the autoplay intro. */}
+          <div
+            ref={quoteEntryRef}
+            className="sr-only"
+            tabIndex={0}
+            aria-label={"\u00a0"}
+          />
+          {/* Visually replaced by the full-screen mockup; kept for braille focus. */}
+          <div
+            ref={quoteTextRef}
+            className="quote-scene-text sr-only"
+            tabIndex={0}
+          >
+            {theme.quote}
+          </div>
+          <audio
+            key={theme.id}
+            ref={audioRef}
+            src={quoteVoSrc(theme.id)}
+            onPlay={stopNvdaSpeechAggressively}
+            preload="auto"
+          />
+        </>
+      ) : null}
     </div>
   );
 }

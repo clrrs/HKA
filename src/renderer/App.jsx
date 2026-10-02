@@ -8,6 +8,7 @@ import { useAnnounce } from "./state/AnnouncerProvider";
 import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 import { EARCON, playEarcon } from "./audio/earcons";
 import { moveSettingsFocus } from "./utils/settingsFocus";
+import { preloadQuoteScreens } from "./data/quoteScreens";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -49,6 +50,11 @@ export default function App() {
   // whole app lifetime instead of per-scene blank/restore.
   useLayoutEffect(() => {
     document.title = "\u00a0";
+  }, []);
+
+  // Quote mockups are large; warm cache before the first theme click.
+  useEffect(() => {
+    preloadQuoteScreens();
   }, []);
 
   const {
