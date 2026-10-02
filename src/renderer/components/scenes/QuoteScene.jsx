@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
+  BRAILLE_OUTPUT_SETTLE_MS,
   guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechAfterBrailleSettle,
   stopNvdaSpeechAggressively,
@@ -45,6 +46,8 @@ export default function QuoteScene() {
   const quoteTextRef = useRef(null);
   const quoteEntryRef = useRef(null);
   const timeoutRef = useRef(null);
+  // Quote copy is hidden from NVDA until the autoplay announcement has finished.
+  const [quoteExposed, setQuoteExposed] = useState(false);
   const appearance = prefs?.theme === "light" ? "light" : "dark";
   const activeImageSrc = theme ? quoteScreenSrc(theme.id, appearance) : "";
 
@@ -57,39 +60,71 @@ export default function QuoteScene() {
     scene === "quote" ? currentTheme : scene
   );
 
+  useLayoutEffect(() => {
+    // Hide before paint on entry and on theme change so the quote cannot be
+    // read during the autoplay announcement. Playback reveals it later.
+    setQuoteExposed(false);
+  }, [scene, theme?.id]);
+
   useEffect(() => {
     const audioEl = audioRef.current;
-    if (!audioEl) return;
 
     if (scene !== "quote") {
-      audioEl.pause();
-      audioEl.currentTime = 0;
+      if (audioEl) {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+      }
       return;
     }
+
+    if (!audioEl) return;
 
     let cancelled = false;
     let cancelSpeechStops = () => {};
     let cancelEntryFocus = () => {};
+    let announceTimer = null;
     let introTimer = null;
+    const extraStopIds = [];
+
+    setQuoteExposed(false);
 
     // Park focus immediately so it never falls to the document (title speech).
+    // Quote text stays aria-hidden so this cannot start the quote utterance.
     cancelEntryFocus = scheduleFocus(quoteEntryRef.current);
 
     const startQuotePlayback = () => {
       if (cancelled) return;
-      // Move to quote text for braille, then silence NVDA and play VO.
-      quoteTextRef.current?.focus({ preventScroll: true });
-      audioEl.currentTime = 0;
-      stopNvdaSpeechAggressively();
+      // Drop the park refocuses before moving to the quote, or they steal it back.
+      cancelEntryFocus();
+      cancelEntryFocus = () => {};
 
+      const quoteEl = quoteTextRef.current;
+      if (quoteEl) {
+        quoteEl.tabIndex = 0;
+        quoteEl.removeAttribute("aria-hidden");
+        quoteEl.focus({ preventScroll: true });
+      }
+      setQuoteExposed(true);
+      audioEl.currentTime = 0;
+
+      // Braille settle, then cut the quote utterance, then play the VO.
+      // An earlier Ctrl misses that utterance and it overlaps the recording.
       cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
-        settleMs: 150,
-        followUpMs: 180,
+        settleMs: BRAILLE_OUTPUT_SETTLE_MS,
+        followUpMs: 160,
         onSettled: () => {
           if (cancelled) return;
+          stopNvdaSpeechAggressively();
           const playPromise = audioEl.play();
           if (playPromise && typeof playPromise.catch === "function") {
             playPromise.catch(() => {});
+          }
+          for (const delay of [100, 280, 520, 900]) {
+            extraStopIds.push(
+              window.setTimeout(() => {
+                if (!cancelled) stopNvdaSpeechAggressively();
+              }, delay)
+            );
           }
         },
       });
@@ -97,7 +132,7 @@ export default function QuoteScene() {
 
     if (speechMode) {
       // Focus first, then announce, so the intro timer matches spoken content.
-      window.setTimeout(() => {
+      announceTimer = window.setTimeout(() => {
         if (cancelled) return;
         announce(QUOTE_INTRO_ANNOUNCEMENT, {
           politeness: "assertive",
@@ -115,9 +150,11 @@ export default function QuoteScene() {
 
     return () => {
       cancelled = true;
+      if (announceTimer) window.clearTimeout(announceTimer);
       if (introTimer) window.clearTimeout(introTimer);
       cancelEntryFocus();
       cancelSpeechStops();
+      for (const id of extraStopIds) window.clearTimeout(id);
     };
   }, [scene, theme?.id, speechMode, announce]);
 
@@ -193,7 +230,8 @@ export default function QuoteScene() {
           <div
             ref={quoteTextRef}
             className="quote-scene-text sr-only"
-            tabIndex={0}
+            tabIndex={quoteExposed ? 0 : -1}
+            aria-hidden={quoteExposed ? undefined : true}
           >
             {theme.quote}
           </div>
