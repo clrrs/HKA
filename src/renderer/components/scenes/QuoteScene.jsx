@@ -19,10 +19,10 @@ import { scheduleFocus } from "../../state/useSceneManager";
 const QUOTE_VO_DIR = "Quote VOs";
 
 const QUOTE_VO_FILE_BY_THEME_ID = {
-  change: "APH_Change_Scratch Aud.mp3",
-  together: "APH_Together_Scratch Aud.mp3",
-  adventure: "APH_Adventure_Scratch Aud.mp3",
-  work: "APH_Work_Scratch Aud.mp3"
+  change: "3HK7_Quotes-Change_v01.mp3",
+  together: "3HK7_Quotes-Together_v01.mp3",
+  adventure: "3HK7_Quotes-Adventure_v01.mp3",
+  work: "3HK7_Quotes-Work_v01.mp3"
 };
 
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
