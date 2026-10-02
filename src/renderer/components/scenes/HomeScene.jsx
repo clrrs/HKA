@@ -60,6 +60,7 @@ export default function HomeScene({ isActive = false }) {
   const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
+  const [videoAspect, setVideoAspect] = useState(16 / 9);
   const [announceHomeArrival, setAnnounceHomeArrival] = useState(false);
   const circleRefs = useRef([]);
   const headingRef = useRef(null);
@@ -428,7 +429,11 @@ export default function HomeScene({ isActive = false }) {
           aria-label="Instructional video"
         >
           <div className="start-video-backdrop" />
-          <div className="start-video-modal" ref={modalRef}>
+          <div
+            className="start-video-modal"
+            ref={modalRef}
+            style={{ "--video-aspect": videoAspect }}
+          >
             <button
               type="button"
               className="exit-pill-btn start-video-exit-btn"
@@ -441,6 +446,12 @@ export default function HomeScene({ isActive = false }) {
               <video
                 ref={videoRef}
                 src="3HK7_Instructional_v06-260929.mp4"
+                onLoadedMetadata={(e) => {
+                  const { videoWidth, videoHeight } = e.currentTarget;
+                  if (videoWidth > 0 && videoHeight > 0) {
+                    setVideoAspect(videoWidth / videoHeight);
+                  }
+                }}
                 onEnded={closeVideo}
                 tabIndex={0}
               />
