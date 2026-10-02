@@ -30,18 +30,9 @@ function getDefaultThumbnailSrc(artifact) {
 }
 
 function getThumbnailSources(artifact) {
-  const fallbackSrc = getDefaultThumbnailSrc(artifact);
-
-  // Adventure artifacts use designer-provided bubble thumbnails in /public.
-  if (artifact?.id?.startsWith("3A")) {
-    return {
-      src: `./${artifact.id}_thumbnail.png`,
-      fallbackSrc
-    };
-  }
-
+  // Videos use posterSrc (e.g. 3A1Biplane_frame); everything else uses the first image.
   return {
-    src: fallbackSrc,
+    src: getDefaultThumbnailSrc(artifact),
     fallbackSrc: null
   };
 }
@@ -397,25 +388,29 @@ export default function ThemeScene() {
                     tabIndex={0}
                   >
                     <span className="artifact-circle-inner" aria-hidden="true" />
-                    {thumbSrc && (
-                      <img
-                        className={`artifact-circle-img ${["2A4", "3A4"].includes(artifact.id) ? "artifact-circle-img--full-visible" : ""}`}
-                        src={thumbSrc}
-                        alt=""
-                        aria-hidden="true"
-                        onError={(e) => {
-                          if (!fallbackSrc) return;
-                          if (e.currentTarget.dataset.fallbackApplied === "true") return;
-                          e.currentTarget.dataset.fallbackApplied = "true";
-                          e.currentTarget.src = fallbackSrc;
-                        }}
-                      />
-                    )}
-                    <span className="artifact-circle-labels" aria-hidden="true">
-                      <span className="artifact-label-title">{artifact.displayTitle}</span>
-                      {artifact.year && (
-                        <span className="artifact-label-year">{artifact.year}</span>
+                    <span className="artifact-circle-content" aria-hidden="true">
+                      {thumbSrc && (
+                        <span className="artifact-circle-media">
+                          <img
+                            className="artifact-circle-img"
+                            src={thumbSrc}
+                            alt=""
+                            aria-hidden="true"
+                            onError={(e) => {
+                              if (!fallbackSrc) return;
+                              if (e.currentTarget.dataset.fallbackApplied === "true") return;
+                              e.currentTarget.dataset.fallbackApplied = "true";
+                              e.currentTarget.src = fallbackSrc;
+                            }}
+                          />
+                        </span>
                       )}
+                      <span className="artifact-circle-labels">
+                        <span className="artifact-label-title">{artifact.displayTitle}</span>
+                        {artifact.year && (
+                          <span className="artifact-label-year">{artifact.year}</span>
+                        )}
+                      </span>
                     </span>
                   </button>
                 </div>

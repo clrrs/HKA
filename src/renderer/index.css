@@ -1779,29 +1779,38 @@ h1[tabindex]:focus-visible {
     border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Artifact image — same placement as theme circles, fit within a fixed zone so all thumbnails align */
-.artifact-circle-img {
+/* Stack image + labels in one column so gap is explicit; media grows upward. */
+.artifact-circle-content {
   position: absolute;
-  width: 100%;
-  max-width: 560px;
-  max-height: 270px;
-  height: auto;
-  top: 38%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(1);
-  object-fit: contain;
-  object-position: center;
-  pointer-events: none;
+  inset: 0;
   z-index: 1;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 36px 84px;
+  pointer-events: none;
 }
 
-.artifact-circle-img--full-visible {
-  width: 92%;
-  max-width: 500px;
-  max-height: 240px;
+.artifact-circle-media {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  max-width: 448px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.artifact-circle-img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center bottom;
 }
 
 /* Layered carousel effect while navigating artifacts */
@@ -1818,28 +1827,15 @@ h1[tabindex]:focus-visible {
   z-index: 2;
 }
 
-/* Focused artifact thumbnail can grow and slightly overflow the bubble */
-.artifact-circle--focused .artifact-circle-img {
-  transform: translate(-50%, -46%) scale(1.2);
-}
-
-/* Keep wide/tall thumbnails (e.g. Student Letters, Global Travel Schedule) inside the bubble when focused */
-.artifact-circle--focused .artifact-circle-img--full-visible {
-  transform: translate(-50%, -47%) scale(1.08);
-}
-
-/* Labels positioned at bottom of circle */
 .artifact-circle-labels {
-  position: absolute;
-  bottom: 90px;
-  left: 40px;
-  right: 40px;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 420px;
   text-align: center;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .artifact-label-number {
@@ -1860,6 +1856,7 @@ h1[tabindex]:focus-visible {
   transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   max-width: 420px;
   overflow-wrap: break-word;
+  text-align: center;
 }
 
 .artifact-label-year {
@@ -1870,27 +1867,17 @@ h1[tabindex]:focus-visible {
   transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Large text: image moved up and capped smaller; labels raised and scaled */
-[data-text-size="large"] .artifact-circle-img {
-  top: 33%;
-  max-height: 200px;
+[data-text-size="large"] .artifact-circle-content {
+  padding: 48px 32px 96px;
 }
 
-[data-text-size="large"] .artifact-circle-img--full-visible {
-  max-height: 185px;
-}
-
-[data-text-size="large"] .artifact-circle--focused .artifact-circle-img {
-  transform: translate(-50%, -50%) scale(1.2);
-}
-
-[data-text-size="large"] .artifact-circle--focused .artifact-circle-img--full-visible {
-  transform: translate(-50%, -51%) scale(1.08);
+[data-text-size="large"] .artifact-circle-media {
+  max-width: 400px;
+  margin-bottom: 16px;
 }
 
 [data-text-size="large"] .artifact-circle-labels {
-  bottom: 110px;
-  gap: 12px;
+  gap: 10px;
 }
 
 [data-text-size="large"] .artifact-label-number {
@@ -2053,6 +2040,25 @@ h1[tabindex]:focus-visible {
 .artifact-popup-nav-arrow--next:focus::before,
 .artifact-popup-nav-arrow--next:focus-visible::before {
   border-left-color: var(--accent);
+}
+
+@keyframes navArrowBump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.artifact-popup-nav-arrow--bump::before {
+  animation: navArrowBump 0.35s ease-out forwards;
 }
 
 .artifact-popup-card {

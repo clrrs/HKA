@@ -2117,6 +2117,20 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   );
   stepTextNavRef.current = stepTextNav;
 
+  const bumpArrow = useCallback((ref) => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.remove("artifact-popup-nav-arrow--bump");
+    requestAnimationFrame(() => {
+      el.classList.add("artifact-popup-nav-arrow--bump");
+      el.addEventListener(
+        "animationend",
+        () => el.classList.remove("artifact-popup-nav-arrow--bump"),
+        { once: true }
+      );
+    });
+  }, []);
+
   const handlePopupKeyDown = useCallback(
     (e) => {
       if (e.repeat) return;
@@ -2210,13 +2224,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         if (idx >= 0 && idx < focusables.length - 1) {
           focusables[idx + 1].focus();
         } else if (idx === focusables.length - 1) {
-          handleNextArrow();
+          bumpArrow(nextArrowRef);
+          const label = nextArrowRef.current?.getAttribute("aria-label");
+          if (label) announce(label, { politeness: "assertive" });
         }
       } else if (isBack) {
         if (idx > 0) {
           focusables[idx - 1].focus();
         } else if (idx === 0) {
-          handlePrevArrow();
+          bumpArrow(prevArrowRef);
+          const label = prevArrowRef.current?.getAttribute("aria-label");
+          if (label) announce(label, { politeness: "assertive" });
         }
       }
     },
@@ -2224,6 +2242,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       showSettings,
       transcriptOpen,
       getPopupFocusables,
+      bumpArrow,
+      announce,
       handlePrevArrow,
       handleNextArrow,
       handleStory,
