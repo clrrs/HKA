@@ -32,6 +32,9 @@ const SCROLL_STEP_RATIO = 0.75;
 const SECTION_TRANSITION_MS = 1000;
 const AUTO_READ_THEME_END_PROMPT =
   "End of artifacts in this theme. Press Select to return to the start of the theme.";
+/** Matches theme/artifact circle select CTAs ("Press select key…"). */
+const ARTIFACT_NAV_SELECT_CTA = "Press select key to learn more.";
+const BACK_TO_THEME_SELECT_CTA = "Press select key to return to the theme.";
 const TOOLBAR_NAV_HINT =
   "Use left and right keys to navigate artifact tool bar.";
 const VIDEO_END_DWELL_MS = 1000;
@@ -499,6 +502,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const transcriptDwellDeadlineRef = useRef(null);
   const transcriptDwellRemainingRef = useRef(null);
   const transcriptDwellActiveRef = useRef(false);
+  /** Holds idle while NVDA is estimated to be reading an open transcript. */
+  const [transcriptSpeechHold, setTranscriptSpeechHold] = useState(false);
+  const transcriptSpeechTimeoutRef = useRef(null);
+  const transcriptSpeechDeadlineRef = useRef(null);
+  const transcriptSpeechRemainingRef = useRef(null);
   const storyTransitionTimeoutRef = useRef(null);
   const storyTransitionDeadlineRef = useRef(null);
   const storyTransitionRemainingRef = useRef(null);
@@ -812,6 +820,39 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     transcriptDwellDeadlineRef.current = null;
     transcriptDwellRemainingRef.current = null;
   }, []);
+
+  const clearTranscriptSpeechHold = useCallback(() => {
+    setTranscriptSpeechHold(false);
+    if (transcriptSpeechTimeoutRef.current !== null) {
+      clearTimeout(transcriptSpeechTimeoutRef.current);
+      transcriptSpeechTimeoutRef.current = null;
+    }
+    transcriptSpeechDeadlineRef.current = null;
+    transcriptSpeechRemainingRef.current = null;
+  }, []);
+
+  const startTranscriptSpeechHold = useCallback(
+    (text) => {
+      clearTranscriptSpeechHold();
+      const trimmed = String(text || "").trim();
+      if (!trimmed) return;
+
+      // Dialog label + body — same estimate auto-read uses for spoken length.
+      const delay =
+        estimateSpeechDurationMs("Transcript window opened.") +
+        DIALOG_TITLE_PREAMBLE_MS +
+        estimateSpeechDurationMs(trimmed);
+
+      setTranscriptSpeechHold(true);
+      transcriptSpeechDeadlineRef.current = Date.now() + delay;
+      transcriptSpeechTimeoutRef.current = setTimeout(() => {
+        transcriptSpeechTimeoutRef.current = null;
+        transcriptSpeechDeadlineRef.current = null;
+        setTranscriptSpeechHold(false);
+      }, delay);
+    },
+    [clearTranscriptSpeechHold]
+  );
 
   const cancelAutoplay = useCallback(() => {
     autoplayingRef.current = false;
@@ -1195,13 +1236,33 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     clearStoryTransition();
   }, [artifactId, artifact, clearTranscriptDwell, clearStoryTransition]);
 
-  // Hold the inactivity timer while auto-read is reading. Pausing counts as idle
-  // again, so a paused read cannot keep the timer suppressed indefinitely.
+  // Hold the inactivity timer while auto-read or transcript speech is reading.
+  // Pausing counts as idle again, so a paused read cannot keep the timer
+  // suppressed indefinitely.
   useEffect(() => {
-    setAutoReadActive(isAutoplaying && !isPaused);
-  }, [isAutoplaying, isPaused, setAutoReadActive]);
+    setAutoReadActive(
+      (isAutoplaying && !isPaused) || (transcriptSpeechHold && !isPaused)
+    );
+  }, [isAutoplaying, isPaused, transcriptSpeechHold, setAutoReadActive]);
 
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
+
+  // Long transcripts are read by NVDA from the focused panel (not auto-read).
+  // Hold idle for the estimated speech duration, then release.
+  useEffect(() => {
+    if (!transcriptOpen || !speechMode) {
+      clearTranscriptSpeechHold();
+      return undefined;
+    }
+    startTranscriptSpeechHold(artifact?.transcriptText);
+    return () => clearTranscriptSpeechHold();
+  }, [
+    transcriptOpen,
+    speechMode,
+    artifact?.transcriptText,
+    startTranscriptSpeechHold,
+    clearTranscriptSpeechHold,
+  ]);
 
   // Park focus on open / artifact change only — not when returning from zoom
   // or transcript (restoreMainFocus handles those).
@@ -1351,7 +1412,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (
       !autoplayingRef.current &&
       !transcriptDwellActiveRef.current &&
-      !storyTransitionActiveRef.current
+      !storyTransitionActiveRef.current &&
+      !transcriptSpeechHold
     ) {
       return;
     }
@@ -1387,6 +1449,19 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         );
         clearTimeout(transcriptDwellTimeoutRef.current);
         transcriptDwellTimeoutRef.current = null;
+      }
+
+      if (
+        transcriptSpeechHold &&
+        transcriptSpeechTimeoutRef.current !== null &&
+        transcriptSpeechDeadlineRef.current !== null
+      ) {
+        transcriptSpeechRemainingRef.current = Math.max(
+          0,
+          transcriptSpeechDeadlineRef.current - Date.now()
+        );
+        clearTimeout(transcriptSpeechTimeoutRef.current);
+        transcriptSpeechTimeoutRef.current = null;
       }
 
       if (
@@ -1446,6 +1521,21 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     }
 
     if (
+      transcriptSpeechHold &&
+      transcriptSpeechTimeoutRef.current === null &&
+      transcriptSpeechRemainingRef.current !== null
+    ) {
+      const delay = transcriptSpeechRemainingRef.current;
+      transcriptSpeechRemainingRef.current = null;
+      transcriptSpeechDeadlineRef.current = Date.now() + delay;
+      transcriptSpeechTimeoutRef.current = setTimeout(() => {
+        transcriptSpeechTimeoutRef.current = null;
+        transcriptSpeechDeadlineRef.current = null;
+        setTranscriptSpeechHold(false);
+      }, delay);
+    }
+
+    if (
       storyTransitionActiveRef.current &&
       storyTransitionTimeoutRef.current === null &&
       storyTransitionRemainingRef.current !== null
@@ -1460,7 +1550,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         storyTransitionPlayRef.current?.();
       }, delay);
     }
-  }, [isPaused, tickTextAutoScroll, landOnNextArrowEnd]);
+  }, [isPaused, transcriptSpeechHold, tickTextAutoScroll, landOnNextArrowEnd]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -1488,7 +1578,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useEffect(() => {
     const video = videoRef.current;
     if (!isVideo || !video) return undefined;
-    return guardNvdaSpeechSilenceWhilePlaying(video);
+    // Soften silence while focus is in the controls toolbar so Play/Pause
+    // (and other toolbar labels) can be announced during playback.
+    return guardNvdaSpeechSilenceWhilePlaying(video, {
+      shouldSilence: () => {
+        const active = document.activeElement;
+        return !active?.closest?.(".artifact-popup-controls");
+      },
+    });
   }, [isVideo, artifactId]);
 
   useEffect(() => {
@@ -2316,20 +2413,27 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const atSnapTop = snapIndex === 0;
   const atSnapBottom = snapIndex >= totalSteps - 1;
 
-  const measureSnapPane = useCallback((clampIndex = true) => {
-    const win = snapWindowRef.current;
-    const img = snapImageRef.current;
-    if (!win || !img || !img.naturalWidth) return;
-    const windowH = win.clientHeight;
-    const renderedW = win.clientWidth * 0.95;
-    const renderedH = (img.naturalHeight / img.naturalWidth) * renderedW;
-    const steps = Math.max(2, Math.ceil(renderedH / windowH));
-    setSnapPaneHeight(windowH);
-    setTotalSteps(steps);
-    if (clampIndex) {
-      setSnapIndex((prev) => Math.min(prev, steps - 1));
-    }
-  }, []);
+  const measureSnapPane = useCallback(
+    (clampIndex = true) => {
+      const win = snapWindowRef.current;
+      const img = snapImageRef.current;
+      if (!win || !img || !img.naturalWidth) return;
+      const windowH = win.clientHeight;
+      const renderedW = win.clientWidth * 0.95;
+      const renderedH = (img.naturalHeight / img.naturalWidth) * renderedW;
+      // Some images fit the zoom window; force a single step so Up/Down stay
+      // aria-disabled but remain in the focus ring.
+      const steps = currentImage?.snapPanDisabled
+        ? 1
+        : Math.max(2, Math.ceil(renderedH / windowH));
+      setSnapPaneHeight(windowH);
+      setTotalSteps(steps);
+      if (clampIndex) {
+        setSnapIndex((prev) => Math.min(prev, steps - 1));
+      }
+    },
+    [currentImage?.snapPanDisabled]
+  );
 
   useEffect(() => {
     if (!zoomOpen || !currentImage) return;
@@ -2459,7 +2563,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           ref={prevArrowRef}
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--prev"
           onClick={handlePrevArrow}
-          aria-label={prevArtifact ? "Previous artifact" : "Back to theme"}
+          aria-label={
+            prevArtifact
+              ? `Previous artifact. ${ARTIFACT_NAV_SELECT_CTA}`
+              : `Back to theme. ${BACK_TO_THEME_SELECT_CTA}`
+          }
         />
 
         <div className="artifact-popup-card">
@@ -2727,7 +2835,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--next"
           onClick={handleNextArrow}
           aria-label={
-            nextArtifact ? "Next artifact" : AUTO_READ_THEME_END_PROMPT
+            nextArtifact
+              ? `Next artifact. ${ARTIFACT_NAV_SELECT_CTA}`
+              : AUTO_READ_THEME_END_PROMPT
           }
         />
       </div>
