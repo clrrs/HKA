@@ -1,4 +1,5 @@
-const WORDS_PER_SEC = 2.4;
+// ~120 WPM. Tuned for the kiosk NVDA voice (rate ~29); was 2.4 (~144 WPM).
+const WORDS_PER_SEC = 2.0;
 
 export function countWords(text) {
   return String(text || "")

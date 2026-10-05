@@ -1,7 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
-  BRAILLE_OUTPUT_SETTLE_MS,
   guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechAfterBrailleSettle,
   stopNvdaSpeechAggressively,
@@ -28,6 +27,10 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
 
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
 const QUOTE_INTRO_PAUSE_MS = 1000;
+/** First Ctrl after focus — early enough to avoid hearing the quote start. */
+const QUOTE_SPEECH_SETTLE_MS = 200;
+/** Extra hush window before VO in case the utterance starts late. */
+const QUOTE_HUSH_BEFORE_PLAY_MS = 120;
 
 const QUOTE_APPEARANCES = ["dark", "light"];
 
@@ -107,25 +110,31 @@ export default function QuoteScene() {
       setQuoteExposed(true);
       audioEl.currentTime = 0;
 
-      // Braille settle, then cut the quote utterance, then play the VO.
-      // An earlier Ctrl misses that utterance and it overlaps the recording.
+      // Wait for the quote utterance to start, hush, then play.
+      // Too-early Ctrl misses NVDA and speech overlaps the recording.
       cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
-        settleMs: BRAILLE_OUTPUT_SETTLE_MS,
-        followUpMs: 160,
+        settleMs: QUOTE_SPEECH_SETTLE_MS,
+        followUpMs: 200,
         onSettled: () => {
           if (cancelled) return;
           stopNvdaSpeechAggressively();
-          const playPromise = audioEl.play();
-          if (playPromise && typeof playPromise.catch === "function") {
-            playPromise.catch(() => {});
-          }
-          for (const delay of [100, 280, 520, 900]) {
-            extraStopIds.push(
-              window.setTimeout(() => {
-                if (!cancelled) stopNvdaSpeechAggressively();
-              }, delay)
-            );
-          }
+          extraStopIds.push(
+            window.setTimeout(() => {
+              if (cancelled) return;
+              stopNvdaSpeechAggressively();
+              const playPromise = audioEl.play();
+              if (playPromise && typeof playPromise.catch === "function") {
+                playPromise.catch(() => {});
+              }
+              for (const delay of [100, 280, 520, 900]) {
+                extraStopIds.push(
+                  window.setTimeout(() => {
+                    if (!cancelled) stopNvdaSpeechAggressively();
+                  }, delay)
+                );
+              }
+            }, QUOTE_HUSH_BEFORE_PLAY_MS)
+          );
         },
       });
     };
