@@ -714,9 +714,9 @@ export const themes = {
 
 export const themeOrder = ["change", "together", "adventure", "work"];
 
-/** Placeholder until the instructional video has a real transcript. */
+/** Transcript for the instructional / controls overview video. */
 export const instructionalVideoTranscript =
-  "placeholder text for instructional video. Description of controls";
+  "The top row of buttons features the control options. To the far right are two buttons oriented vertically that adjust the volume. Use the plus to increase the volume and the minus to decrease the volume. To the left of the volume is the pause button, marked by the two-line pause symbol. Press this button at any time to pause the audio. To the far left of the pause button is the Settings button, marked by the cog shape. The bottom row features the navigation buttons. Directly below the Settings button is the Home button, which will take you back to the main menu. To the right of the Home button is the left arrow. Use the left arrow to go back when exploring content. Next is the circle button in the middle. Use this button to select content. And finally, use the right arrow to go forward when exploring content. When you are ready to begin, press any button.";
 
 export function getTheme(themeId) {
   return themes[themeId] || null;
