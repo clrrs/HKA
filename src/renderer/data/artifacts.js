@@ -225,17 +225,17 @@ export const themes = {
         "year": "1919",
         "description": "Eugene Debs, a former socialist presidential candidate, trade unionist, and Southern Indiana native, wrote this letter to Helen while serving a 10-year prison sentence for sedition after he delivered a 1918 speech urging resistance to the military draft. Debs would go on to run for president in 1920 while still imprisoned.",
         "type": "document",
-        "alt": "A handwritten document shows the first page of a letter to Helen from socialist Eugene Debs.",
+        "alt": "A handwritten letter to Helen from socialist Eugene Debs, shown here on its first page.",
         "images": [
           {
             "src": "2A1Debs1.png",
             "alt": "Page 1 of letter from Eugene Debs to Helen Keller, 1919",
-            "guidedDescription": "A document shows the first of two pages of a handwritten letter to Helen from socialist Eugene Debs. West Virginia Penitentiary letterhead has blanks for sender and recipient above a floral design. Blue-lined paper is filled with cursive. Creases and a faint upside-down watermark show."
+            "guidedDescription": "The first of two pages of a handwritten letter to Helen from socialist Eugene Debs. West Virginia Penitentiary letterhead has blanks for sender and recipient above a floral design. Blue-lined paper is filled with cursive. Creases and a faint upside-down watermark show."
           },
           {
             "src": "2A1Debs2.png",
             "alt": "Page 2 of letter from Eugene Debs to Helen Keller, 1919",
-            "guidedDescription": "A document shows the second of two pages of a handwritten letter to Helen from socialist Eugene Debs. Small print at the top gives the prison warden's four paragraphs of correspondence instructions. Unlike page one, this page is unlined. Inked cursive fills it. Creases and a faint upside-down watermark show."
+            "guidedDescription": "The second of two pages of a handwritten letter to Helen from socialist Eugene Debs. Small print at the top gives the prison warden's four paragraphs of correspondence instructions. Unlike page one, this page is unlined. Inked cursive fills it. Creases and a faint upside-down watermark show."
           }
         ],
         "transcriptTitle": "Transcript",
@@ -247,7 +247,7 @@ export const themes = {
         "title": "Letter to General MacArthur, 1949",
         "displayTitle": "Letter to General MacArthur",
         "year": "1949",
-        "description": "Although Helen and General MacArthur, a top US general during WWII, could not have been more dissimilar in their career paths or politics, the two worked closely and successfully during her post-war trip to Occupied Japan. In this warm and cordial letter, Helen thanks him for bringing international attention to the needs of blind and disabled people in the post-WWII-ravaged nation.",
+        "description": "Although Helen and General MacArthur, a top U.S. general during WWII, could not have been more dissimilar in their career paths or politics, the two worked closely and successfully during her post-war trip to Occupied Japan. In this warm and cordial letter, Helen thanks him for bringing international attention to the needs of blind and disabled people in the post-WWII-ravaged nation.",
         "type": "document",
         "alt": "A yellowed sheet of paper shows the first page of a typed letter from Helen to General MacArthur.",
         "images": [
@@ -390,7 +390,7 @@ export const themes = {
         "year": "1929",
         "description": "Having received a typewritten letter from Gov. Franklin D. Roosevelt declining membership in the American Foundation for the Blind, Helen replied on the reverse with a handwritten note requesting his autograph.  The only autograph she had ever asked for, she wanted to make her request before he became the President of the United States. Four years later, he was elected to that position.",
         "type": "document",
-        "alt": "A typed document on State of New York letterhead features a letter to Helen from Franklin Delano Roosevelt.",
+        "alt": "A typed letter on State of New York letterhead features a letter to Helen from Franklin Delano Roosevelt.",
         "images": [
           {
             "src": "2A6FDR2.png",
@@ -481,11 +481,11 @@ export const themes = {
         "year": "1948–49",
         "description": "This travel itinerary details Helen’s travels from March of 1948 to April 1949, when she embarked on a global journey including visits to Australia, Korea, China, Thailand, India, Syria, and more, to meet with officials about the welfare of blind people in their respective countries.",
         "type": "document",
-        "alt": "A typed document outlines Helen's travels from 1948-1949.",
+        "alt": "A typed schedule outlines Helen's travels from 1948-1949.",
         "images": [
           {
             "src": "3A4_TentativeShedKeller.png",
-            "alt": "A typed document outlines Helen's travels from 1948-1949."
+            "alt": "A typed schedule outlines Helen's travels from 1948-1949."
           }
         ],
         "transcriptTitle": "Transcript",
@@ -541,11 +541,11 @@ export const themes = {
         "year": "1952",
         "description": "This travel itinerary details Helen travels to the Middle East in 1952, during which she spent 5 days in Syria to raise awareness for people who are blind or deaf and visit local communities.",
         "type": "document",
-        "alt": "A typed document with handwriting in blue and red ink outlines Helen's travel to Syria.",
+        "alt": "A typed itinerary with handwriting in blue and red ink outlines Helen's travel to Syria.",
         "images": [
           {
             "src": "3A7Syria1.png",
-            "alt": "A typed document with handwriting in blue and red ink outlines Helen's travel to Syria."
+            "alt": "A typed itinerary with handwriting in blue and red ink outlines Helen's travel to Syria."
           }
         ],
         "transcriptTitle": "Transcript",

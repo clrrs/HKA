@@ -253,7 +253,8 @@ function buildTextBlocks(artifact, images, isCombined) {
         key: `guided-letter-${i}`,
         kind: "guided",
         imageIndex: getLetterSectionImageIndex(section, i, images),
-        heading: total > 1 ? `Letter ${i + 1} of ${total}` : "Letter",
+        // Student Christmas Letters: first section is an envelope, so "Item" not "Letter".
+        heading: total > 1 ? `Item ${i + 1} of ${total}` : "Item",
         tagline: null,
         text,
       });
@@ -1899,7 +1900,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
         if (nextLetter !== prevLetter && block) {
           const total = artifact.letterSections?.length ?? 1;
-          const position = `Letter ${nextLetter + 1} of ${total}.`;
+          const position = `Item ${nextLetter + 1} of ${total}.`;
           announce(`${position} ${getBlockSpeech(block, false)}`, { dedupeMs: 200 });
           revealGuided(block);
           return;
