@@ -1,8 +1,7 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
   guardNvdaSpeechSilenceWhilePlaying,
-  stopNvdaSpeechAfterBrailleSettle,
   stopNvdaSpeechAggressively,
 } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
@@ -26,11 +25,8 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
 };
 
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
-const QUOTE_INTRO_PAUSE_MS = 1000;
-/** First Ctrl after focus — early enough to avoid hearing the quote start. */
-const QUOTE_SPEECH_SETTLE_MS = 200;
-/** Extra hush window before VO in case the utterance starts late. */
-const QUOTE_HUSH_BEFORE_PLAY_MS = 120;
+/** Same pause nudge used after role "button" on theme/artifact circles. */
+const QUOTE_SPEECH_PAUSE = ": . : . :";
 
 const QUOTE_APPEARANCES = ["dark", "light"];
 
@@ -41,16 +37,19 @@ function quoteVoSrc(themeId) {
   return `./${path}`;
 }
 
+function quoteSceneAnnouncement(quote) {
+  const trimmed = String(quote || "").trim();
+  if (!trimmed) return `${QUOTE_INTRO_ANNOUNCEMENT} ${QUOTE_SPEECH_PAUSE}`;
+  return `${QUOTE_INTRO_ANNOUNCEMENT} ${QUOTE_SPEECH_PAUSE} ${trimmed}`;
+}
+
 export default function QuoteScene() {
   const { currentTheme, goToScene, scene, speechMode, prefs } = useAppState();
   const announce = useAnnounce();
   const theme = getTheme(currentTheme);
   const audioRef = useRef(null);
-  const quoteTextRef = useRef(null);
   const quoteEntryRef = useRef(null);
   const timeoutRef = useRef(null);
-  // Quote copy is hidden from NVDA until the autoplay announcement has finished.
-  const [quoteExposed, setQuoteExposed] = useState(false);
   const appearance = prefs?.theme === "light" ? "light" : "dark";
   const activeImageSrc = theme ? quoteScreenSrc(theme.id, appearance) : "";
 
@@ -62,12 +61,6 @@ export default function QuoteScene() {
     audioRef,
     scene === "quote" ? currentTheme : scene
   );
-
-  useLayoutEffect(() => {
-    // Hide before paint on entry and on theme change so the quote cannot be
-    // read during the autoplay announcement. Playback reveals it later.
-    setQuoteExposed(false);
-  }, [scene, theme?.id]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -83,78 +76,49 @@ export default function QuoteScene() {
     if (!audioEl) return;
 
     let cancelled = false;
-    let cancelSpeechStops = () => {};
     let cancelEntryFocus = () => {};
     let announceTimer = null;
     let introTimer = null;
     const extraStopIds = [];
 
-    setQuoteExposed(false);
-
-    // Park focus immediately so it never falls to the document (title speech).
-    // Quote text stays aria-hidden so this cannot start the quote utterance.
+    // Park focus and leave it there — braille comes from the live announcement,
+    // not from moving focus onto the quote text.
     cancelEntryFocus = scheduleFocus(quoteEntryRef.current);
 
-    const startQuotePlayback = () => {
+    const hushAndPlay = () => {
       if (cancelled) return;
-      // Drop the park refocuses before moving to the quote, or they steal it back.
-      cancelEntryFocus();
-      cancelEntryFocus = () => {};
 
-      const quoteEl = quoteTextRef.current;
-      if (quoteEl) {
-        quoteEl.tabIndex = 0;
-        quoteEl.removeAttribute("aria-hidden");
-        quoteEl.focus({ preventScroll: true });
-      }
-      setQuoteExposed(true);
       audioEl.currentTime = 0;
+      stopNvdaSpeechAggressively();
+      const playPromise = audioEl.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
 
-      // Wait for the quote utterance to start, hush, then play.
-      // Too-early Ctrl misses NVDA and speech overlaps the recording.
-      cancelSpeechStops = stopNvdaSpeechAfterBrailleSettle({
-        settleMs: QUOTE_SPEECH_SETTLE_MS,
-        followUpMs: 200,
-        onSettled: () => {
-          if (cancelled) return;
-          stopNvdaSpeechAggressively();
-          extraStopIds.push(
-            window.setTimeout(() => {
-              if (cancelled) return;
-              stopNvdaSpeechAggressively();
-              const playPromise = audioEl.play();
-              if (playPromise && typeof playPromise.catch === "function") {
-                playPromise.catch(() => {});
-              }
-              for (const delay of [100, 280, 520, 900]) {
-                extraStopIds.push(
-                  window.setTimeout(() => {
-                    if (!cancelled) stopNvdaSpeechAggressively();
-                  }, delay)
-                );
-              }
-            }, QUOTE_HUSH_BEFORE_PLAY_MS)
-          );
-        },
-      });
+      for (const delay of [100, 280, 520, 900]) {
+        extraStopIds.push(
+          window.setTimeout(() => {
+            if (!cancelled) stopNvdaSpeechAggressively();
+          }, delay)
+        );
+      }
     };
 
     if (speechMode) {
-      // Focus first, then announce, so the intro timer matches spoken content.
+      // One live announcement: intro, pause nudge, then quote (for braille).
+      // Timer covers the intro only — hush+VO fire in the ": . : . :" buffer
+      // before the quote would be spoken.
       announceTimer = window.setTimeout(() => {
         if (cancelled) return;
-        announce(QUOTE_INTRO_ANNOUNCEMENT, {
+        announce(quoteSceneAnnouncement(theme?.quote), {
           politeness: "assertive",
           source: "quote-scene-intro",
         });
       }, 50);
-      const waitMs =
-        50 +
-        estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT) +
-        QUOTE_INTRO_PAUSE_MS;
-      introTimer = window.setTimeout(startQuotePlayback, waitMs);
+      const waitMs = 50 + estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT);
+      introTimer = window.setTimeout(hushAndPlay, waitMs);
     } else {
-      startQuotePlayback();
+      hushAndPlay();
     }
 
     return () => {
@@ -162,10 +126,9 @@ export default function QuoteScene() {
       if (announceTimer) window.clearTimeout(announceTimer);
       if (introTimer) window.clearTimeout(introTimer);
       cancelEntryFocus();
-      cancelSpeechStops();
       for (const id of extraStopIds) window.clearTimeout(id);
     };
-  }, [scene, theme?.id, speechMode, announce]);
+  }, [scene, theme?.id, theme?.quote, speechMode, announce]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -227,23 +190,13 @@ export default function QuoteScene() {
       )}
       {theme ? (
         <>
-          {/* Silent focus park: holds focus off the document so NVDA has nothing
-              to announce before the autoplay intro. */}
+          {/* Silent focus park: stays focused for the whole quote scene. */}
           <div
             ref={quoteEntryRef}
             className="sr-only"
             tabIndex={0}
             aria-label={"\u00a0"}
           />
-          {/* Visually replaced by the full-screen mockup; kept for braille focus. */}
-          <div
-            ref={quoteTextRef}
-            className="quote-scene-text sr-only"
-            tabIndex={quoteExposed ? 0 : -1}
-            aria-hidden={quoteExposed ? undefined : true}
-          >
-            {theme.quote}
-          </div>
           <audio
             key={theme.id}
             ref={audioRef}
