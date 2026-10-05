@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
 const { autoUpdater } = require("electron-updater");
+const { createNvdaControllerBridge } = require("./nvdaControllerBridge");
 
 const IS_WIN = process.platform === "win32";
 
@@ -97,6 +98,26 @@ ipcMain.on("stop-speech", () => {
     "[KbdEvent]::keybd_event(0x11,0,0,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x11,0,2,[UIntPtr]::Zero)"
   );
+});
+
+// Braille-only Controller Client bridge (never speaks).
+const nvdaBraille = createNvdaControllerBridge({
+  isWin: IS_WIN,
+  ensurePowerShell,
+  sendKeys,
+});
+
+ipcMain.handle("nvda:braille-status", async () => nvdaBraille.status());
+
+ipcMain.handle("nvda:braille-test", async () => nvdaBraille.testIfRunning());
+
+ipcMain.handle("nvda:braille-message", async (_event, payload = {}) => {
+  const text = typeof payload === "string" ? payload : payload?.text;
+  const force = Boolean(payload?.force);
+  if (typeof text !== "string") {
+    return { ok: false, reason: "invalid_payload", sent: false };
+  }
+  return nvdaBraille.brailleMessage(text, { force });
 });
 
 app.whenReady().then(() => {

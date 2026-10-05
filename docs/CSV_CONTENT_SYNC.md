@@ -48,9 +48,10 @@ guided section. The panel scrolls the block being spoken to the top and auto-scr
 only through that block. Short lines on the right edge of the panel mark where each
 block starts, and the line for the block being spoken turns gold.
 
-Video artifacts are the exception: auto-read speaks the body copy and then hands off
-to playback, and the guided copy is spoken once more just before the video starts so
-it lands on the braille display.
+Video artifacts: auto-read speaks story body only (no guided sections, no auto video
+handoff). Play starts video manually. Braille for open/auto-read is a single Controller
+Client composite page (title + alt + story + toolbar hint), not a second pre-video
+guided announcement.
 
 ## Screen # → artifact `id`
 

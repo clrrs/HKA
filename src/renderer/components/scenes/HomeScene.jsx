@@ -6,6 +6,8 @@ import {
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
 import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
+import { buildHomeThemeBraillePage } from "../../braille/braillePage.js";
+import { setBraillePage } from "../../braille/brailleControl.js";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { useAppState } from "../../state/StateProvider";
 import { scheduleFocus } from "../../state/useSceneManager";
@@ -221,13 +223,25 @@ export default function HomeScene({ isActive = false }) {
     const isFirstCarouselEntry = focusedIndexRef.current < 0;
     setFocusedIndex(index);
     clearThemeDescAnnounce();
-    if (!speechMode) return;
     const theme = themes[index];
     if (!theme || theme.disabledForTesting) return;
-    const message = getThemeCarouselDescription(theme.id);
-    if (!message) return;
 
     const name = getThemeCarouselName(theme.label, index, themes.length);
+    const description = getThemeCarouselDescription(theme.id);
+    // Braille gets the full composite immediately; speech keeps its delay.
+    setBraillePage(
+      buildHomeThemeBraillePage({
+        listLabel: THEME_LIST_PREAMBLE,
+        name,
+        description,
+        includeListLabel: isFirstCarouselEntry,
+      }),
+      { source: "HomeScene-theme-focus", immediate: true, suppressFocusMs: 200 }
+    );
+
+    if (!speechMode) return;
+    if (!description) return;
+
     const delay = isFirstCarouselEntry
       ? estimateSpeechDurationMs(`${THEME_LIST_PREAMBLE}. ${name} button`) +
         THEME_DESC_DELAY_MS
@@ -235,9 +249,10 @@ export default function HomeScene({ isActive = false }) {
 
     themeDescTimeoutRef.current = window.setTimeout(() => {
       themeDescTimeoutRef.current = null;
-      announce(message, {
+      announce(description, {
         politeness: "assertive",
         source: "HomeScene",
+        skipBraille: true,
       });
     }, delay);
   }, [speechMode, announce, clearThemeDescAnnounce]);

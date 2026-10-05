@@ -8,6 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { EARCON, playEarcon } from "../audio/earcons";
+import { resetBrailleState } from "../braille/brailleControl.js";
 
 const TEST_EASTER_EGG_MESSAGES = [
   "thank you for trying to break something!",
@@ -351,6 +352,8 @@ export default function StateProvider({ children }) {
     setPreviousScene("attract");
     setTestEasterEgg(null);
     setHasSeenThemeTip(false);
+    // Drop modal braille pages (idle/settings/tip) so attract gets a clean base.
+    resetBrailleState();
     setSpeechMode((prev) => {
       if (!prev) {
         lastTtsToggleRef.current = Date.now();

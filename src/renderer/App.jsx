@@ -9,6 +9,13 @@ import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 import { EARCON, playEarcon } from "./audio/earcons";
 import { moveSettingsFocus } from "./utils/settingsFocus";
 import { preloadQuoteScreens } from "./data/quoteScreens";
+import { buildIdleBraillePage } from "./braille/braillePage.js";
+import { buildFocusBraillePage } from "./braille/focusPage.js";
+import {
+  popBrailleModal,
+  pushBrailleModal,
+  setBraillePage,
+} from "./braille/brailleControl.js";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -215,6 +222,12 @@ export default function App() {
           politeness: "assertive",
           source: "idle-dismiss",
           dedupeMs: 0,
+          skipBraille: true,
+        });
+        popBrailleModal("idle-warning", {
+          status: IDLE_DISMISSED_ANNOUNCEMENT,
+          source: "idle-dismiss",
+          suppressFocusMs: 250,
         });
       }
     };
@@ -242,6 +255,12 @@ export default function App() {
           politeness: "assertive",
           source: "idle-dismiss",
           dedupeMs: 0,
+          skipBraille: true,
+        });
+        popBrailleModal("idle-warning", {
+          status: IDLE_DISMISSED_ANNOUNCEMENT,
+          source: "idle-dismiss",
+          suppressFocusMs: 250,
         });
         const key = e.key.toLowerCase();
         if (key === "s" || key === "home") {
@@ -326,19 +345,37 @@ export default function App() {
       if (active && active !== document.body) {
         settingsReturnFocusRef.current = active;
       }
+      pushBrailleModal("settings", "Settings", {
+        source: "settings-open",
+        suppressFocusMs: 200,
+      });
     } else if (!showSettings && prevShowSettingsRef.current) {
       // Assertive + delayed restore so "Settings closed." speaks before the
       // restored control (polite waited behind focus; immediate focus raced the live region).
+      const el = settingsReturnFocusRef.current;
+      settingsReturnFocusRef.current = null;
+      const usable =
+        el && document.contains(el) && !el.closest("[inert]") ? el : null;
+      const restoredPage = buildFocusBraillePage(usable || getActiveSceneFocusTarget());
+      // Stash restored control under the settings modal, then pop with status.
+      setBraillePage(restoredPage || SETTINGS_CLOSED_ANNOUNCEMENT, {
+        source: "settings-closed-base",
+        asBase: true,
+        suppressFocusMs: 280,
+      });
+      popBrailleModal("settings", {
+        status: SETTINGS_CLOSED_ANNOUNCEMENT,
+        source: "settings-closed",
+        suppressFocusMs: 280,
+        forceRestore: true,
+      });
       announce(SETTINGS_CLOSED_ANNOUNCEMENT, {
         politeness: "assertive",
         source: "settings-closed",
         dedupeMs: 0,
+        skipBraille: true,
       });
-      const el = settingsReturnFocusRef.current;
-      settingsReturnFocusRef.current = null;
       const restore = () => {
-        const usable =
-          el && document.contains(el) && !el.closest("[inert]") ? el : null;
         // Fall back to the scene so focus never drops to body on close.
         const target = usable || getActiveSceneFocusTarget();
         target?.focus({ preventScroll: true });
@@ -424,11 +461,18 @@ export default function App() {
     if (active && active !== document.body && !active.closest?.(".idle-overlay")) {
       idleReturnFocusRef.current = active;
     }
+    // One stable braille page for the whole warning — do not resend on each digit.
+    pushBrailleModal("idle-warning", buildIdleBraillePage(), {
+      source: "idle-warning-show",
+      suppressFocusMs: 5000,
+    });
     announce("Still there? Press any key to stay.", {
       politeness: "assertive",
       source: "idle-warning-show",
       dedupeMs: 0,
+      skipBraille: true,
     });
+    // Keep focused idle copy as DOM fallback if Controller Client is unavailable.
     const t = window.setTimeout(() => {
       idleBrailleRef.current?.focus();
     }, 50);
@@ -443,6 +487,7 @@ export default function App() {
       politeness: "assertive",
       source: "idle-buffer",
       dedupeMs: 0,
+      skipBraille: true,
     });
   }, [idleCountdown, announce]);
 
@@ -629,7 +674,14 @@ export default function App() {
             >
               {typeof idleCountdown === "number" ? idleCountdown : ""}
             </div>
-            <div ref={idleBrailleRef} className="sr-only" tabIndex={-1}>
+            {/* DOM fallback when Controller Client is unavailable. Ignored by
+                the page engine so it cannot overwrite the pre-idle base page. */}
+            <div
+              ref={idleBrailleRef}
+              className="sr-only"
+              tabIndex={-1}
+              data-braille-ignore="true"
+            >
               Still there? Press any key to stay.
               {showCountdownIntro ? " Returning to start in…" : ""}
               {typeof idleCountdown === "number" ? ` ${idleCountdown}` : ""}

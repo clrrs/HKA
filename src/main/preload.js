@@ -19,4 +19,16 @@ contextBridge.exposeInMainWorld("kioskApi", {
       ipcRenderer.on(channel, (e, ...args) => cb(...args));
     }
   },
+  /**
+   * Push a braille-only page via NVDA Controller Client.
+   * Does not speak. Safe no-op when bridge/NVDA is unavailable.
+   */
+  brailleMessage: (text, options = {}) =>
+    ipcRenderer.invoke("nvda:braille-message", {
+      text,
+      force: Boolean(options.force),
+      source: options.source || null,
+    }),
+  brailleStatus: () => ipcRenderer.invoke("nvda:braille-status"),
+  brailleTest: () => ipcRenderer.invoke("nvda:braille-test"),
 });

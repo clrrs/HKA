@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback, useRef, useEffect } from "react";
+import { onAnnounceForBraille } from "../braille/brailleControl.js";
 
 const AnnouncerContext = createContext(null);
 const ANNOUNCE_LOG_KEY = "__HKA_ANNOUNCE_LOG__";
@@ -169,6 +170,15 @@ export default function AnnouncerProvider({ children }) {
       pendingRef.current[channel] = null;
       target.textContent = message;
     }, 50);
+
+    // Braille is a separate channel. Only fold this announce into the Controller
+    // page when the caller opts in (braillePage / brailleMode / includeInBraille).
+    // Timed speech sequences should precompute a full braille page instead.
+    try {
+      onAnnounceForBraille(message, options);
+    } catch {
+      // Braille failures must never affect speech.
+    }
 
     ensureAnnouncementTools();
     sequenceRef.current += 1;

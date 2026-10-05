@@ -121,6 +121,8 @@ export default function AccessibilityMenu({ onboarding = false }) {
     announce(tip ? `${label}. ${tip}` : label, {
       politeness: "assertive",
       source: "settings-cycle",
+      includeInBraille: true,
+      brailleMode: "status",
     });
   };
 
@@ -145,6 +147,8 @@ export default function AccessibilityMenu({ onboarding = false }) {
     announce(RESET_RESTORED_ANNOUNCEMENT, {
       politeness: "assertive",
       source: "settings-reset",
+      includeInBraille: true,
+      brailleMode: "status",
     });
     // Keep focus on Reset (aria-disabled, not native disabled) so Next → Close
     // and Prev → last setting. Re-assert after paint in case anything steals it.

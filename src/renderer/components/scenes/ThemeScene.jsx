@@ -2,6 +2,8 @@ import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from
 import { useAppState } from "../../state/StateProvider";
 import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme, getArtifactIndex, getArtifactCircleName, getArtifactCircleDescription } from "../../data/artifacts";
+import { buildTipBraillePage, buildThemeArtifactBraillePage } from "../../braille/braillePage.js";
+import { popBrailleModal, pushBrailleModal, setBraillePage } from "../../braille/brailleControl.js";
 import { scheduleFocus } from "../../state/useSceneManager";
 import { EARCON, playEarcon } from "../../audio/earcons";
 import ArtifactPopup from "../ArtifactPopup";
@@ -90,6 +92,7 @@ export default function ThemeScene() {
     if (!showTipRef.current) return;
     showTipRef.current = false;
     playEarcon(EARCON.popupClose);
+    popBrailleModal("theme-tip", { source: "theme-tip-dismiss" });
     setTipGate((prev) => (prev.show ? { ...prev, show: false } : prev));
   }, []);
 
@@ -135,10 +138,16 @@ export default function ThemeScene() {
   useEffect(() => {
     if (!showTip || !theme) return;
 
-    announce(getThemeTipMessage(theme.label), {
+    const tipMessage = getThemeTipMessage(theme.label);
+    pushBrailleModal("theme-tip", buildTipBraillePage(tipMessage), {
+      source: "theme-tip-show",
+      suppressFocusMs: 300,
+    });
+    announce(tipMessage, {
       politeness: "assertive",
       source: "theme-tip-show",
       dedupeMs: 0,
+      skipBraille: true,
     });
 
     const handleKeyDownCapture = (e) => {
@@ -226,7 +235,16 @@ export default function ThemeScene() {
 
   const handleFocus = useCallback((index) => {
     setFocusedIndex(index);
-  }, []);
+    const artifact = artifacts[index];
+    if (!artifact) return;
+    setBraillePage(
+      buildThemeArtifactBraillePage({
+        name: getArtifactCircleName(artifact, index, artifacts.length),
+        description: getArtifactCircleDescription(artifact),
+      }),
+      { source: "ThemeScene-artifact-focus", immediate: true, suppressFocusMs: 200 }
+    );
+  }, [artifacts]);
 
   const handleHeadingFocus = useCallback(() => {
     setFocusedIndex(-1);
@@ -439,6 +457,7 @@ export default function ThemeScene() {
           aria-modal="true"
           tabIndex={-1}
           data-autofocus
+          data-braille-ignore="true"
         >
           {/* Visual only — spoken once via announce(); hiding prevents focus+name double-read */}
           <div className="idle-overlay-card" aria-hidden="true">

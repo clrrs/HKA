@@ -139,6 +139,8 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
     announce(tip ? `${label}. ${tip}` : label, {
       politeness: "assertive",
       source: "settings-select",
+      includeInBraille: true,
+      brailleMode: "status",
     });
   };
 
@@ -169,6 +171,8 @@ export default function AccessibilityMenuFlat({ onboarding = false }) {
     announce(RESET_RESTORED_ANNOUNCEMENT, {
       politeness: "assertive",
       source: "settings-reset",
+      includeInBraille: true,
+      brailleMode: "status",
     });
     const el = resetBtnRef.current;
     if (el) {

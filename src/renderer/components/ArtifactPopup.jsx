@@ -27,6 +27,12 @@ import {
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 import { estimateSpeechDurationMs } from "../utils/speechTiming";
+import { buildArtifactOpenBraillePage } from "../braille/braillePage.js";
+import {
+  popBrailleModal,
+  pushBrailleModal,
+  setBraillePage,
+} from "../braille/brailleControl.js";
 
 const SCROLL_STEP_RATIO = 0.75;
 const SECTION_TRANSITION_MS = 1000;
@@ -904,7 +910,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setIsAutoplaying(false);
     setVisualSection("description");
     storyParkedRef.current = true;
-    announce(TOOLBAR_NAV_HINT, { politeness: "assertive" });
+    announce(TOOLBAR_NAV_HINT, {
+      politeness: "assertive",
+      includeInBraille: true,
+      brailleMode: "status",
+    });
   }, [announce, clearTranscriptDwell, clearTextAutoScroll, setVisualSection]);
 
   // Used when an auto-started video finishes (legacy path; auto-read no longer starts video).
@@ -1277,12 +1287,21 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
     const openTitle = `${artifact.title} opened.`;
     const openAlt = getArtifactAltText(artifact);
-    announce(openTitle, { politeness: "assertive" });
+    setBraillePage(
+      buildArtifactOpenBraillePage({
+        title: artifact.title,
+        alt: openAlt,
+        storyChunks: [],
+        endHint: TOOLBAR_NAV_HINT,
+      }),
+      { source: "ArtifactPopup-open-speech-off", immediate: true, suppressFocusMs: 400 }
+    );
+    announce(openTitle, { politeness: "assertive", skipBraille: true });
     setDialogAriaLabel("\u00a0");
 
     const altDelay = estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS;
     const t = window.setTimeout(() => {
-      announce(openAlt, { politeness: "assertive" });
+      announce(openAlt, { politeness: "assertive", skipBraille: true });
     }, altDelay);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1316,6 +1335,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const openAlt = getArtifactAltText(artifact);
     const openTitle = `${artifact.title} opened.`;
 
+    // One braille page for the whole open/auto-read sequence; speech still chunks.
+    setBraillePage(
+      buildArtifactOpenBraillePage({
+        title: artifact.title,
+        alt: openAlt,
+        storyChunks: chunks,
+        endHint: TOOLBAR_NAV_HINT,
+      }),
+      { source: "ArtifactPopup-auto-read", immediate: true, suppressFocusMs: 800 }
+    );
+
     let chunkIndex = 0;
     autoplayingRef.current = true;
     storyParkedRef.current = false;
@@ -1338,7 +1368,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       setCurrentImageIndex(chunk.imageIndex);
       setVisualSection(chunk.section, chunk.blockKey);
 
-      announce(chunk.text, { politeness: "assertive" });
+      announce(chunk.text, { politeness: "assertive", skipBraille: true });
       chunkIndex += 1;
 
       const delay = autoReadDelayMs(
@@ -1368,7 +1398,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const announceAltThenStory = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
       setDialogAriaLabel("\u00a0");
-      announce(openAlt, { politeness: "assertive" });
+      announce(openAlt, { politeness: "assertive", skipBraille: true });
       const altDelay = autoReadDelayMs(
         estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
         autoReadFastRef.current
@@ -2025,7 +2055,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
   const closeTranscript = useCallback(() => {
     setTranscriptOpen(false);
-    announce("Transcript closed.", { politeness: "assertive", dedupeMs: 0 });
+    popBrailleModal("transcript", {
+      status: "Transcript closed.",
+      source: "transcript-close",
+      suppressFocusMs: 200,
+    });
+    announce("Transcript closed.", {
+      politeness: "assertive",
+      dedupeMs: 0,
+      skipBraille: true,
+    });
     // Delay focus so the live region lands before the restored control is read.
     window.setTimeout(() => restoreMainFocus(transcriptBtnRef), 60);
   }, [announce, restoreMainFocus]);
@@ -2034,7 +2073,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     rememberMainFocus();
     markAutoplayEnded();
     setTranscriptOpen(true);
-  }, [markAutoplayEnded, rememberMainFocus]);
+    const body = artifact?.transcriptText || "";
+    pushBrailleModal(
+      "transcript",
+      `Transcript window opened. ${body}`,
+      { source: "transcript-open", suppressFocusMs: 400 }
+    );
+  }, [artifact?.transcriptText, markAutoplayEnded, rememberMainFocus]);
 
   const openZoom = useCallback(() => {
     rememberMainFocus();
@@ -2042,13 +2087,22 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setSnapIndex(0);
     setZoomOpen(true);
     playEarcon(EARCON.popupOpen);
+    pushBrailleModal("zoom", "Zoom mode opened.", {
+      source: "zoom-open",
+      suppressFocusMs: 300,
+    });
   }, [markAutoplayEnded, rememberMainFocus]);
 
   const exitZoom = useCallback(() => {
     setZoomOpen(false);
     setSnapIndex(0);
     playEarcon(EARCON.popupClose);
-    announce("Exited zoom mode.");
+    popBrailleModal("zoom", {
+      status: "Exited zoom mode.",
+      source: "zoom-close",
+      suppressFocusMs: 200,
+    });
+    announce("Exited zoom mode.", { skipBraille: true });
     restoreMainFocus(zoomOrPlayRef);
   }, [announce, restoreMainFocus]);
 

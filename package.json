@@ -13,7 +13,9 @@
     "dist": "electron-builder",
     "build:win": "vite build && electron-builder --win",
     "publish": "vite build && electron-builder --win --publish always",
-    "export:sr": "node scripts/export_sr_announcements.mjs"
+    "export:sr": "node scripts/export_sr_announcements.mjs",
+    "test:braille": "node --test scripts/test_braille_pages.mjs scripts/test_nvda_controller_bridge.mjs scripts/test_braille_control.mjs",
+    "verify:nvda-dll": "node scripts/verify_nvda_controller_dll.mjs"
   },
   "dependencies": {
     "electron-updater": "^6.7.3",
@@ -34,6 +36,16 @@
     "files": [
       "dist/renderer/**/*",
       "src/main/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "vendor/nvdaControllerClient/nvdaControllerClient.dll",
+        "to": "nvdaControllerClient/nvdaControllerClient.dll"
+      },
+      {
+        "from": "docs/licenses/nvdaControllerClient-LGPL-2.1.txt",
+        "to": "nvdaControllerClient/LICENSE.txt"
+      }
     ],
     "win": {
       "target": "nsis"

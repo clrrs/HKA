@@ -16,6 +16,7 @@ import {
 } from "../../data/quoteScreens";
 import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 import { scheduleFocus } from "../../state/useSceneManager";
+import { setBraillePage } from "../../braille/brailleControl.js";
 
 const QUOTE_VO_DIR = "Quote VOs";
 
@@ -104,6 +105,14 @@ export default function QuoteScene() {
         quoteEl.removeAttribute("aria-hidden");
         quoteEl.focus({ preventScroll: true });
       }
+      if (theme?.quote) {
+        // Controller page holds the full quote while speech is cut for VO.
+        setBraillePage(theme.quote, {
+          source: "QuoteScene-quote",
+          immediate: true,
+          suppressFocusMs: 600,
+        });
+      }
       setQuoteExposed(true);
       audioEl.currentTime = 0;
 
@@ -137,6 +146,8 @@ export default function QuoteScene() {
         announce(QUOTE_INTRO_ANNOUNCEMENT, {
           politeness: "assertive",
           source: "quote-scene-intro",
+          brailleMode: "replace",
+          suppressFocusMs: 400,
         });
       }, 50);
       const waitMs =
@@ -225,8 +236,9 @@ export default function QuoteScene() {
             className="sr-only"
             tabIndex={0}
             aria-label={"\u00a0"}
+            data-braille-ignore="true"
           />
-          {/* Visually replaced by the full-screen mockup; kept for braille focus. */}
+          {/* Visually replaced by the full-screen mockup; kept as a11y/braille fallback. */}
           <div
             ref={quoteTextRef}
             className="quote-scene-text sr-only"
