@@ -737,14 +737,14 @@ export function getThemeCarouselName(themeLabel, index, total) {
 }
 
 /**
- * Theme circle follow-up after name + button.
- * HomeScene speaks this via delayed live announce (not aria-describedby).
+ * Description after role "button". Leading ": . : . :" nudges a brief pause.
+ * HomeScene speaks this via aria-describedby.
  */
 export function getThemeCarouselDescription(themeId) {
   const iconAlt = themes[themeId]?.iconAlt;
-  if (!iconAlt) return THEME_SELECT_CTA;
+  if (!iconAlt) return `: . : . : ${THEME_SELECT_CTA}`;
   const alt = iconAlt.replace(/\.\s*$/, "");
-  return `Image: ${alt}. ${THEME_SELECT_CTA}`;
+  return `: . : . : Image: ${alt}. ${THEME_SELECT_CTA}`;
 }
 
 /** @deprecated Prefer getThemeCarouselName + getThemeCarouselDescription */
@@ -766,10 +766,10 @@ export function getArtifactCircleName(artifact, index, total) {
   return `${title}, ${index + 1} of ${total}`;
 }
 
-/** Description after role "button". Leading " , " nudges a brief pause. */
+/** Description after role "button". Leading ": . : . :" nudges a brief pause. */
 export function getArtifactCircleDescription(artifact) {
   const alt = getArtifactAltText(artifact).replace(/\.\s*$/, "");
-  return ` , ${alt}. ${ARTIFACT_SELECT_CTA}`;
+  return `: . : . : ${alt}. ${ARTIFACT_SELECT_CTA}`;
 }
 
 export function getThemeArtifacts(themeId) {

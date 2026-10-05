@@ -6,17 +6,10 @@ import {
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
 import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
-import { useAnnounce } from "../../state/AnnouncerProvider";
 import { useAppState } from "../../state/StateProvider";
 import { scheduleFocus } from "../../state/useSceneManager";
-import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 
 const TESTING_ADVENTURE_ONLY = false;
-
-/** Pause after NVDA says "button" before the Image: follow-up. */
-const THEME_DESC_DELAY_MS = 300;
-/** What NVDA prepends on first entry into the revealed list. */
-const THEME_LIST_PREAMBLE = "Theme selection list";
 
 const ALL_THEMES = [
   { id: "change",    label: "Change",    scene: "quote", image: "./Change.png" },
@@ -57,7 +50,6 @@ export default function HomeScene({ isActive = false }) {
     lastTtsToggleRef,
     homeArrivalNonce,
   } = useAppState();
-  const announce = useAnnounce();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showVideo, setShowVideo] = useState(false);
   const [videoAspect, setVideoAspect] = useState(16 / 9);
@@ -69,7 +61,6 @@ export default function HomeScene({ isActive = false }) {
   const modalRef = useRef(null);
   const videoRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
-  const themeDescTimeoutRef = useRef(null);
   const wasActiveRef = useRef(isActive);
   const prevShowSettingsRef = useRef(showSettings);
   const prevHomeArrivalNonceRef = useRef(homeArrivalNonce);
@@ -77,12 +68,6 @@ export default function HomeScene({ isActive = false }) {
   // while already on the home scene (nonce bump without inactive→active).
   const stayedOnHomeRef = useRef(false);
   focusedIndexRef.current = focusedIndex;
-
-  const clearThemeDescAnnounce = useCallback(() => {
-    if (themeDescTimeoutRef.current == null) return;
-    window.clearTimeout(themeDescTimeoutRef.current);
-    themeDescTimeoutRef.current = null;
-  }, []);
 
   stayedOnHomeRef.current = wasActiveRef.current && isActive;
   if (isActive && !wasActiveRef.current) {
@@ -111,16 +96,13 @@ export default function HomeScene({ isActive = false }) {
   useLayoutEffect(() => {
     const wasOpen = prevShowSettingsRef.current;
     prevShowSettingsRef.current = showSettings;
-    if (showSettings) {
-      clearThemeDescAnnounce();
-      return;
-    }
+    if (showSettings) return;
     if (!wasOpen) return;
     const idx = focusedIndexRef.current;
     if (idx < 0) return;
     const el = circleRefs.current[idx];
     el?.focus({ preventScroll: true });
-  }, [showSettings, clearThemeDescAnnounce]);
+  }, [showSettings]);
 
   useHeadphoneSinkEffect(videoRef, showVideo);
 
@@ -205,48 +187,21 @@ export default function HomeScene({ isActive = false }) {
     carouselRef.current?.setAttribute("aria-hidden", "true");
   }, []);
 
-  useEffect(() => () => clearThemeDescAnnounce(), [clearThemeDescAnnounce]);
-
   // Snap idle while hidden so re-entry doesn't play leftover carousel CSS.
   useLayoutEffect(() => {
     if (isActive) return;
-    clearThemeDescAnnounce();
     setFocusedIndex(-1);
     hideCarousel();
-  }, [isActive, hideCarousel, clearThemeDescAnnounce]);
+  }, [isActive, hideCarousel]);
 
   const handleFocus = useCallback((index) => {
-    // First land on the carousel also speaks "Theme selection list"; later
-    // L/R moves only speak the button — keep the short pause for those.
-    const isFirstCarouselEntry = focusedIndexRef.current < 0;
     setFocusedIndex(index);
-    clearThemeDescAnnounce();
-    if (!speechMode) return;
-    const theme = themes[index];
-    if (!theme || theme.disabledForTesting) return;
-    const message = getThemeCarouselDescription(theme.id);
-    if (!message) return;
-
-    const name = getThemeCarouselName(theme.label, index, themes.length);
-    const delay = isFirstCarouselEntry
-      ? estimateSpeechDurationMs(`${THEME_LIST_PREAMBLE}. ${name} button`) +
-        THEME_DESC_DELAY_MS
-      : THEME_DESC_DELAY_MS;
-
-    themeDescTimeoutRef.current = window.setTimeout(() => {
-      themeDescTimeoutRef.current = null;
-      announce(message, {
-        politeness: "assertive",
-        source: "HomeScene",
-      });
-    }, delay);
-  }, [speechMode, announce, clearThemeDescAnnounce]);
+  }, []);
 
   const handleHeadingFocus = useCallback(() => {
-    clearThemeDescAnnounce();
     setFocusedIndex(-1);
     hideCarousel();
-  }, [hideCarousel, clearThemeDescAnnounce]);
+  }, [hideCarousel]);
 
   const handleHeadingBlur = useCallback((e) => {
     const next = e.relatedTarget;
@@ -261,12 +216,11 @@ export default function HomeScene({ isActive = false }) {
     requestAnimationFrame(() => {
       if (document.querySelector(".settings-overlay")) return;
       if (scene && !scene.contains(document.activeElement)) {
-        clearThemeDescAnnounce();
         setFocusedIndex(-1);
         hideCarousel();
       }
     });
-  }, [hideCarousel, showSettings, clearThemeDescAnnounce]);
+  }, [hideCarousel, showSettings]);
 
   const handleSceneKeyDown = useCallback((e) => {
     if (e.repeat) return;
@@ -280,7 +234,6 @@ export default function HomeScene({ isActive = false }) {
     if (isSelect && idx >= 0) {
       const theme = themes[idx];
       if (!theme.disabledForTesting && theme.scene) {
-        clearThemeDescAnnounce();
         goToScene(theme.scene, { theme: theme.id });
       }
       e.preventDefault();
@@ -321,12 +274,21 @@ export default function HomeScene({ isActive = false }) {
         circleRefs.current[idx - 1]?.focus();
       }
     }
-  }, [goToScene, showCarousel, showVideo, clearThemeDescAnnounce]);
+  }, [goToScene, showCarousel, showVideo]);
 
   const hasFocus = focusedIndex >= 0;
 
   return (
     <div className="home-scene" onKeyDown={handleSceneKeyDown}>
+      {themes.map((theme) => (
+        <p
+          key={`theme-circle-desc-${theme.id}`}
+          id={`theme-circle-desc-${theme.id}`}
+          className="sr-only"
+        >
+          {getThemeCarouselDescription(theme.id)}
+        </p>
+      ))}
       <div className="home-bg" aria-hidden="true" />
       <div
         className="home-scene-main"
@@ -388,7 +350,6 @@ export default function HomeScene({ isActive = false }) {
                   onBlur={handleBlur}
                   onClick={() => {
                     if (!theme.disabledForTesting && theme.scene) {
-                      clearThemeDescAnnounce();
                       goToScene(theme.scene, { theme: theme.id });
                     }
                   }}
@@ -396,6 +357,11 @@ export default function HomeScene({ isActive = false }) {
                     speechMode && !theme.disabledForTesting
                       ? getThemeCarouselName(theme.label, i, themes.length)
                       : `${theme.label}, ${i + 1} of ${themes.length}`
+                  }
+                  aria-describedby={
+                    theme.disabledForTesting
+                      ? undefined
+                      : `theme-circle-desc-${theme.id}`
                   }
                   aria-disabled={theme.disabledForTesting ? true : undefined}
                   tabIndex={0}
