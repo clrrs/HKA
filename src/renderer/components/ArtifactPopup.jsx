@@ -331,6 +331,32 @@ function getTextSnapScrollCue(index, total, blockSpeech = "") {
   return `More description. ${index + 1} of ${total}.`;
 }
 
+/** Transcript is one scrollable body — cues only, never re-speak the full text. */
+function getTranscriptSnapScrollCue(index, total) {
+  if (index <= 0) return "View snapped to beginning of transcript.";
+  if (index >= total - 1) return "View snapped to end of transcript.";
+  return `More transcript. ${index + 1} of ${total}.`;
+}
+
+function buildTranscriptSnaps(panel) {
+  if (!panel) return [];
+  return getBlockScrollStops(panel, "transcript", 0, panel.scrollHeight);
+}
+
+function findNearestSnapIndex(snaps, scrollTop) {
+  if (!snaps.length) return 0;
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < snaps.length; i++) {
+    const dist = Math.abs(snaps[i].scrollTop - scrollTop);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  }
+  return best;
+}
+
 /** Auto-read speaks story body only — no guided sections, no video handoff. */
 function buildAutoplayChunks(artifact, blocks) {
   if (!artifact) return [];
@@ -400,44 +426,6 @@ function useFocusTrap(containerRef, isActive, options = {}) {
 
     return () => container.removeEventListener("keydown", handleKeyDown);
   }, [isActive, containerRef, autofocusOnActivate, skipAutofocusRef, initialFocusDoneRef]);
-}
-
-function stepScrollKeyDown(e, bodyRef, { loop = false, onLoop = null } = {}) {
-  if (e.repeat) return false;
-  const key = e.key.toLowerCase();
-  if (key !== "l" && key !== "k") return false;
-
-  const body = bodyRef.current;
-  if (!body) return false;
-
-  const maxScroll = body.scrollHeight - body.clientHeight;
-  if (maxScroll <= 0) return false;
-
-  const step = Math.floor(body.clientHeight * SCROLL_STEP_RATIO) || body.clientHeight;
-
-  if (key === "l") {
-    if (body.scrollTop < maxScroll - 1) {
-      e.preventDefault();
-      e.stopPropagation();
-      body.scrollTo({ top: Math.min(maxScroll, body.scrollTop + step), behavior: "auto" });
-      return true;
-    }
-    if (loop) {
-      e.preventDefault();
-      e.stopPropagation();
-      body.scrollTo({ top: 0, behavior: "auto" });
-      onLoop?.();
-      return true;
-    }
-    return false;
-  }
-  if (key === "k" && body.scrollTop > 0) {
-    e.preventDefault();
-    e.stopPropagation();
-    body.scrollTo({ top: Math.max(0, body.scrollTop - step), behavior: "auto" });
-    return true;
-  }
-  return false;
 }
 
 export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }) {
@@ -520,9 +508,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const transcriptDwellActiveRef = useRef(false);
   /** Holds idle while NVDA is estimated to be reading an open transcript. */
   const [transcriptSpeechHold, setTranscriptSpeechHold] = useState(false);
+  const transcriptSpeechHoldRef = useRef(false);
   const transcriptSpeechTimeoutRef = useRef(null);
   const transcriptSpeechDeadlineRef = useRef(null);
   const transcriptSpeechRemainingRef = useRef(null);
+  const transcriptAutoScrollTimeoutRef = useRef(null);
+  const transcriptAutoScrollStateRef = useRef(null);
+  const transcriptAutoScrollRemainingRef = useRef(null);
+  const transcriptSnapIndexRef = useRef(0);
   const storyTransitionTimeoutRef = useRef(null);
   const storyTransitionDeadlineRef = useRef(null);
   const storyTransitionRemainingRef = useRef(null);
@@ -837,15 +830,108 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     transcriptDwellRemainingRef.current = null;
   }, []);
 
+  const clearTranscriptAutoScroll = useCallback(() => {
+    if (transcriptAutoScrollTimeoutRef.current !== null) {
+      clearTimeout(transcriptAutoScrollTimeoutRef.current);
+      transcriptAutoScrollTimeoutRef.current = null;
+    }
+    transcriptAutoScrollStateRef.current = null;
+    transcriptAutoScrollRemainingRef.current = null;
+  }, []);
+
   const clearTranscriptSpeechHold = useCallback(() => {
+    transcriptSpeechHoldRef.current = false;
     setTranscriptSpeechHold(false);
+    clearTranscriptAutoScroll();
     if (transcriptSpeechTimeoutRef.current !== null) {
       clearTimeout(transcriptSpeechTimeoutRef.current);
       transcriptSpeechTimeoutRef.current = null;
     }
     transcriptSpeechDeadlineRef.current = null;
     transcriptSpeechRemainingRef.current = null;
+  }, [clearTranscriptAutoScroll]);
+
+  const tickTranscriptAutoScroll = useCallback(() => {
+    transcriptAutoScrollTimeoutRef.current = null;
+    const state = transcriptAutoScrollStateRef.current;
+    if (!state || !transcriptSpeechHoldRef.current || isPausedRef.current) return;
+
+    const el = transcriptBodyRef.current;
+    if (!el) {
+      transcriptAutoScrollStateRef.current = null;
+      return;
+    }
+
+    const maxScroll = Math.min(state.maxTop, el.scrollHeight - el.clientHeight);
+    if (maxScroll <= SCROLL_OVERFLOW_THRESHOLD_PX) {
+      transcriptAutoScrollStateRef.current = null;
+      return;
+    }
+
+    el.scrollTo({
+      top: Math.min(maxScroll, el.scrollTop + state.stepPx),
+      behavior: "smooth",
+    });
+    state.stepsLeft -= 1;
+    if (state.stepsLeft <= 0) {
+      transcriptAutoScrollStateRef.current = null;
+      return;
+    }
+
+    state.nextDeadline = Date.now() + state.intervalMs;
+    transcriptAutoScrollTimeoutRef.current = setTimeout(
+      tickTranscriptAutoScroll,
+      state.intervalMs
+    );
   }, []);
+
+  const startTranscriptAutoScroll = useCallback(
+    (durationMs) => {
+      clearTranscriptAutoScroll();
+      if (!(durationMs > 0)) return;
+
+      const schedule = () => {
+        if (!transcriptSpeechHoldRef.current || isPausedRef.current) return;
+        const el = transcriptBodyRef.current;
+        if (!el) return;
+
+        const scrollLimit = Math.max(0, el.scrollHeight - el.clientHeight);
+        el.scrollTop = 0;
+
+        const padBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0;
+        const maxTop = Math.min(
+          scrollLimit,
+          Math.max(0, el.scrollHeight - el.clientHeight + padBottom)
+        );
+        const overflow = maxTop;
+        if (overflow <= SCROLL_OVERFLOW_THRESHOLD_PX) return;
+
+        const stepPx = Math.floor(el.clientHeight * SCROLL_STEP_RATIO) || el.clientHeight;
+        const steps = Math.max(1, Math.ceil(overflow / stepPx));
+        // Leave a beat at the top and at the bottom so the last step is not
+        // scheduled at the same instant as the speech-hold release.
+        const intervalMs = durationMs / (steps + 1);
+        if (!(intervalMs > 0)) return;
+
+        transcriptAutoScrollStateRef.current = {
+          stepPx,
+          maxTop,
+          stepsLeft: steps,
+          intervalMs,
+          nextDeadline: Date.now() + intervalMs,
+        };
+        transcriptAutoScrollTimeoutRef.current = setTimeout(
+          tickTranscriptAutoScroll,
+          intervalMs
+        );
+      };
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(schedule);
+      });
+    },
+    [clearTranscriptAutoScroll, tickTranscriptAutoScroll]
+  );
 
   const startTranscriptSpeechHold = useCallback(
     (text) => {
@@ -859,15 +945,21 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         DIALOG_TITLE_PREAMBLE_MS +
         estimateSpeechDurationMs(trimmed);
 
+      transcriptSpeechHoldRef.current = true;
       setTranscriptSpeechHold(true);
       transcriptSpeechDeadlineRef.current = Date.now() + delay;
       transcriptSpeechTimeoutRef.current = setTimeout(() => {
         transcriptSpeechTimeoutRef.current = null;
         transcriptSpeechDeadlineRef.current = null;
+        transcriptSpeechHoldRef.current = false;
         setTranscriptSpeechHold(false);
+        clearTranscriptAutoScroll();
       }, delay);
+
+      // Scroll the panel in step with the estimated read of the open line + body.
+      startTranscriptAutoScroll(delay);
     },
-    [clearTranscriptSpeechHold]
+    [clearTranscriptSpeechHold, clearTranscriptAutoScroll, startTranscriptAutoScroll]
   );
 
   const cancelAutoplay = useCallback(() => {
@@ -1264,8 +1356,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
 
   // Long transcripts are read by NVDA from the focused panel (not auto-read).
-  // Hold idle for the estimated speech duration, then release.
+  // Hold idle for the estimated speech duration and scroll in step with it.
   useEffect(() => {
+    transcriptSnapIndexRef.current = 0;
     if (!transcriptOpen || !speechMode) {
       clearTranscriptSpeechHold();
       return undefined;
@@ -1481,6 +1574,19 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }
 
       if (
+        transcriptSpeechHold &&
+        transcriptAutoScrollTimeoutRef.current !== null &&
+        transcriptAutoScrollStateRef.current
+      ) {
+        transcriptAutoScrollRemainingRef.current = Math.max(
+          0,
+          transcriptAutoScrollStateRef.current.nextDeadline - Date.now()
+        );
+        clearTimeout(transcriptAutoScrollTimeoutRef.current);
+        transcriptAutoScrollTimeoutRef.current = null;
+      }
+
+      if (
         storyTransitionActiveRef.current &&
         storyTransitionTimeoutRef.current !== null &&
         storyTransitionDeadlineRef.current !== null
@@ -1547,8 +1653,25 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       transcriptSpeechTimeoutRef.current = setTimeout(() => {
         transcriptSpeechTimeoutRef.current = null;
         transcriptSpeechDeadlineRef.current = null;
+        transcriptSpeechHoldRef.current = false;
         setTranscriptSpeechHold(false);
+        clearTranscriptAutoScroll();
       }, delay);
+    }
+
+    if (
+      transcriptSpeechHold &&
+      transcriptAutoScrollTimeoutRef.current === null &&
+      transcriptAutoScrollRemainingRef.current !== null &&
+      transcriptAutoScrollStateRef.current
+    ) {
+      const delay = transcriptAutoScrollRemainingRef.current;
+      transcriptAutoScrollRemainingRef.current = null;
+      transcriptAutoScrollStateRef.current.nextDeadline = Date.now() + delay;
+      transcriptAutoScrollTimeoutRef.current = setTimeout(
+        tickTranscriptAutoScroll,
+        delay
+      );
     }
 
     if (
@@ -1566,7 +1689,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         storyTransitionPlayRef.current?.();
       }, delay);
     }
-  }, [isPaused, transcriptSpeechHold, tickTextAutoScroll, landOnNextArrowEnd]);
+  }, [
+    isPaused,
+    transcriptSpeechHold,
+    tickTextAutoScroll,
+    tickTranscriptAutoScroll,
+    clearTranscriptAutoScroll,
+    landOnNextArrowEnd,
+  ]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -2385,33 +2515,72 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     ]
   );
 
-  const handleTranscriptKeyDown = useCallback((e) => {
-    if (e.repeat) return;
-    const key = e.key.toLowerCase();
-    if (key !== "l" && key !== "k") return;
+  const applyTranscriptSnap = useCallback(
+    (index, snaps) => {
+      const snap = snaps[index];
+      if (!snap) return;
 
-    const body = transcriptBodyRef.current;
-    const exitBtn = transcriptExitRef.current;
-    if (!body || !exitBtn) return;
+      transcriptSnapIndexRef.current = index;
+      const el = transcriptBodyRef.current;
+      if (el) {
+        clearTranscriptAutoScroll();
+        el.scrollTo({ top: snap.scrollTop, behavior: "auto" });
+      }
 
-    const maxScroll = body.scrollHeight - body.clientHeight;
-    if (maxScroll <= 0 && document.activeElement === body) {
-      e.preventDefault();
-      e.stopPropagation();
-      exitBtn.focus();
-      return;
-    }
+      if (speechMode) {
+        announce(getTranscriptSnapScrollCue(index, snaps.length), { dedupeMs: 200 });
+      }
+    },
+    [announce, clearTranscriptAutoScroll, speechMode]
+  );
 
-    if (key === "l" && document.activeElement === body && body.scrollTop >= maxScroll - 1) {
-      e.preventDefault();
-      e.stopPropagation();
-      body.scrollTo({ top: 0, behavior: "auto" });
-      exitBtn.focus();
-      return;
-    }
+  const handleTranscriptKeyDown = useCallback(
+    (e) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      if (key !== "l" && key !== "k") return;
 
-    stepScrollKeyDown(e, transcriptBodyRef);
-  }, []);
+      const body = transcriptBodyRef.current;
+      const exitBtn = transcriptExitRef.current;
+      if (!body || !exitBtn) return;
+
+      const snaps = buildTranscriptSnaps(body);
+      // One snap means nowhere to step — L hands focus to Exit (same as story
+      // leaving the text panel when there is no overflow).
+      if (snaps.length <= 1) {
+        if (key === "l" && document.activeElement === body) {
+          e.preventDefault();
+          e.stopPropagation();
+          clearTranscriptAutoScroll();
+          exitBtn.focus();
+        }
+        return;
+      }
+
+      const index = findNearestSnapIndex(snaps, body.scrollTop);
+
+      if (key === "l") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (index + 1 < snaps.length) {
+          applyTranscriptSnap(index + 1, snaps);
+        } else {
+          clearTranscriptAutoScroll();
+          body.scrollTo({ top: 0, behavior: "auto" });
+          transcriptSnapIndexRef.current = 0;
+          exitBtn.focus();
+        }
+        return;
+      }
+
+      if (key === "k" && index > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        applyTranscriptSnap(index - 1, snaps);
+      }
+    },
+    [applyTranscriptSnap, clearTranscriptAutoScroll]
+  );
 
   useEffect(() => {
     const handleEscape = (e) => {
