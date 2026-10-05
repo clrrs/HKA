@@ -2699,11 +2699,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const transcriptText = hasTranscript ? textOrMissing(artifact.transcriptText) : null;
 
   // Toolbar-only "x of x" positions (prev/next artifact arrows are outside the toolbar).
-  // Play and Pause share one slot number, matching their tabIndex swap.
   const toolbarLabels = (() => {
     const entries = [];
     if (showStoryButton) entries.push({ id: "story", base: "Story" });
-    if (isVideo) entries.push({ id: "video", base: null });
+    if (isVideo) {
+      entries.push({ id: "play", base: "Play video" });
+      entries.push({ id: "pause", base: "Pause video" });
+    }
     if (showGuidedDescriptionButton) entries.push({ id: "description", base: "Description" });
     if (!isVideo && hasPrevImageButton) entries.push({ id: "prevImage", base: "Previous image" });
     if (!isVideo && hasMultipleImages) entries.push({ id: "nextImage", base: "Next image" });
@@ -2712,13 +2714,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const total = entries.length;
     const map = {};
     entries.forEach((entry, i) => {
-      const pos = `${i + 1} of ${total}`;
-      if (entry.id === "video") {
-        map.play = `Play video, ${pos}`;
-        map.pause = `Pause video, ${pos}`;
-      } else {
-        map[entry.id] = `${entry.base}, ${pos}`;
-      }
+      map[entry.id] = `${entry.base}, ${i + 1} of ${total}`;
     });
     return map;
   })();
