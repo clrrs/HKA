@@ -30,11 +30,18 @@ import { estimateSpeechDurationMs } from "../utils/speechTiming";
 
 const SCROLL_STEP_RATIO = 0.75;
 const SECTION_TRANSITION_MS = 1000;
-const AUTO_READ_THEME_END_PROMPT =
-  "End of artifacts in this theme. Press Select to return to the start of the theme.";
-/** Matches theme/artifact circle select CTAs ("Press select key…"). */
-const ARTIFACT_NAV_SELECT_CTA = "Press select key to learn more.";
+const PREV_ARTIFACT_LABEL = "Previous artifact";
+const NEXT_ARTIFACT_LABEL = "Next artifact";
+const BACK_TO_THEME_LABEL = "Back to theme";
+const THEME_END_LABEL = "End of artifacts in this theme";
+/** Leading ": . : . :" is applied when these are put in aria-describedby. */
+const PREV_ARTIFACT_SELECT_CTA = "Press Select to go to the previous artifact.";
+const NEXT_ARTIFACT_SELECT_CTA = "Press Select to go to the next artifact.";
 const BACK_TO_THEME_SELECT_CTA = "Press select key to return to the theme.";
+const THEME_END_SELECT_CTA =
+  "Press Select to return to the start of the theme.";
+const PREV_ARROW_DESC_ID = "artifact-prev-arrow-desc";
+const NEXT_ARROW_DESC_ID = "artifact-next-arrow-desc";
 const TOOLBAR_NAV_HINT =
   "Use left and right keys to navigate artifact tool bar.";
 const VIDEO_END_DWELL_MS = 1000;
@@ -445,6 +452,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const artifact = getArtifact(theme.id, artifactId);
   const prevArtifact = getPrevArtifact(theme.id, artifactId);
   const nextArtifact = getNextArtifact(theme.id, artifactId);
+  const prevArrowLabel = prevArtifact ? PREV_ARTIFACT_LABEL : BACK_TO_THEME_LABEL;
+  const prevArrowTip = prevArtifact
+    ? PREV_ARTIFACT_SELECT_CTA
+    : BACK_TO_THEME_SELECT_CTA;
+  const nextArrowLabel = nextArtifact ? NEXT_ARTIFACT_LABEL : THEME_END_LABEL;
+  const nextArrowTip = nextArtifact
+    ? NEXT_ARTIFACT_SELECT_CTA
+    : THEME_END_SELECT_CTA;
 
   const isVideo = artifact?.type === "video";
   const images = !isVideo ? artifact?.images || EMPTY_IMAGES : EMPTY_IMAGES;
@@ -2323,16 +2338,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           focusables[idx + 1].focus();
         } else if (idx === focusables.length - 1) {
           bumpArrow(nextArrowRef);
-          const label = nextArrowRef.current?.getAttribute("aria-label");
-          if (label) announce(label, { politeness: "assertive" });
+          announce(`${nextArrowLabel}. ${nextArrowTip}`, {
+            politeness: "assertive",
+          });
         }
       } else if (isBack) {
         if (idx > 0) {
           focusables[idx - 1].focus();
         } else if (idx === 0) {
           bumpArrow(prevArrowRef);
-          const label = prevArrowRef.current?.getAttribute("aria-label");
-          if (label) announce(label, { politeness: "assertive" });
+          announce(`${prevArrowLabel}. ${prevArrowTip}`, {
+            politeness: "assertive",
+          });
         }
       }
     },
@@ -2342,6 +2359,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       getPopupFocusables,
       bumpArrow,
       announce,
+      nextArrowLabel,
+      nextArrowTip,
+      prevArrowLabel,
+      prevArrowTip,
       handlePrevArrow,
       handleNextArrow,
       handleStory,
@@ -2550,6 +2571,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         aria-label={dialogAriaLabel}
         onKeyDown={handlePopupKeyDown}
       >
+        <p id={PREV_ARROW_DESC_ID} className="sr-only">
+          {`: . : . : ${prevArrowTip}`}
+        </p>
+        <p id={NEXT_ARROW_DESC_ID} className="sr-only">
+          {`: . : . : ${nextArrowTip}`}
+        </p>
         {(speechMode || focusAnchorActive) && (
           <div
             ref={focusAnchorRef}
@@ -2564,11 +2591,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           ref={prevArrowRef}
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--prev"
           onClick={handlePrevArrow}
-          aria-label={
-            prevArtifact
-              ? `Previous artifact. ${ARTIFACT_NAV_SELECT_CTA}`
-              : `Back to theme. ${BACK_TO_THEME_SELECT_CTA}`
-          }
+          aria-label={prevArrowLabel}
+          aria-describedby={PREV_ARROW_DESC_ID}
         />
 
         <div className="artifact-popup-card">
@@ -2835,11 +2859,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           ref={nextArrowRef}
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--next"
           onClick={handleNextArrow}
-          aria-label={
-            nextArtifact
-              ? `Next artifact. ${ARTIFACT_NAV_SELECT_CTA}`
-              : AUTO_READ_THEME_END_PROMPT
-          }
+          aria-label={nextArrowLabel}
+          aria-describedby={NEXT_ARROW_DESC_ID}
         />
       </div>
 
