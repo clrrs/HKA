@@ -841,11 +841,53 @@ h1[tabindex]:focus-visible {
   color: var(--text-primary);
 }
 
+/* Idle warning (tip popup in ThemeScene shares the base card/line classes) */
+.idle-warning-card {
+  max-width: 640px;
+  padding: 44px 56px 40px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.idle-warning-content {
+  gap: 0;
+}
+
+.idle-warning-title {
+  font-size: calc(var(--font-size-h3) * var(--text-scale));
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-heading);
+}
+
+.idle-warning-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
 .idle-countdown {
-  font-size: calc(var(--font-size-h1) * 2 * var(--text-scale));
-  font-weight: 500;
-  line-height: 1.1;
-  color: var(--text-primary);
+  /* Fixed 1em slot so the card doesn't jump when the numbers start */
+  height: 1em;
+  margin-top: 4px;
+  font-size: calc(var(--font-size-h1) * 1.6 * var(--text-scale));
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-heading);
+  opacity: 1;
+  transition: opacity 300ms ease;
+}
+
+.idle-countdown--pending {
+  opacity: 0;
+}
+
+.idle-warning-hint {
+  width: 100%;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 2px solid var(--btn-nav-source-border);
+  font-weight: 600;
 }
 
 /* Test shortcut indicators (visual only) */

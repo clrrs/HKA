@@ -3,9 +3,15 @@ import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
   guardNvdaSpeechSilenceWhilePlaying,
+  stopNvdaSpeechAfterBrailleSettle,
   stopNvdaSpeechForMediaStart,
 } from "../../audio/nvdaSpeechControl";
-import { getThemeCarouselName, getThemeCarouselDescription } from "../../data/artifacts";
+import {
+  getThemeCarouselName,
+  getThemeCarouselDescription,
+  instructionalVideoTranscript,
+} from "../../data/artifacts";
+import { textOrMissing } from "../../data/contentPlaceholder";
 import { useAppState } from "../../state/StateProvider";
 import { scheduleFocus } from "../../state/useSceneManager";
 
@@ -60,7 +66,9 @@ export default function HomeScene({ isActive = false }) {
   const helpButtonRef = useRef(null);
   const modalRef = useRef(null);
   const videoRef = useRef(null);
+  const videoAnchorRef = useRef(null);
   const videoExitExploringRef = useRef(false);
+  const cancelVideoHushRef = useRef(null);
   const focusedIndexRef = useRef(focusedIndex);
   const wasActiveRef = useRef(isActive);
   const prevShowSettingsRef = useRef(showSettings);
@@ -107,16 +115,29 @@ export default function HomeScene({ isActive = false }) {
 
   useHeadphoneSinkEffect(videoRef, showVideo);
 
+  // Cut speech as soon as braille has the new focus text. The 400ms guard tick
+  // alone is slow enough that a word or two of the announcement is audible.
+  const hushVideoSpeech = useCallback(() => {
+    cancelVideoHushRef.current?.();
+    cancelVideoHushRef.current = stopNvdaSpeechAfterBrailleSettle();
+  }, []);
+
   useEffect(() => {
-    if (!showVideo) return;
+    if (!showVideo) return undefined;
     const video = videoRef.current;
-    if (!video) return;
+    if (!video) return undefined;
     stopNvdaSpeechForMediaStart();
+    hushVideoSpeech();
     video.play().catch(() => {});
-    return guardNvdaSpeechSilenceWhilePlaying(video, {
+    const stopGuard = guardNvdaSpeechSilenceWhilePlaying(video, {
       shouldSilence: () => !videoExitExploringRef.current,
     });
-  }, [showVideo]);
+    return () => {
+      stopGuard();
+      cancelVideoHushRef.current?.();
+      cancelVideoHushRef.current = null;
+    };
+  }, [showVideo, hushVideoSpeech]);
 
   useEffect(() => {
     if (!showVideo || !modalRef.current) return;
@@ -127,7 +148,7 @@ export default function HomeScene({ isActive = false }) {
       container.querySelector(".start-video-exit-btn")?.focus();
     };
     const focusVideo = () => {
-      videoRef.current?.focus();
+      videoAnchorRef.current?.focus();
     };
 
     // Two stops only: from either control, next/back both go to the other.
@@ -141,7 +162,7 @@ export default function HomeScene({ isActive = false }) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (document.activeElement === videoRef.current) {
+      if (document.activeElement === videoAnchorRef.current) {
         focusExit();
       } else {
         focusVideo();
@@ -391,12 +412,9 @@ export default function HomeScene({ isActive = false }) {
       </div>
 
       {showVideo && (
-        <div
-          className="start-video-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Instructional video"
-        >
+        // No dialog role/label: the only thing that should reach the visitor
+        // here is the instructional transcript, same as the post-attract scene.
+        <div className="start-video-overlay">
           <div className="start-video-backdrop" />
           <div
             className="start-video-modal"
@@ -418,12 +436,21 @@ export default function HomeScene({ isActive = false }) {
               }}
               onBlur={() => {
                 videoExitExploringRef.current = false;
+                hushVideoSpeech();
               }}
               aria-label="Close instructional video"
             >
               Exit
             </button>
-            <div className="start-video-body">
+            <div
+              ref={videoAnchorRef}
+              tabIndex={0}
+              className="instruction-focus-anchor"
+              onFocus={hushVideoSpeech}
+            >
+              {textOrMissing(instructionalVideoTranscript)}
+            </div>
+            <div className="start-video-body" aria-hidden="true">
               <video
                 ref={videoRef}
                 src="3HK7_Instructional_v06-260929.mp4"
@@ -434,7 +461,7 @@ export default function HomeScene({ isActive = false }) {
                   }
                 }}
                 onEnded={closeVideo}
-                tabIndex={0}
+                tabIndex={-1}
               />
             </div>
           </div>

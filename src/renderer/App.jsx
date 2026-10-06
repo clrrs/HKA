@@ -627,20 +627,29 @@ export default function App() {
             aria-modal="true"
             tabIndex={-1}
           >
-            <div className="idle-overlay-card" aria-hidden="true">
-              <div className="idle-overlay-content">
-                <h2 className="idle-overlay-line">
+            <div className="idle-overlay-card idle-warning-card" aria-hidden="true">
+              <div className="idle-overlay-content idle-warning-content">
+                <h2 className="idle-overlay-line idle-warning-title">
                   Still there?
                 </h2>
                 {showCountdownIntro && (
-                  <p className="idle-overlay-line">Returning to start in…</p>
-                )}
-                {typeof idleCountdown === "number" && (
-                  <div className="idle-countdown" aria-hidden="true">
-                    {idleCountdown}
+                  <div className="idle-warning-countdown">
+                    <p className="idle-overlay-line">Returning to start in…</p>
+                    {/* Slot is reserved during the buffer so the card doesn't
+                        jump when the numbers start. */}
+                    <div
+                      className={`idle-countdown${
+                        typeof idleCountdown === "number"
+                          ? ""
+                          : " idle-countdown--pending"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {typeof idleCountdown === "number" ? idleCountdown : ""}
+                    </div>
                   </div>
                 )}
-                <p className="idle-overlay-line">
+                <p className="idle-overlay-line idle-warning-hint">
                   Press any key to stay
                 </p>
               </div>

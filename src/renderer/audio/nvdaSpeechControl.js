@@ -81,8 +81,9 @@ export function guardNvdaSpeechSilenceWhilePlaying(audioEl, options = {}) {
   };
 
   const startGuard = () => {
-    if (!shouldSilence()) return;
-    stopNvdaSpeechAggressively();
+    if (shouldSilence()) stopNvdaSpeechAggressively();
+    // Keep ticking even while softened, so silence resumes the moment
+    // shouldSilence() flips back without waiting for another play event.
     if (intervalId !== null) return;
     intervalId = window.setInterval(() => {
       if (audioEl.paused || audioEl.ended) {

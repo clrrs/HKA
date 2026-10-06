@@ -122,8 +122,8 @@ function inferProducerScenario(row) {
   if (location === "HomeScene" && msg.includes("{theme.label}")) {
     return "Visitor moves between theme circles with the left and right keys; each circle announces its name and position.";
   }
-  if (location === "HomeScene" && message === "Instructional video") {
-    return "Visitor opens the help video overlay; NVDA reads the video dialog label.";
+  if (location === "HomeScene" && message === "{instructionalVideoTranscript}") {
+    return "Visitor opens the help video overlay; the hidden focus anchor carries the instructional video transcript (braille; speech is hushed while the video plays).";
   }
   if (location === "HomeScene" && message === "Close instructional video") {
     return "Visitor tabs to Close inside the help video overlay.";
