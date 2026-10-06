@@ -110,6 +110,29 @@ export default function App() {
     visible: false,
     closing: false,
   });
+  // Hidden cursor can still leave :hover / mouseenter on whatever is underneath.
+  // Block pointer hit-testing until the user actually moves or presses the mouse.
+  const [pointerActive, setPointerActive] = useState(false);
+  const prevSceneRef = useRef(scene);
+
+  useEffect(() => {
+    if (scene === "attract" && prevSceneRef.current !== "attract") {
+      setPointerActive(false);
+    }
+    prevSceneRef.current = scene;
+  }, [scene]);
+
+  useEffect(() => {
+    if (pointerActive) return undefined;
+
+    const activate = () => setPointerActive(true);
+    window.addEventListener("mousemove", activate, { passive: true });
+    window.addEventListener("mousedown", activate, true);
+    return () => {
+      window.removeEventListener("mousemove", activate);
+      window.removeEventListener("mousedown", activate, true);
+    };
+  }, [pointerActive]);
 
   useEffect(() => {
     if (!testEasterEgg) return;
@@ -664,6 +687,9 @@ export default function App() {
           </div>
         )}
       </div>
+      {!pointerActive && (
+        <div className="pointer-shield" aria-hidden="true" />
+      )}
     </div>
   );
 }

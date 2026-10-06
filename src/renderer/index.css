@@ -180,6 +180,14 @@ body {
   overflow: hidden;
 }
 
+/* Blocks stray hover/focus-from-hover while cursor: none (see App.jsx). */
+.pointer-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 2300;
+  cursor: none;
+}
+
 .app-scaler {
   width: 1920px;
   height: 1080px;

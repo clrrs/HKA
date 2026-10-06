@@ -60,6 +60,7 @@ export default function HomeScene({ isActive = false }) {
   const helpButtonRef = useRef(null);
   const modalRef = useRef(null);
   const videoRef = useRef(null);
+  const videoExitExploringRef = useRef(false);
   const focusedIndexRef = useRef(focusedIndex);
   const wasActiveRef = useRef(isActive);
   const prevShowSettingsRef = useRef(showSettings);
@@ -112,7 +113,9 @@ export default function HomeScene({ isActive = false }) {
     if (!video) return;
     stopNvdaSpeechForMediaStart();
     video.play().catch(() => {});
-    return guardNvdaSpeechSilenceWhilePlaying(video);
+    return guardNvdaSpeechSilenceWhilePlaying(video, {
+      shouldSilence: () => !videoExitExploringRef.current,
+    });
   }, [showVideo]);
 
   useEffect(() => {
@@ -404,6 +407,18 @@ export default function HomeScene({ isActive = false }) {
               type="button"
               className="exit-pill-btn start-video-exit-btn"
               onClick={closeVideo}
+              onMouseEnter={() => {
+                videoExitExploringRef.current = true;
+              }}
+              onMouseLeave={() => {
+                videoExitExploringRef.current = false;
+              }}
+              onFocus={() => {
+                videoExitExploringRef.current = true;
+              }}
+              onBlur={() => {
+                videoExitExploringRef.current = false;
+              }}
               aria-label="Close instructional video"
             >
               Exit
