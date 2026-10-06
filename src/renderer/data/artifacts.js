@@ -485,7 +485,11 @@ export const themes = {
         "images": [
           {
             "src": "3A4_TentativeShedKeller.png",
-            "alt": "A typed schedule outlines Helen's travels from 1948-1949."
+            "alt": "Page 1 of Helen Keller’s tentative itinerary for the Orient and Near East, 1948–49"
+          },
+          {
+            "src": "3A4_TentativeShedKeller2.png",
+            "alt": "Page 2 of Helen Keller’s tentative itinerary: General Statement about the world tour"
           }
         ],
         "transcriptTitle": "Transcript",

@@ -42,6 +42,10 @@ const THEME_END_SELECT_CTA =
   "Press Select to return to the start of the theme.";
 const PREV_ARROW_DESC_ID = "artifact-prev-arrow-desc";
 const NEXT_ARROW_DESC_ID = "artifact-next-arrow-desc";
+const ZOOM_TIP_ID = "artifact-zoom-tip";
+// Leading ": . : . :" nudges a brief pause after NVDA says "button".
+const ZOOM_TIP = "Tip: Zoom will enlarge image to full screen size";
+const ZOOM_TIP_DESCRIPTION = `: . : . : ${ZOOM_TIP}`;
 const TOOLBAR_NAV_HINT =
   "Use left and right keys to navigate artifact tool bar.";
 const VIDEO_END_DWELL_MS = 1000;
@@ -2742,6 +2746,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         <p id={NEXT_ARROW_DESC_ID} className="sr-only">
           {`: . : . : ${nextArrowTip}`}
         </p>
+        <p id={ZOOM_TIP_ID} className="sr-only">
+          {ZOOM_TIP_DESCRIPTION}
+        </p>
         {(speechMode || focusAnchorActive) && (
           <div
             ref={focusAnchorRef}
@@ -2893,6 +2900,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 className={`carousel-btn${zoomOpen ? " is-selected" : ""}`}
                 onClick={handlePrimaryAction}
                 aria-label={toolbarLabels.zoom}
+                aria-describedby={ZOOM_TIP_ID}
               >
                 Zoom
               </button>
