@@ -358,11 +358,28 @@ function getTextSnapScrollCue(index, total, blockSpeech = "") {
   return `More description. ${index + 1} of ${total}.`;
 }
 
-/** Transcript is one scrollable body — cues only, never re-speak the full text. */
+/** Position cue for a transcript snap; the caller appends the text read from there. */
 function getTranscriptSnapScrollCue(index, total) {
   if (index <= 0) return "View snapped to beginning of transcript.";
   if (index >= total - 1) return "View snapped to end of transcript.";
   return `More transcript. ${index + 1} of ${total}.`;
+}
+
+/**
+ * Transcript text from the first line visible at the top of the panel onward
+ * (a line cut off at the top is included so no words are skipped).
+ */
+function getTranscriptTextFromScroll(panel) {
+  if (!panel) return "";
+  const panelTop = panel.getBoundingClientRect().top;
+  const lines = Array.from(panel.querySelectorAll("p"));
+  const start = lines.findIndex((line) => line.getBoundingClientRect().bottom > panelTop + 1);
+  if (start === -1) return "";
+  return lines
+    .slice(start)
+    .map((line) => line.textContent.trim())
+    .filter(Boolean)
+    .join(" ");
 }
 
 function buildTranscriptSnaps(panel) {
@@ -922,7 +939,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, []);
 
   const startTranscriptAutoScroll = useCallback(
-    (durationMs) => {
+    (durationMs, { fromCurrent = false } = {}) => {
       clearTranscriptAutoScroll();
       if (!(durationMs > 0)) return;
 
@@ -932,14 +949,15 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         if (!el) return;
 
         const scrollLimit = Math.max(0, el.scrollHeight - el.clientHeight);
-        el.scrollTop = 0;
+        // Manual snaps re-read from where the visitor scrolled to.
+        if (!fromCurrent) el.scrollTop = 0;
 
         const padBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0;
         const maxTop = Math.min(
           scrollLimit,
           Math.max(0, el.scrollHeight - el.clientHeight + padBottom)
         );
-        const overflow = maxTop;
+        const overflow = maxTop - el.scrollTop;
         if (overflow <= SCROLL_OVERFLOW_THRESHOLD_PX) return;
 
         const stepPx = Math.floor(el.clientHeight * SCROLL_STEP_RATIO) || el.clientHeight;
@@ -970,15 +988,15 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   );
 
   const startTranscriptSpeechHold = useCallback(
-    (text) => {
+    (text, { lead = "Transcript window opened.", fromCurrent = false } = {}) => {
       clearTranscriptSpeechHold();
       const trimmed = String(text || "").trim();
       if (!trimmed) return;
 
-      // Dialog label + body — same estimate auto-read uses for spoken length.
+      // Lead line (open label or snap cue) + body — same estimate auto-read
+      // uses for spoken length.
       const delay =
-        estimateSpeechDurationMs("Transcript window opened.") +
-        DIALOG_TITLE_PREAMBLE_MS +
+        (lead ? estimateSpeechDurationMs(lead) + DIALOG_TITLE_PREAMBLE_MS : 0) +
         estimateSpeechDurationMs(trimmed);
 
       transcriptSpeechHoldRef.current = true;
@@ -992,8 +1010,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         clearTranscriptAutoScroll();
       }, delay);
 
-      // Scroll the panel in step with the estimated read of the open line + body.
-      startTranscriptAutoScroll(delay);
+      // Scroll the panel in step with the estimated read of the lead + body.
+      startTranscriptAutoScroll(delay, { fromCurrent });
     },
     [clearTranscriptSpeechHold, clearTranscriptAutoScroll, startTranscriptAutoScroll]
   );
@@ -2569,10 +2587,17 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }
 
       if (speechMode) {
-        announce(getTranscriptSnapScrollCue(index, snaps.length), { dedupeMs: 200 });
+        const cue = getTranscriptSnapScrollCue(index, snaps.length);
+        const rest = isPausedRef.current ? "" : getTranscriptTextFromScroll(el);
+        // One message so the cue always comes first, then reading resumes
+        // from the line now at the top of the panel.
+        announce(rest ? `${cue} ${rest}` : cue, { dedupeMs: 200 });
+        if (rest) {
+          startTranscriptSpeechHold(rest, { lead: cue, fromCurrent: true });
+        }
       }
     },
-    [announce, clearTranscriptAutoScroll, speechMode]
+    [announce, clearTranscriptAutoScroll, speechMode, startTranscriptSpeechHold]
   );
 
   const handleTranscriptKeyDown = useCallback(

@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from "react";
+import { flushSync } from "react-dom";
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import AccessibilityMenuFlat from "./components/AccessibilityMenuFlat";
@@ -9,6 +10,7 @@ import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
 import { EARCON, playEarcon } from "./audio/earcons";
 import { moveSettingsFocus } from "./utils/settingsFocus";
 import { preloadQuoteScreens } from "./data/quoteScreens";
+import { SILENT_NAME } from "./utils/silentName";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -26,6 +28,10 @@ const SPEECH_HUD_FADE_MS = 280;
 
 const IDLE_DISMISSED_ANNOUNCEMENT = "Idle warning dismissed.";
 const SETTINGS_CLOSED_ANNOUNCEMENT = "Settings closed.";
+
+function isFocusPark(el) {
+  return Boolean(el?.hasAttribute?.("data-focus-park"));
+}
 
 function isParagraphFocus() {
   return document.activeElement?.tagName === "P";
@@ -85,6 +91,12 @@ export default function App() {
   // role never changes under the focused element.
   const [mainEntryLabel, setMainEntryLabel] = useState(null);
   const [scenesEntryLabel, setScenesEntryLabel] = useState(null);
+  // Silent focus target for whenever focus would otherwise fall to <body>.
+  // NVDA presents the bare document as "doc" and then treats every ancestor
+  // as new, so braille leads with "doc". Held off while a settings/idle
+  // restore is about to place focus itself.
+  const focusParkRef = useRef(null);
+  const focusRestorePendingRef = useRef(false);
   const idleWasActiveRef = useRef(false);
 
   useEffect(() => {
@@ -249,7 +261,10 @@ export default function App() {
 
     const handlePassiveActivity = (e) => {
       // Programmatic focus on the idle alertdialog fires focusin; that must not count as user activity.
-      if (e.type === "focusin" && e.target?.closest?.(".idle-overlay")) {
+      if (
+        e.type === "focusin" &&
+        (e.target?.closest?.(".idle-overlay") || isFocusPark(e.target))
+      ) {
         return;
       }
       handleActivity();
@@ -348,7 +363,7 @@ export default function App() {
     if (showSettings && !prevShowSettingsRef.current) {
       setScenesEntryLabel(null);
       const active = document.activeElement;
-      if (active && active !== document.body) {
+      if (active && active !== document.body && !isFocusPark(active)) {
         settingsReturnFocusRef.current = active;
       }
     } else if (!showSettings && prevShowSettingsRef.current) {
@@ -364,14 +379,21 @@ export default function App() {
         const target = usable || getActiveSceneFocusTarget();
         target?.focus({ preventScroll: true });
       };
-      const t0 = window.setTimeout(restore, 60);
-      const t1 = window.setTimeout(restore, 120);
-      const t2 = window.setTimeout(restore, 220);
+      // First attempt next frame: after the label commits, before Chromium
+      // reports the removed overlay's focus loss (which brailles as "doc").
+      focusRestorePendingRef.current = true;
+      const raf = requestAnimationFrame(restore);
+      const t1 = window.setTimeout(restore, 60);
+      const t2 = window.setTimeout(() => {
+        restore();
+        focusRestorePendingRef.current = false;
+      }, 220);
       prevShowSettingsRef.current = showSettings;
       return () => {
-        window.clearTimeout(t0);
+        cancelAnimationFrame(raf);
         window.clearTimeout(t1);
         window.clearTimeout(t2);
+        focusRestorePendingRef.current = false;
       };
     }
     prevShowSettingsRef.current = showSettings;
@@ -422,16 +444,48 @@ export default function App() {
       restoreEl && document.contains(restoreEl) && !restoreEl.closest("[inert]");
     const target = usable ? restoreEl : getActiveSceneFocusTarget();
     // "Idle warning dismissed." is the .app-main name (mainEntryLabel), so it
-    // speaks first whenever focus re-enters; the delay lets inert clear.
+    // speaks first whenever focus re-enters. Next frame lets inert clear while
+    // still beating Chromium's report of the overlay's focus loss ("doc").
     let cancelFocus = () => {};
-    const t = window.setTimeout(() => {
+    focusRestorePendingRef.current = true;
+    const raf = requestAnimationFrame(() => {
       cancelFocus = scheduleFocus(target, { stealWindow: true });
-    }, 60);
+    });
+    const t = window.setTimeout(() => {
+      focusRestorePendingRef.current = false;
+    }, 220);
     return () => {
+      cancelAnimationFrame(raf);
       window.clearTimeout(t);
       cancelFocus();
+      focusRestorePendingRef.current = false;
     };
   }, [idleCountdown]);
+
+  // Checked every frame (rAF runs before Chromium serializes accessibility
+  // events for that frame), so a removed or inerted focus target is replaced
+  // before NVDA ever sees focus on the document.
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      if (focusRestorePendingRef.current || !document.hasFocus()) return;
+      const active = document.activeElement;
+      if (active && active !== document.body) return;
+      const park = focusParkRef.current;
+      if (!park || park.closest("[inert]")) return;
+      // Clear any entry label first: focus is outside both containers right
+      // now, so the role can change safely, and a stale "Settings closed." /
+      // "Idle warning dismissed." won't be re-spoken on the way into the park.
+      flushSync(() => {
+        setMainEntryLabel(null);
+        setScenesEntryLabel(null);
+      });
+      park.focus({ preventScroll: true });
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
     if (idleCountdown === null) {
@@ -444,7 +498,12 @@ export default function App() {
     setMainEntryLabel(null);
     setScenesEntryLabel(null);
     const active = document.activeElement;
-    if (active && active !== document.body && !active.closest?.(".idle-overlay")) {
+    if (
+      active &&
+      active !== document.body &&
+      !active.closest?.(".idle-overlay") &&
+      !isFocusPark(active)
+    ) {
       idleReturnFocusRef.current = active;
     }
     announce("Still there? Press any key to stay.", {
@@ -570,6 +629,14 @@ export default function App() {
             aria-hidden={showSettings ? true : undefined}
             inert={showSettings ? "" : undefined}
           >
+            <div
+              ref={focusParkRef}
+              className="sr-only"
+              tabIndex={-1}
+              role="application"
+              aria-label={SILENT_NAME}
+              data-focus-park=""
+            />
             <SceneContainer />
           </div>
           {showSettings && (
