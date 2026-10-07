@@ -14,6 +14,7 @@ import {
 } from "../../data/quoteScreens";
 import { estimateSpeechDurationMs } from "../../utils/speechTiming";
 import { scheduleFocus } from "../../state/useSceneManager";
+import { SILENT_NAME } from "../../utils/silentName";
 
 const QUOTE_VO_DIR = "Quote VOs";
 
@@ -197,7 +198,7 @@ export default function QuoteScene() {
             className="sr-only"
             tabIndex={0}
             role="application"
-            aria-label={"\u00a0"}
+            aria-label={SILENT_NAME}
           />
           <audio
             key={theme.id}

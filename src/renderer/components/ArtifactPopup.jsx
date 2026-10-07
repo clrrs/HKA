@@ -27,6 +27,7 @@ import {
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 import { estimateSpeechDurationMs } from "../utils/speechTiming";
+import { SILENT_NAME } from "../utils/silentName";
 
 const SCROLL_STEP_RATIO = 0.75;
 const SECTION_TRANSITION_MS = 1000;
@@ -512,7 +513,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // Dialog name carries "{title} opened." once; blanked after so zoom/settings/
   // idle restore does not make NVDA re-speak the open line.
   const [dialogAriaLabel, setDialogAriaLabel] = useState(() =>
-    artifact ? `${artifact.title} opened.` : "\u00a0"
+    artifact ? `${artifact.title} opened.` : SILENT_NAME
   );
   const focusAnchorActiveRef = useRef(!speechMode);
   const focusAnchorRef = useRef(null);
@@ -1374,7 +1375,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayDoneRef.current = false;
     storyParkedRef.current = false;
     popupInitialFocusDoneRef.current = false;
-    setDialogAriaLabel(artifact ? `${artifact.title} opened.` : "\u00a0");
+    setDialogAriaLabel(artifact ? `${artifact.title} opened.` : SILENT_NAME);
     clearTranscriptDwell();
     clearStoryTransition();
   }, [artifactId, artifact, clearTranscriptDwell, clearStoryTransition]);
@@ -1421,7 +1422,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const openTitle = `${artifact.title} opened.`;
     const openAlt = getArtifactAltText(artifact);
     announce(openTitle, { politeness: "assertive" });
-    setDialogAriaLabel("\u00a0");
+    setDialogAriaLabel(SILENT_NAME);
 
     const altDelay = estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS;
     const t = window.setTimeout(() => {
@@ -1510,7 +1511,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     // idle restore) does not re-speak it.
     const announceAltThenStory = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
-      setDialogAriaLabel("\u00a0");
+      setDialogAriaLabel(SILENT_NAME);
       announce(openAlt, { politeness: "assertive" });
       const altDelay = autoReadDelayMs(
         estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
@@ -2798,7 +2799,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             tabIndex={0}
             data-autofocus
             role="application"
-            aria-label={"\u00a0"}
+            aria-label={SILENT_NAME}
             aria-hidden={speechMode ? undefined : true}
           />
         )}
@@ -2989,7 +2990,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   ref={textBodyRef}
                   tabIndex={speechMode && !isAutoplaying && textScrollable ? 0 : -1}
                   role={speechMode ? "application" : undefined}
-                  aria-label={speechMode ? "\u00a0" : undefined}
+                  aria-label={speechMode ? SILENT_NAME : undefined}
                   aria-hidden={speechMode && isAutoplaying ? true : undefined}
                 >
                   {visibleBlocks.map((block) =>

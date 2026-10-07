@@ -80,7 +80,9 @@ export default function App() {
   // container focus re-enters, not a live region. NVDA speaks new ancestors
   // outermost-first in the same focus event, so the confirmation always lands
   // before the restored control's context and name (a live region could be
-  // spoken between them). Cleared whenever an overlay opens again.
+  // spoken between them). The role is only applied while a label is set, and
+  // labels are only set/cleared while focus is outside the container, so the
+  // role never changes under the focused element.
   const [mainEntryLabel, setMainEntryLabel] = useState(null);
   const [scenesEntryLabel, setScenesEntryLabel] = useState(null);
   const idleWasActiveRef = useRef(false);
@@ -344,7 +346,6 @@ export default function App() {
 
   useLayoutEffect(() => {
     if (showSettings && !prevShowSettingsRef.current) {
-      setMainEntryLabel(null);
       setScenesEntryLabel(null);
       const active = document.activeElement;
       if (active && active !== document.body) {
@@ -551,12 +552,12 @@ export default function App() {
   return (
     <div className="app">
       <div id="app-scaler" className="app-scaler">
-        {/* role="application" is silent in NVDA speech and braille when named;
-            the nbsp keeps it named (unnamed brailles as "app"). */}
+        {/* role="application" is silent in NVDA speech and braille only when
+            named, so it's applied only while an entry label is set. */}
         <div
           className="app-main"
-          role="application"
-          aria-label={mainEntryLabel || "\u00a0"}
+          role={mainEntryLabel ? "application" : undefined}
+          aria-label={mainEntryLabel || undefined}
           aria-hidden={idleWarningActive ? true : undefined}
           inert={idleWarningActive ? "" : undefined}
         >
@@ -564,8 +565,8 @@ export default function App() {
               drive the carousel behind the overlay. */}
           <div
             className="app-scenes"
-            role="application"
-            aria-label={scenesEntryLabel || "\u00a0"}
+            role={scenesEntryLabel ? "application" : undefined}
+            aria-label={scenesEntryLabel || undefined}
             aria-hidden={showSettings ? true : undefined}
             inert={showSettings ? "" : undefined}
           >

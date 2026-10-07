@@ -5,6 +5,7 @@ import { getTheme, getArtifactIndex, getArtifactCircleName, getArtifactCircleDes
 import { scheduleFocus } from "../../state/useSceneManager";
 import { EARCON, playEarcon } from "../../audio/earcons";
 import ArtifactPopup from "../ArtifactPopup";
+import { SILENT_NAME } from "../../utils/silentName";
 
 const ITEM_WIDTH = 600;
 const GAP = 77;
@@ -440,10 +441,10 @@ export default function ThemeScene() {
         <div
           ref={tipRef}
           className="idle-overlay theme-tip-overlay"
-          // Not alertdialog: NVDA would add "alert dialog". Named nbsp so the
-          // silent role stays silent; the tip itself is spoken via announce().
+          // Not alertdialog: NVDA would add "alert dialog". SILENT_NAME keeps
+          // the silent role silent; the tip itself is spoken via announce().
           role="application"
-          aria-label={"\u00a0"}
+          aria-label={SILENT_NAME}
           tabIndex={-1}
           data-autofocus
         >
