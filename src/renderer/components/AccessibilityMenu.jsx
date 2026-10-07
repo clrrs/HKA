@@ -168,7 +168,11 @@ export default function AccessibilityMenu({ onboarding = false }) {
           tabIndex={0}
           data-autofocus
           data-settings-layer="chrome"
-          aria-label={onboarding ? ONBOARDING_INTRO_SR_LABEL : undefined}
+          // role="application" is one of NVDA's silent roles: with a name, the
+          // role word is dropped from speech and braille (a bare focusable div
+          // reads as "section").
+          role="application"
+          aria-label={onboarding ? ONBOARDING_INTRO_SR_LABEL : "Settings"}
         >
           <h2
             id="accessibility-settings-title"

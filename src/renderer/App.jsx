@@ -564,16 +564,11 @@ export default function App() {
             <SceneContainer />
           </div>
           {showSettings && (
-            <div
-              className="settings-overlay"
-              role="dialog"
-              aria-modal="true"
-              // Onboarding: name lives only on the focused intro so NVDA does not
-              // announce "Settings" here and again on the blurb.
-              aria-label={
-                settingsOnboarding ? undefined : "Settings"
-              }
-            >
+            // No dialog/document roles: NVDA speaks and brailles every container
+            // role on entry ("Settings dialog document section"). Plain divs are
+            // layout to NVDA, so the focused intro's own name is the only output.
+            // Modality comes from inert .app-scenes + the Tab trap below.
+            <div className="settings-overlay">
               <div
                 className={`settings-backdrop${
                   settingsOnboarding ? " settings-backdrop--opaque" : ""
@@ -587,7 +582,6 @@ export default function App() {
                     : ""
                 }`}
                 ref={settingsPanelRef}
-                role="document"
                 onKeyDown={handleSettingsKeyDown}
               >
                 {settingsMenuVariantActive === "A" ? (
