@@ -77,13 +77,30 @@ function autoReadDelayMs(ms, fast) {
 /** Ignore only sub-pixel / rounding noise — not a full line of clipped text. */
 const SCROLL_OVERFLOW_THRESHOLD_PX = 8;
 
-function getScrollOverflowPx(el) {
-  if (!el) return 0;
-  return Math.max(0, el.scrollHeight - el.clientHeight);
+/**
+ * Slack before the copy counts as clipped. The last line box ends in blank
+ * half-leading (line-height 1.5), so a few px past the edge hides no glyphs.
+ */
+const CONTENT_FIT_TOLERANCE_PX = 4;
+
+/**
+ * How far the copy itself runs past the bottom of the visible panel. Measured
+ * off the blocks, not scrollHeight: scrollHeight also counts the body's bottom
+ * padding and the last paragraph's margin, which made copy that fits on screen
+ * register as overflowing.
+ */
+function getContentOverflowPx(panel) {
+  if (!panel) return 0;
+  let bottom = 0;
+  for (const child of panel.children) {
+    const top = child.offsetParent === panel ? child.offsetTop : child.offsetTop - panel.offsetTop;
+    bottom = Math.max(bottom, top + child.offsetHeight);
+  }
+  return Math.max(0, bottom - panel.clientHeight);
 }
 
 function hasScrollOverflow(el) {
-  return getScrollOverflowPx(el) > SCROLL_OVERFLOW_THRESHOLD_PX;
+  return getContentOverflowPx(el) > CONTENT_FIT_TOLERANCE_PX;
 }
 
 function showsTranscriptButton(artifact, isVideo) {
@@ -144,6 +161,11 @@ function getBlockScrollStops(panel, blockKey, offset, height) {
 function buildTextSnapsAndMarkers(panel, textBlocks) {
   if (!panel || textBlocks.length === 0) {
     return { snaps: [], markers: [] };
+  }
+  // Everything is already on screen: one stop, no ticks, no gold bar — even
+  // when there are several paragraphs to read.
+  if (!hasScrollOverflow(panel)) {
+    return { snaps: [{ blockKey: textBlocks[0].key, scrollTop: 0 }], markers: [] };
   }
 
   const total = panel.scrollHeight || 1;
@@ -699,6 +721,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       if (!el || !blockKey) return;
 
       clearTextAutoScroll();
+      // Copy that fits must not shift into its own bottom padding.
+      if (!hasScrollOverflow(el)) {
+        el.scrollTop = 0;
+        return;
+      }
       const scrollLimit = Math.max(0, el.scrollHeight - el.clientHeight);
       el.scrollTo({
         top: Math.min(getBlockOffsetTop(blockKey), scrollLimit),
@@ -782,6 +809,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         if (!autoplayingRef.current || isPausedRef.current) return;
         const el = textBodyRef.current;
         if (!el) return;
+        if (!hasScrollOverflow(el)) {
+          el.scrollTop = 0;
+          return;
+        }
 
         const scrollLimit = Math.max(0, el.scrollHeight - el.clientHeight);
         const blockTop = blockKey ? getBlockOffsetTop(blockKey) : 0;
@@ -1773,6 +1804,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (!el) return;
 
     const measure = () => {
+      // Not laid out yet (hidden behind an overlay): nothing to judge. The
+      // ResizeObserver fires again once the panel has a real size.
+      if (el.clientHeight === 0) return;
       const { snaps, markers } = buildTextSnapsAndMarkers(el, visibleBlocks);
       textSnapsRef.current = snaps;
       // Real step-scroll only when there is more than one snap (not phantom overflow).
@@ -1813,6 +1847,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     if (typeof ResizeObserver !== "undefined") {
       ro = new ResizeObserver(measure);
       ro.observe(el);
+      // A text-size change can reflow the copy without resizing the panel.
+      for (const child of el.children) ro.observe(child);
     }
 
     return () => {

@@ -2226,6 +2226,17 @@ h1[tabindex]:focus-visible {
   border-color: transparent;
 }
 
+/* Large text: card and text panel grow together (image area unchanged) so the
+   common four-line description clears the bottom edge instead of touching it. */
+[data-text-size="large"] .artifact-popup-card {
+  height: 1020px;
+}
+
+[data-text-size="large"] .artifact-popup-text {
+  height: 350px;
+  max-height: 350px;
+}
+
 .artifact-popup-text-header {
   flex-shrink: 0;
   padding: 0 100px 12px;
