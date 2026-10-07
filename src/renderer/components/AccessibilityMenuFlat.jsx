@@ -44,6 +44,8 @@ function SettingHeader({ name, valueLabel: currentValue, id }) {
       tabIndex={0}
       data-settings-layer="menu"
       data-settings-menu-item
+      // Silent role so NVDA doesn't add "section" after the label.
+      role="application"
       aria-label={headerLabel(name, currentValue)}
     >
       <span aria-hidden="true">{name}</span>

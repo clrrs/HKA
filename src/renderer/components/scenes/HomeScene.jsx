@@ -337,12 +337,13 @@ export default function HomeScene({ isActive = false }) {
             data-autofocus
             onFocus={handleHeadingFocus}
             onBlur={handleHeadingBlur}
+            // Silent role + name: NVDA drops the role word ("section") in
+            // speech and braille. Named in both modes so braille keeps the text.
+            role="application"
             aria-label={
-              speechMode
-                ? announceHomeArrival
-                  ? `Home. ${HOME_HEADING_LABEL}`
-                  : HOME_HEADING_LABEL
-                : undefined
+              speechMode && announceHomeArrival
+                ? `Home. ${HOME_HEADING_LABEL}`
+                : HOME_HEADING_LABEL
             }
           >
             <p className="home-heading-text" aria-hidden={speechMode ? true : undefined}>
@@ -359,14 +360,16 @@ export default function HomeScene({ isActive = false }) {
         </div>
 
         <div ref={carouselRef} className="home-carousel" aria-hidden="true">
+          {/* application, not list: keeps "Theme selection" without the list
+              role word / item count in speech and braille. */}
           <div
-            role="list"
+            role="application"
             aria-label="Theme selection"
             className="theme-circles"
             style={{ transform: `translateX(${getTrackTranslateX(focusedIndex)}px)` }}
           >
             {themes.map((theme, i) => (
-              <div role="listitem" key={theme.id}>
+              <div key={theme.id}>
                 <button
                   ref={(el) => { circleRefs.current[i] = el; }}
                   className={`theme-circle ${focusedIndex === i ? "theme-circle--focused" : ""} ${theme.disabledForTesting ? "theme-circle--disabled" : ""}`}
@@ -447,6 +450,9 @@ export default function HomeScene({ isActive = false }) {
               tabIndex={0}
               className="instruction-focus-anchor"
               onFocus={hushVideoSpeech}
+              // Named + silent role: reads the transcript without "section".
+              role="application"
+              aria-label={textOrMissing(instructionalVideoTranscript)}
             >
               {textOrMissing(instructionalVideoTranscript)}
             </div>

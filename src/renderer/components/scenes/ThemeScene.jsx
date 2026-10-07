@@ -329,7 +329,10 @@ export default function ThemeScene() {
             tabIndex={0}
             data-autofocus={!showTip ? true : undefined}
             onFocus={handleHeadingFocus}
-            aria-label={speechMode ? `${theme.label}. ${theme.description} Use left and right keys to select an artifact.` : undefined}
+            // Silent role + name: NVDA drops the role word ("section") in
+            // speech and braille. Named in both modes so braille keeps the text.
+            role="application"
+            aria-label={`${theme.label}. ${theme.description} Use left and right keys to select an artifact.`}
           >
             <p
               className="theme-title"
@@ -356,8 +359,10 @@ export default function ThemeScene() {
         </div>
 
         <div ref={carouselRef} className="theme-carousel" aria-hidden="true">
+          {/* application, not list: keeps "Artifact selection" without the
+              list role word / item count in speech and braille. */}
           <div
-            role="list"
+            role="application"
             aria-label="Artifact selection"
             className={`artifact-circles ${hasFocus || popupOpen ? "artifact-circles--active" : ""}`}
             style={{
@@ -368,7 +373,7 @@ export default function ThemeScene() {
             {artifacts.map((artifact, i) => {
               if (popupOpen && i === focusedIndex) {
                 return (
-                  <div role="listitem" key={artifact.id}>
+                  <div key={artifact.id}>
                     <div className="artifact-popup-slot" aria-hidden="true" />
                   </div>
                 );
@@ -376,7 +381,7 @@ export default function ThemeScene() {
 
               const { src: thumbSrc, fallbackSrc } = getThumbnailSources(artifact);
               return (
-                <div role="listitem" key={artifact.id}>
+                <div key={artifact.id}>
                   <button
                     ref={(el) => { circleRefs.current[i] = el; }}
                     className={`artifact-circle ${!popupOpen && focusedIndex === i ? "artifact-circle--focused" : ""}`}
@@ -435,8 +440,10 @@ export default function ThemeScene() {
         <div
           ref={tipRef}
           className="idle-overlay theme-tip-overlay"
-          role="alertdialog"
-          aria-modal="true"
+          // Not alertdialog: NVDA would add "alert dialog". Named nbsp so the
+          // silent role stays silent; the tip itself is spoken via announce().
+          role="application"
+          aria-label={"\u00a0"}
           tabIndex={-1}
           data-autofocus
         >

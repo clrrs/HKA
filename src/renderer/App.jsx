@@ -76,6 +76,13 @@ export default function App() {
   } = useAppState();
   const announce = useAnnounce();
   const [idleCountdown, setIdleCountdown] = useState(null);
+  // "Settings closed." / "Idle warning dismissed." ride on the name of the
+  // container focus re-enters, not a live region. NVDA speaks new ancestors
+  // outermost-first in the same focus event, so the confirmation always lands
+  // before the restored control's context and name (a live region could be
+  // spoken between them). Cleared whenever an overlay opens again.
+  const [mainEntryLabel, setMainEntryLabel] = useState(null);
+  const [scenesEntryLabel, setScenesEntryLabel] = useState(null);
   const idleWasActiveRef = useRef(false);
 
   useEffect(() => {
@@ -234,11 +241,7 @@ export default function App() {
       warningVisibleRef.current = false;
       if (wasWarning) {
         playEarcon(EARCON.popupClose);
-        announce(IDLE_DISMISSED_ANNOUNCEMENT, {
-          politeness: "assertive",
-          source: "idle-dismiss",
-          dedupeMs: 0,
-        });
+        setMainEntryLabel(IDLE_DISMISSED_ANNOUNCEMENT);
       }
     };
 
@@ -261,11 +264,7 @@ export default function App() {
 
       if (wasWarning) {
         playEarcon(EARCON.popupClose);
-        announce(IDLE_DISMISSED_ANNOUNCEMENT, {
-          politeness: "assertive",
-          source: "idle-dismiss",
-          dedupeMs: 0,
-        });
+        setMainEntryLabel(IDLE_DISMISSED_ANNOUNCEMENT);
         const key = e.key.toLowerCase();
         if (key === "s" || key === "home") {
           return;
@@ -345,18 +344,16 @@ export default function App() {
 
   useLayoutEffect(() => {
     if (showSettings && !prevShowSettingsRef.current) {
+      setMainEntryLabel(null);
+      setScenesEntryLabel(null);
       const active = document.activeElement;
       if (active && active !== document.body) {
         settingsReturnFocusRef.current = active;
       }
     } else if (!showSettings && prevShowSettingsRef.current) {
-      // Assertive + delayed restore so "Settings closed." speaks before the
-      // restored control (polite waited behind focus; immediate focus raced the live region).
-      announce(SETTINGS_CLOSED_ANNOUNCEMENT, {
-        politeness: "assertive",
-        source: "settings-closed",
-        dedupeMs: 0,
-      });
+      // Spoken as the .app-scenes name when focus re-enters it (see
+      // scenesEntryLabel), ahead of e.g. "Theme selection" and the button.
+      setScenesEntryLabel(SETTINGS_CLOSED_ANNOUNCEMENT);
       const el = settingsReturnFocusRef.current;
       settingsReturnFocusRef.current = null;
       const restore = () => {
@@ -366,7 +363,6 @@ export default function App() {
         const target = usable || getActiveSceneFocusTarget();
         target?.focus({ preventScroll: true });
       };
-      // Live region writes at 50ms; restore after that so close wins the race.
       const t0 = window.setTimeout(restore, 60);
       const t1 = window.setTimeout(restore, 120);
       const t2 = window.setTimeout(restore, 220);
@@ -378,7 +374,7 @@ export default function App() {
       };
     }
     prevShowSettingsRef.current = showSettings;
-  }, [showSettings, announce]);
+  }, [showSettings]);
 
   useLayoutEffect(() => {
     if (!showSettings) return;
@@ -424,7 +420,8 @@ export default function App() {
     const usable =
       restoreEl && document.contains(restoreEl) && !restoreEl.closest("[inert]");
     const target = usable ? restoreEl : getActiveSceneFocusTarget();
-    // Live region writes at 50ms; delay restore so dismiss speaks before focus.
+    // "Idle warning dismissed." is the .app-main name (mainEntryLabel), so it
+    // speaks first whenever focus re-enters; the delay lets inert clear.
     let cancelFocus = () => {};
     const t = window.setTimeout(() => {
       cancelFocus = scheduleFocus(target, { stealWindow: true });
@@ -443,6 +440,8 @@ export default function App() {
     }
     if (idleFocusSessionRef.current) return;
     idleFocusSessionRef.current = true;
+    setMainEntryLabel(null);
+    setScenesEntryLabel(null);
     const active = document.activeElement;
     if (active && active !== document.body && !active.closest?.(".idle-overlay")) {
       idleReturnFocusRef.current = active;
@@ -545,12 +544,19 @@ export default function App() {
   const idleWarningActive = idleCountdown !== null;
   const showCountdownIntro =
     idleCountdown === "buffer" || typeof idleCountdown === "number";
+  const idleBrailleText = `Still there? Press any key to stay.${
+    showCountdownIntro ? " Returning to start in…" : ""
+  }${typeof idleCountdown === "number" ? ` ${idleCountdown}` : ""}`;
 
   return (
     <div className="app">
       <div id="app-scaler" className="app-scaler">
+        {/* role="application" is silent in NVDA speech and braille when named;
+            the nbsp keeps it named (unnamed brailles as "app"). */}
         <div
           className="app-main"
+          role="application"
+          aria-label={mainEntryLabel || "\u00a0"}
           aria-hidden={idleWarningActive ? true : undefined}
           inert={idleWarningActive ? "" : undefined}
         >
@@ -558,6 +564,8 @@ export default function App() {
               drive the carousel behind the overlay. */}
           <div
             className="app-scenes"
+            role="application"
+            aria-label={scenesEntryLabel || "\u00a0"}
             aria-hidden={showSettings ? true : undefined}
             inert={showSettings ? "" : undefined}
           >
@@ -614,11 +622,11 @@ export default function App() {
           )}
         </div>
         {idleWarningActive && (
+          // No alertdialog role: NVDA would add "alert dialog" to speech and
+          // braille. .app-main is inert while this shows.
           <div
             ref={idleOverlayRef}
             className="idle-overlay"
-            role="alertdialog"
-            aria-modal="true"
             tabIndex={-1}
           >
             <div className="idle-overlay-card idle-warning-card" aria-hidden="true">
@@ -655,10 +663,15 @@ export default function App() {
             >
               {typeof idleCountdown === "number" ? idleCountdown : ""}
             </div>
-            <div ref={idleBrailleRef} className="sr-only" tabIndex={-1}>
-              Still there? Press any key to stay.
-              {showCountdownIntro ? " Returning to start in…" : ""}
-              {typeof idleCountdown === "number" ? ` ${idleCountdown}` : ""}
+            {/* Named + silent role so focus reads the text without "section". */}
+            <div
+              ref={idleBrailleRef}
+              className="sr-only"
+              tabIndex={-1}
+              role="application"
+              aria-label={idleBrailleText}
+            >
+              {idleBrailleText}
             </div>
           </div>
         )}

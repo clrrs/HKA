@@ -190,11 +190,13 @@ export default function QuoteScene() {
       )}
       {theme ? (
         <>
-          {/* Silent focus park: stays focused for the whole quote scene. */}
+          {/* Silent focus park: stays focused for the whole quote scene.
+              role="application" so NVDA doesn't add "section". */}
           <div
             ref={quoteEntryRef}
             className="sr-only"
             tabIndex={0}
+            role="application"
             aria-label={"\u00a0"}
           />
           <audio

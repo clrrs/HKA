@@ -176,6 +176,9 @@ export default function InstructionScene({ isActive }) {
           tabIndex={0}
           data-autofocus={true}
           className="instruction-focus-anchor"
+          // Named + silent role: reads the transcript without "section".
+          role="application"
+          aria-label={textOrMissing(instructionalVideoTranscript)}
         >
           {textOrMissing(instructionalVideoTranscript)}
         </div>

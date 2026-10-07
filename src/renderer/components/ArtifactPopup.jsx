@@ -2761,6 +2761,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // Title opened first — auto-read then announces Image: alt, then story.
   // dialogAriaLabel state is blanked after that open title is consumed.
 
+  const textPanelLabel = [
+    artifact.title,
+    ...visibleBlocks.map((block) => getBlockSpeech(block, false)),
+  ].join(". ");
+
   const autoplayBtnClass = (section) =>
     visualActiveSection === section ? " carousel-btn--autoplay-active" : "";
 
@@ -2771,8 +2776,9 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           isAutoplaying ? " artifact-popup--autoplaying" : ""
         }`}
         ref={popupRef}
-        role="dialog"
-        aria-modal="true"
+        // application, not dialog: NVDA still speaks the name on entry but
+        // drops the role word in speech and braille (silent role when named).
+        role="application"
         aria-label={dialogAriaLabel}
         onKeyDown={handlePopupKeyDown}
       >
@@ -2791,6 +2797,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             className="artifact-popup-focus-anchor"
             tabIndex={0}
             data-autofocus
+            role="application"
+            aria-label={"\u00a0"}
             aria-hidden={speechMode ? undefined : true}
           />
         )}
@@ -2836,7 +2844,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             </div>
           )}
 
-          <div className="artifact-popup-controls" role="toolbar" aria-label="Controls">
+          <div className="artifact-popup-controls" role="application" aria-label="Controls">
             {showStoryButton && (
               <button
                 type="button"
@@ -2963,6 +2971,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               }`}
               ref={textRef}
               tabIndex={speechMode || !textScrollable ? -1 : 0}
+              // Focused only with speech off: name it so braille shows the text
+              // without "section". Generic in speech mode (layout ancestor).
+              role={speechMode ? undefined : "application"}
+              aria-label={speechMode ? undefined : textPanelLabel}
               data-autofocus={!speechMode && !focusAnchorActive && textScrollable ? true : undefined}
               onClick={() => enterTextNav()}
             >
@@ -2976,7 +2988,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   className="artifact-popup-text-body"
                   ref={textBodyRef}
                   tabIndex={speechMode && !isAutoplaying && textScrollable ? 0 : -1}
-                  role={speechMode ? "group" : undefined}
+                  role={speechMode ? "application" : undefined}
+                  aria-label={speechMode ? "\u00a0" : undefined}
                   aria-hidden={speechMode && isAutoplaying ? true : undefined}
                 >
                   {visibleBlocks.map((block) =>
@@ -2985,6 +2998,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                         key={block.key}
                         data-block-key={block.key}
                         tabIndex={-1}
+                        role="application"
+                        aria-label={getBlockSpeech(block, false)}
                         className={`artifact-popup-guided-section${
                           activeBlockKey === block.key ? " is-active" : ""
                         }`}
@@ -3004,6 +3019,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                         key={block.key}
                         data-block-key={block.key}
                         tabIndex={-1}
+                        role="application"
+                        aria-label={block.text}
                         className={`artifact-popup-description${
                           activeBlockKey === block.key ? " is-active" : ""
                         }`}
@@ -3034,8 +3051,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             <div
               className="artifact-popup-transcript"
               ref={transcriptPanelRef}
-              role="dialog"
-              aria-modal="true"
+              role="application"
               aria-label="Transcript window opened."
             >
               <button
@@ -3052,6 +3068,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 className="artifact-popup-transcript-body"
                 ref={transcriptBodyRef}
                 tabIndex={0}
+                role="application"
+                aria-label={transcriptText}
                 onKeyDown={handleTranscriptKeyDown}
                 data-autofocus=""
               >
@@ -3077,8 +3095,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         <div
           className="carousel-zoom"
           ref={zoomRef}
-          role="dialog"
-          aria-modal="true"
+          role="application"
           aria-label="Zoom mode opened."
         >
           <div className="snap-zoom-panel">

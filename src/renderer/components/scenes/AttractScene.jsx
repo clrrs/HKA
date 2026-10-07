@@ -135,7 +135,8 @@ export default function AttractScene({ isActive }) {
     <div
       className="attract-scene"
       onClick={handleClick}
-      role="button"
+      // Not role="button": any key starts, so NVDA's trailing "button" is noise.
+      role="application"
       tabIndex={0}
       data-autofocus={true}
       aria-label="Welcome to the Helen Keller Archives. Use the headphones to the right. Press any button to begin."
