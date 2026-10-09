@@ -20,7 +20,6 @@ const TITLE_TO_ID = {
   "Women's Suffrage Speech, 1920": "1A3",
   "Letter from the ACLU, 1919": "1A4",
   "Letter to the NAACP, 1916": "1A5",
-  "Blindness Prevention Article, 1914": "1A6",
   "Letter from Eugene Debs, 1919": "2A1",
   "Letter to General MacArthur, 1949": "2A2",
   "Letter from Mark Twain, 1905": "2A3",
