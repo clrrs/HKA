@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useAppState } from "../state/StateProvider";
-import { useAnnounce } from "../state/AnnouncerProvider";
+import { useAnnounce, useBraille } from "../state/AnnouncerProvider";
 import { scheduleFocus } from "../state/useSceneManager";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import { EARCON, playEarcon } from "../audio/earcons";
@@ -50,6 +50,8 @@ const ZOOM_TIP_DESCRIPTION = `: . : . : ${ZOOM_TIP}`;
 const TOOLBAR_NAV_HINT =
   "Use left and right keys to navigate artifact tool bar.";
 const VIDEO_END_DWELL_MS = 1000;
+// Extra time the inactivity timer stays held after a transcript read finishes.
+const TRANSCRIPT_IDLE_BUFFER_MS = 30000;
 /** Covers NVDA's "dialog" role preamble before it reaches the spoken dialog label. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
 const EMPTY_IMAGES = [];
@@ -480,6 +482,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     (message, options = {}) => globalAnnounce(message, { source: "ArtifactPopup", ...options }),
     [globalAnnounce]
   );
+  const globalShowBraille = useBraille();
+  const showBraille = useCallback(
+    (text) => globalShowBraille(text, { source: "ArtifactPopup" }),
+    [globalShowBraille]
+  );
 
   const artifact = getArtifact(theme.id, artifactId);
   const prevArtifact = getPrevArtifact(theme.id, artifactId);
@@ -552,6 +559,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   const transcriptDwellActiveRef = useRef(false);
   /** Holds idle while NVDA is estimated to be reading an open transcript. */
   const [transcriptSpeechHold, setTranscriptSpeechHold] = useState(false);
+  const [transcriptIdleBuffer, setTranscriptIdleBuffer] = useState(false);
+  const transcriptIdleBufferTimeoutRef = useRef(null);
   const transcriptSpeechHoldRef = useRef(false);
   const transcriptSpeechTimeoutRef = useRef(null);
   const transcriptSpeechDeadlineRef = useRef(null);
@@ -892,7 +901,25 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     transcriptAutoScrollRemainingRef.current = null;
   }, []);
 
+  const clearTranscriptIdleBuffer = useCallback(() => {
+    if (transcriptIdleBufferTimeoutRef.current !== null) {
+      clearTimeout(transcriptIdleBufferTimeoutRef.current);
+      transcriptIdleBufferTimeoutRef.current = null;
+    }
+    setTranscriptIdleBuffer(false);
+  }, []);
+
+  const startTranscriptIdleBuffer = useCallback(() => {
+    clearTranscriptIdleBuffer();
+    setTranscriptIdleBuffer(true);
+    transcriptIdleBufferTimeoutRef.current = setTimeout(() => {
+      transcriptIdleBufferTimeoutRef.current = null;
+      setTranscriptIdleBuffer(false);
+    }, TRANSCRIPT_IDLE_BUFFER_MS);
+  }, [clearTranscriptIdleBuffer]);
+
   const clearTranscriptSpeechHold = useCallback(() => {
+    clearTranscriptIdleBuffer();
     transcriptSpeechHoldRef.current = false;
     setTranscriptSpeechHold(false);
     clearTranscriptAutoScroll();
@@ -902,7 +929,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     }
     transcriptSpeechDeadlineRef.current = null;
     transcriptSpeechRemainingRef.current = null;
-  }, [clearTranscriptAutoScroll]);
+  }, [clearTranscriptAutoScroll, clearTranscriptIdleBuffer]);
 
   const tickTranscriptAutoScroll = useCallback(() => {
     transcriptAutoScrollTimeoutRef.current = null;
@@ -1008,12 +1035,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         transcriptSpeechHoldRef.current = false;
         setTranscriptSpeechHold(false);
         clearTranscriptAutoScroll();
+        startTranscriptIdleBuffer();
       }, delay);
 
       // Scroll the panel in step with the estimated read of the lead + body.
       startTranscriptAutoScroll(delay, { fromCurrent });
     },
-    [clearTranscriptSpeechHold, clearTranscriptAutoScroll, startTranscriptAutoScroll]
+    [
+      clearTranscriptSpeechHold,
+      clearTranscriptAutoScroll,
+      startTranscriptAutoScroll,
+      startTranscriptIdleBuffer,
+    ]
   );
 
   const cancelAutoplay = useCallback(() => {
@@ -1065,7 +1098,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setIsAutoplaying(false);
     setVisualSection("description");
     storyParkedRef.current = true;
-    announce(TOOLBAR_NAV_HINT, { politeness: "assertive" });
+    // Already on braille as the tail of the auto-read braille message.
+    announce(TOOLBAR_NAV_HINT, { politeness: "assertive", speechOnly: true });
   }, [announce, clearTranscriptDwell, clearTextAutoScroll, setVisualSection]);
 
   // Used when an auto-started video finishes (legacy path; auto-read no longer starts video).
@@ -1214,8 +1248,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       prevArrowRef.current,
       showStoryButton ? storyBtnRef.current : null,
       showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
-      hasPrevImageButton ? prevImageRef.current : null,
       hasMultipleImages ? nextImageRef.current : null,
+      hasPrevImageButton ? prevImageRef.current : null,
       zoomOrPlayRef.current,
       hasTranscriptLocal ? transcriptBtnRef.current : null,
       nextArrowRef.current,
@@ -1263,8 +1297,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         ]
       : [
           showGuidedDescriptionButton ? guidedDescBtnRef.current : null,
-          hasPrevImageButton ? prevImageRef.current : null,
           hasMultipleImages ? nextImageRef.current : null,
+          hasPrevImageButton ? prevImageRef.current : null,
           zoomOrPlayRef.current,
           transcriptBtnRef.current,
         ];
@@ -1403,9 +1437,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // suppressed indefinitely.
   useEffect(() => {
     setAutoReadActive(
-      (isAutoplaying && !isPaused) || (transcriptSpeechHold && !isPaused)
+      (isAutoplaying && !isPaused) ||
+        ((transcriptSpeechHold || transcriptIdleBuffer) && !isPaused)
     );
-  }, [isAutoplaying, isPaused, transcriptSpeechHold, setAutoReadActive]);
+  }, [
+    isAutoplaying,
+    isPaused,
+    transcriptSpeechHold,
+    transcriptIdleBuffer,
+    setAutoReadActive,
+  ]);
+
+  useEffect(() => clearTranscriptIdleBuffer, [clearTranscriptIdleBuffer]);
 
   useEffect(() => () => setAutoReadActive(false), [setAutoReadActive]);
 
@@ -1439,12 +1482,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
 
     const openTitle = `${artifact.title} opened.`;
     const openAlt = getArtifactAltText(artifact);
-    announce(openTitle, { politeness: "assertive" });
+    // Braille gets title + alt together so the alt doesn't wipe the title.
+    showBraille([openTitle, openAlt].filter(Boolean).join(" "));
+    announce(openTitle, { politeness: "assertive", speechOnly: true });
     setDialogAriaLabel(SILENT_NAME);
 
     const altDelay = estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS;
     const t = window.setTimeout(() => {
-      announce(openAlt, { politeness: "assertive" });
+      announce(openAlt, { politeness: "assertive", speechOnly: true });
     }, altDelay);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1478,6 +1523,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const openAlt = getArtifactAltText(artifact);
     const openTitle = `${artifact.title} opened.`;
 
+    // Braille shows the whole auto-read at once and stays put while speech
+    // reads it in pieces (the pieces below are speech-only). NVDA clears it
+    // when the visitor moves focus with a key. Sent after the dialog's focus
+    // braille settles so it lands on top.
+    const brailleText = [openTitle, openAlt, ...chunks.map((c) => c.text), TOOLBAR_NAV_HINT]
+      .filter(Boolean)
+      .join(" ");
+    const brailleTimer = window.setTimeout(
+      () => showBraille(brailleText),
+      BRAILLE_OUTPUT_SETTLE_MS
+    );
+
     let chunkIndex = 0;
     autoplayingRef.current = true;
     storyParkedRef.current = false;
@@ -1500,7 +1557,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       setCurrentImageIndex(chunk.imageIndex);
       setVisualSection(chunk.section, chunk.blockKey);
 
-      announce(chunk.text, { politeness: "assertive" });
+      announce(chunk.text, { politeness: "assertive", speechOnly: true });
       chunkIndex += 1;
 
       const delay = autoReadDelayMs(
@@ -1530,7 +1587,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     const announceAltThenStory = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
       setDialogAriaLabel(SILENT_NAME);
-      announce(openAlt, { politeness: "assertive" });
+      announce(openAlt, { politeness: "assertive", speechOnly: true });
       const altDelay = autoReadDelayMs(
         estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
         autoReadFastRef.current
@@ -1549,6 +1606,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayTimeoutRef.current = setTimeout(announceAltThenStory, titleDelay);
 
     return () => {
+      window.clearTimeout(brailleTimer);
       if (autoplayingRef.current) {
         cancelAutoplay();
       }
@@ -1561,6 +1619,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     zoomOpen,
     transcriptOpen,
     announce,
+    showBraille,
     cancelAutoplay,
     clearTranscriptDwell,
     clearStoryTransition,
@@ -1710,6 +1769,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         transcriptSpeechHoldRef.current = false;
         setTranscriptSpeechHold(false);
         clearTranscriptAutoScroll();
+        startTranscriptIdleBuffer();
       }, delay);
     }
 
@@ -1749,6 +1809,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     tickTextAutoScroll,
     tickTranscriptAutoScroll,
     clearTranscriptAutoScroll,
+    startTranscriptIdleBuffer,
     landOnNextArrowEnd,
   ]);
 
@@ -2773,8 +2834,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       entries.push({ id: "pause", base: "Pause video" });
     }
     if (showGuidedDescriptionButton) entries.push({ id: "description", base: "Description" });
-    if (!isVideo && hasPrevImageButton) entries.push({ id: "prevImage", base: "Previous image" });
     if (!isVideo && hasMultipleImages) entries.push({ id: "nextImage", base: "Next image" });
+    if (!isVideo && hasPrevImageButton) entries.push({ id: "prevImage", base: "Previous image" });
     if (!isVideo) entries.push({ id: "zoom", base: "Zoom" });
     if (hasTranscript) entries.push({ id: "transcript", base: "Transcript" });
     const total = entries.length;
@@ -2937,19 +2998,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 Description
               </button>
             )}
-            {!isVideo && hasPrevImageButton && (
-              <button
-                type="button"
-                ref={prevImageRef}
-                className={`carousel-btn${
-                  textNavSourceId === "prevImage" ? " is-selected" : ""
-                }`}
-                onClick={handlePrevImage}
-                aria-label={toolbarLabels.prevImage}
-              >
-                Previous Image
-              </button>
-            )}
             {!isVideo && hasMultipleImages && (
               <button
                 type="button"
@@ -2961,6 +3009,19 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                 aria-label={toolbarLabels.nextImage}
               >
                 Next Image
+              </button>
+            )}
+            {!isVideo && hasPrevImageButton && (
+              <button
+                type="button"
+                ref={prevImageRef}
+                className={`carousel-btn${
+                  textNavSourceId === "prevImage" ? " is-selected" : ""
+                }`}
+                onClick={handlePrevImage}
+                aria-label={toolbarLabels.prevImage}
+              >
+                Previous Image
               </button>
             )}
             {!isVideo && (

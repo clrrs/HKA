@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
 const { autoUpdater } = require("electron-updater");
+const nvdaController = require("./nvdaController");
 
 const IS_WIN = process.platform === "win32";
 
@@ -91,12 +92,28 @@ ipcMain.on("volume-down", () => {
   );
 });
 
-// Stop current NVDA speech immediately (Ctrl)
+// Stop current NVDA speech immediately. Prefer the controller client: an
+// injected Ctrl counts as a key press in NVDA, which makes the next focus move
+// dismiss whatever braille message is showing.
 ipcMain.on("stop-speech", () => {
+  if (nvdaController.cancel()) return;
   sendKeys(
     "[KbdEvent]::keybd_event(0x11,0,0,[UIntPtr]::Zero);" +
     "[KbdEvent]::keybd_event(0x11,0,2,[UIntPtr]::Zero)"
   );
+});
+
+ipcMain.handle("nvda-available", () => nvdaController.isAvailable());
+
+// Speech only (no braille side effect, unlike a live region).
+ipcMain.on("nvda-speak", (_e, text) => {
+  nvdaController.speak(text);
+});
+
+// Braille only: shown as an NVDA braille message until replaced or until the
+// visitor moves focus with a key.
+ipcMain.on("nvda-braille", (_e, text) => {
+  nvdaController.braille(text);
 });
 
 app.whenReady().then(() => {

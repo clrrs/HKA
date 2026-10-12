@@ -8,10 +8,19 @@ contextBridge.exposeInMainWorld("kioskApi", {
       "volume-up",
       "volume-down",
       "stop-speech",
+      "nvda-speak",
+      "nvda-braille",
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }
+  },
+  invoke: (channel, data) => {
+    const validChannels = ["nvda-available"];
+    if (validChannels.includes(channel)) {
+      return ipcRenderer.invoke(channel, data);
+    }
+    return Promise.resolve(undefined);
   },
   on: (channel, cb) => {
     const validChannels = ["fromMain"];
