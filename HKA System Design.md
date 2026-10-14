@@ -39,7 +39,7 @@ HKA/
 ├─ scripts/                    # content sync, SR announcement export, NVDA dictionary builder
 ├─ docs/                       # screen-reader-announcements.csv
 ├─ nvda.ini                    # source of the NVDA settings baked into the portable copy
-├─ nvda-default.dic            # source of the NVDA default speech dictionary (strips role words)
+├─ backup-dictionary.dic       # backup of the NVDA speech dictionary (the live one ships in the portable copy)
 ├─ package.json                # includes electron-builder config
 └─ vite.config.js
 ```
@@ -146,7 +146,8 @@ Opened with A from any scene except Attract and Quote, or automatically in onboa
 - NVDA (portable copy, started from the Windows Startup folder) must be running before the app launches. `role="application"` keeps NVDA in focus mode.
 - Named `role="application"` elements are silent in NVDA speech and braille, so the app uses them (with `SILENT_NAME`, U+2800) for focus parks and announcement carriers to avoid "section", "doc", "dialog", etc.
 - A focus park in `App.jsx` catches focus every frame before it can fall to `<body>` (which NVDA brailles as "doc").
-- `nvda-default.dic` strips remaining role words. Kiosks get it (and `nvda.ini`) already in place inside the portable NVDA copy (`userConfig\speechDicts\default.dic` and `userConfig\nvda.ini`); see README for install. After changing either file, regenerate the dictionary with `python3 scripts/build_nvda_default_dic.py`, copy both into the portable copy, and re-zip it.
+- The live speech dictionary ships inside the portable NVDA copy at `userConfig\speechDicts\default.dic`. It holds pronunciation fixes and strips remaining role words, and it is voice-agnostic (NVDA's default dictionary, not a per-voice one). Kiosks get it (and `nvda.ini`) already in place; see README for install.
+- `backup-dictionary.dic` in the repo is only a backup of that file. To use it, copy it to `userConfig\speechDicts\` in the portable copy and rename it to `default.dic`. When the dictionary on a kiosk changes, copy it back over `backup-dictionary.dic` so the backup stays current (keep it tab-separated, UTF-8 with BOM).
 - `docs/screen-reader-announcements.csv` lists every spoken string. `npm run export:sr` regenerates it from source but replaces the hand-written scenario descriptions.
 - Debug helpers on `window`: `__HKA_EXPORT_DEBUG_LOGS__()` exports the announcement, input, and focus trace; `__HKA_CLEAR_DEBUG_LOGS__()` clears them.
 
