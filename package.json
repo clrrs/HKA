@@ -16,7 +16,6 @@
     "export:sr": "node scripts/export_sr_announcements.mjs"
   },
   "dependencies": {
-    "electron-updater": "^6.7.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -36,12 +35,8 @@
       "src/main/**/*"
     ],
     "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": false
+      "target": "portable",
+      "artifactName": "HKA-Kiosk-${version}.exe"
     },
     "publish": {
       "provider": "github",

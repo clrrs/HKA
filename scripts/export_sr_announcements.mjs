@@ -75,9 +75,6 @@ function inferProducerScenario(row) {
   if (location === "App" && message === "Settings") {
     return "Visitor opens Settings (Settings key); NVDA reads the dialog title.";
   }
-  if (location === "App" && notes.includes("test-easter-egg-message")) {
-    return "Developer test easter egg only — not part of the public visitor experience.";
-  }
 
   // --- AccessibilityMenu ---
   if (location === "AccessibilityMenu" && notes.includes("accessibility-onboarding-blurb")) {

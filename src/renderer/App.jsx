@@ -2,7 +2,6 @@ import React, { useEffect, useLayoutEffect, useCallback, useState, useRef } from
 import { flushSync } from "react-dom";
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
-import AccessibilityMenuFlat from "./components/AccessibilityMenuFlat";
 import {
   scheduleFocus,
   scheduleFocusAfterReveal,
@@ -11,10 +10,7 @@ import {
 import { getElementSummary, logInputEvent } from "./state/interactionLog";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
-import {
-  stopNvdaSpeechForMediaStart,
-  toggleNvdaSpeechModeQuietly,
-} from "./audio/nvdaSpeechControl";
+import { toggleNvdaSpeechModeQuietly } from "./audio/nvdaSpeechControl";
 import { EARCON, playEarcon } from "./audio/earcons";
 import { moveSettingsFocus } from "./utils/settingsFocus";
 import { preloadQuoteScreens } from "./data/quoteScreens";
@@ -90,10 +86,6 @@ export default function App() {
     lastTtsToggleRef,
     idleTimeoutDisabled,
     autoReadFast,
-    settingsMenuVariant,
-    settingsMenuVariantActive,
-    testEasterEgg,
-    dismissTestEasterEgg,
   } = useAppState();
   const announce = useAnnounce();
   const [idleCountdown, setIdleCountdown] = useState(null);
@@ -140,13 +132,6 @@ export default function App() {
     visible: false,
     closing: false,
     enabled: true,
-  });
-  const settingsVariantHudSeenFirstRef = useRef(false);
-  const settingsVariantHudFadeTimeoutRef = useRef(null);
-  const settingsVariantHudHideTimeoutRef = useRef(null);
-  const [settingsVariantHud, setSettingsVariantHud] = useState({
-    visible: false,
-    closing: false,
   });
   // Hidden cursor can still leave :hover / mouseenter on whatever is underneath.
   // Block pointer hit-testing until the user actually moves or presses the mouse.
@@ -198,38 +183,6 @@ export default function App() {
       document.removeEventListener("focusout", onFocusOut, true);
     };
   }, []);
-
-  useEffect(() => {
-    if (!testEasterEgg) return;
-    const openedAt = Date.now();
-    const audio = new Audio(testEasterEgg.audioSrc);
-    stopNvdaSpeechForMediaStart();
-    audio.play().catch(() => {});
-    const timeoutId = window.setTimeout(() => {
-      dismissTestEasterEgg();
-    }, 5000);
-
-    const handleEarlyDismiss = (e) => {
-      if (Date.now() - openedAt < 200) return;
-      const key = e.key.toLowerCase();
-      // Let home / S reach useKeyboardNav so home is never blocked.
-      if (key === "s" || key === "home") {
-        dismissTestEasterEgg();
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      dismissTestEasterEgg();
-    };
-
-    window.addEventListener("keydown", handleEarlyDismiss, true);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      audio.pause();
-      window.removeEventListener("keydown", handleEarlyDismiss, true);
-    };
-  }, [testEasterEgg, dismissTestEasterEgg]);
 
   const rescale = useCallback(() => {
     const el = document.getElementById("app-scaler");
@@ -632,44 +585,12 @@ export default function App() {
   }, [speechMode]);
 
   useEffect(() => {
-    if (!settingsVariantHudSeenFirstRef.current) {
-      settingsVariantHudSeenFirstRef.current = true;
-      return;
-    }
-
-    if (settingsVariantHudFadeTimeoutRef.current) {
-      window.clearTimeout(settingsVariantHudFadeTimeoutRef.current);
-      settingsVariantHudFadeTimeoutRef.current = null;
-    }
-    if (settingsVariantHudHideTimeoutRef.current) {
-      window.clearTimeout(settingsVariantHudHideTimeoutRef.current);
-      settingsVariantHudHideTimeoutRef.current = null;
-    }
-
-    setSettingsVariantHud({ visible: true, closing: false });
-
-    settingsVariantHudFadeTimeoutRef.current = window.setTimeout(() => {
-      setSettingsVariantHud((prev) => ({ ...prev, closing: true }));
-    }, SPEECH_HUD_VISIBLE_MS - SPEECH_HUD_FADE_MS);
-
-    settingsVariantHudHideTimeoutRef.current = window.setTimeout(() => {
-      setSettingsVariantHud({ visible: false, closing: false });
-    }, SPEECH_HUD_VISIBLE_MS);
-  }, [settingsMenuVariant]);
-
-  useEffect(() => {
     return () => {
       if (speechHudFadeTimeoutRef.current) {
         window.clearTimeout(speechHudFadeTimeoutRef.current);
       }
       if (speechHudHideTimeoutRef.current) {
         window.clearTimeout(speechHudHideTimeoutRef.current);
-      }
-      if (settingsVariantHudFadeTimeoutRef.current) {
-        window.clearTimeout(settingsVariantHudFadeTimeoutRef.current);
-      }
-      if (settingsVariantHudHideTimeoutRef.current) {
-        window.clearTimeout(settingsVariantHudHideTimeoutRef.current);
       }
     };
   }, []);
@@ -734,39 +655,11 @@ export default function App() {
                 onClick={settingsOnboarding ? dismissSettings : toggleSettings}
               />
               <div
-                className={`settings-panel${
-                  settingsMenuVariantActive === "A"
-                    ? " settings-panel--flat"
-                    : ""
-                }`}
+                className="settings-panel"
                 ref={settingsPanelRef}
                 onKeyDown={handleSettingsKeyDown}
               >
-                {settingsMenuVariantActive === "A" ? (
-                  <AccessibilityMenuFlat onboarding={settingsOnboarding} />
-                ) : (
-                  <AccessibilityMenu onboarding={settingsOnboarding} />
-                )}
-              </div>
-            </div>
-          )}
-          {testEasterEgg && (
-            <div
-              className="test-easter-egg-overlay"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="test-easter-egg-message"
-              aria-live="assertive"
-            >
-              <div className="test-easter-egg-card">
-                <img
-                  className="test-easter-egg-image"
-                  src={testEasterEgg.imageSrc}
-                  alt=""
-                />
-                <p id="test-easter-egg-message" className="test-easter-egg-message">
-                  {testEasterEgg.message}
-                </p>
+                <AccessibilityMenu onboarding={settingsOnboarding} />
               </div>
             </div>
           )}
@@ -826,15 +719,6 @@ export default function App() {
           )}
           {autoReadFast && (
             <div className="idle-disabled-badge">Auto-read 6x</div>
-          )}
-          {settingsVariantHud.visible && (
-            <div
-              className={`idle-disabled-badge${
-                settingsVariantHud.closing ? " idle-disabled-badge--closing" : ""
-              }`}
-            >
-              Settings {settingsMenuVariant}
-            </div>
           )}
         </div>
         {speechHud.visible && (

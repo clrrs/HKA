@@ -9,24 +9,6 @@ import React, {
 } from "react";
 import { EARCON, playEarcon } from "../audio/earcons";
 
-const TEST_EASTER_EGG_MESSAGES = [
-  "thank you for trying to break something!",
-  "nice try, carry on",
-  "thank you for bug hunting.",
-];
-
-const TEST_EASTER_EGG_IMAGES = [
-  "/zz_testingMaterials/catOfTechnology.jpeg",
-  "/zz_testingMaterials/catOfSadness.jpg",
-  "/zz_testingMaterials/catOfBug.jpeg",
-];
-
-const TEST_EASTER_EGG_SFX = [
-  "/zz_testingMaterials/testsfx1.mp3",
-  "/zz_testingMaterials/testsfx2.mp3",
-  "/zz_testingMaterials/testsfx3.mp3",
-];
-
 export const DEFAULT_PREFS = {
   textSize: "medium",
   theme: "dark",
@@ -41,7 +23,6 @@ const AppState = createContext();
 // window/capture order, ahead of anything a component effect can attach.
 const idleTimeoutToggleRef = { current: null };
 const autoReadFastToggleRef = { current: null };
-const settingsMenuVariantToggleRef = { current: null };
 
 if (typeof window !== "undefined") {
   window.addEventListener(
@@ -60,13 +41,6 @@ if (typeof window !== "undefined") {
         e.preventDefault();
         e.stopImmediatePropagation();
         autoReadFastToggleRef.current();
-        return;
-      }
-      if (e.key === "8" || e.code === "Digit8" || e.code === "Numpad8") {
-        if (!settingsMenuVariantToggleRef.current) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        settingsMenuVariantToggleRef.current();
         return;
       }
       const key = e.key.toLowerCase();
@@ -163,13 +137,6 @@ export default function StateProvider({ children }) {
   const showSettingsRef = useRef(showSettings);
   showSettingsRef.current = showSettings;
 
-  // Pending layout for next Settings open; active is frozen when the panel opens.
-  const [settingsMenuVariant, setSettingsMenuVariant] = useState("B");
-  const [settingsMenuVariantActive, setSettingsMenuVariantActive] =
-    useState("B");
-  const settingsMenuVariantRef = useRef(settingsMenuVariant);
-  settingsMenuVariantRef.current = settingsMenuVariant;
-
   const dismissSettings = useCallback(() => {
     if (showSettingsRef.current) {
       playEarcon(EARCON.popupClose);
@@ -183,7 +150,6 @@ export default function StateProvider({ children }) {
     if (!showSettingsRef.current) {
       playEarcon(EARCON.popupOpen);
     }
-    setSettingsMenuVariantActive(settingsMenuVariantRef.current);
     setSettingsOnboarding(true);
     setShowSettings(true);
   }, []);
@@ -191,9 +157,6 @@ export default function StateProvider({ children }) {
   const toggleSettings = () => {
     const opening = !showSettingsRef.current;
     playEarcon(opening ? EARCON.popupOpen : EARCON.popupClose);
-    if (opening) {
-      setSettingsMenuVariantActive(settingsMenuVariantRef.current);
-    }
     setShowSettings((prev) => {
       if (prev && settingsOnboarding) {
         setSettingsOnboarding(false);
@@ -276,40 +239,6 @@ export default function StateProvider({ children }) {
     };
   }, []);
 
-  useLayoutEffect(() => {
-    const toggle = () =>
-      setSettingsMenuVariant((prev) => (prev === "A" ? "B" : "A"));
-    settingsMenuVariantToggleRef.current = toggle;
-    return () => {
-      if (settingsMenuVariantToggleRef.current === toggle) {
-        settingsMenuVariantToggleRef.current = null;
-      }
-    };
-  }, []);
-
-  const [testEasterEgg, setTestEasterEgg] = useState(null);
-
-  const triggerTestEasterEgg = useCallback(() => {
-    setTestEasterEgg({
-      message:
-        TEST_EASTER_EGG_MESSAGES[
-          Math.floor(Math.random() * TEST_EASTER_EGG_MESSAGES.length)
-        ],
-      imageSrc:
-        TEST_EASTER_EGG_IMAGES[
-          Math.floor(Math.random() * TEST_EASTER_EGG_IMAGES.length)
-        ],
-      audioSrc:
-        TEST_EASTER_EGG_SFX[
-          Math.floor(Math.random() * TEST_EASTER_EGG_SFX.length)
-        ],
-    });
-  }, []);
-
-  const dismissTestEasterEgg = useCallback(() => {
-    setTestEasterEgg(null);
-  }, []);
-
   useEffect(() => {
     document.documentElement.dataset.speechMode = speechMode ? "on" : "off";
   }, [speechMode]);
@@ -329,7 +258,6 @@ export default function StateProvider({ children }) {
     setSettingsOnboarding(false);
     setPendingAccessibilityOnboarding(true);
     setPreviousScene("attract");
-    setTestEasterEgg(null);
     setHasSeenThemeTip(false);
     setSpeechMode((prev) => {
       if (!prev) {
@@ -373,7 +301,6 @@ export default function StateProvider({ children }) {
         setSettingsOnboarding(false);
         setPendingAccessibilityOnboarding(false);
       }
-      setTestEasterEgg(null);
     }
     goToScene(sceneName, options);
   };
@@ -416,12 +343,7 @@ export default function StateProvider({ children }) {
       resetToStart,
       homeArrivalNonce,
       idleTimeoutDisabled,
-      autoReadFast,
-      settingsMenuVariant,
-      settingsMenuVariantActive,
-      testEasterEgg,
-      triggerTestEasterEgg,
-      dismissTestEasterEgg
+      autoReadFast
     }}>
       {children}
     </AppState.Provider>

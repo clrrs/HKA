@@ -89,89 +89,18 @@ export function useKeyboardNav() {
     speechMode,
     togglePaused,
     lastTtsToggleRef,
-    triggerTestEasterEgg,
   } = useAppState();
-  const klEggRef = useRef({ step: 0, lastTs: 0 });
-  const qEggRef = useRef({ streak: 0, lastTs: 0 });
 
   useEffect(() => {
     const ENABLE_TEST_SHORTCUTS = true;
-    const ENABLE_TEST_EASTER_EGGS = false;
-    const KL_EGG_PATTERN = ["k", "l", "k", "l", "k", "l"];
-    const KL_EGG_MAX_GAP_MS = 450;
-    const Q_EGG_MAX_GAP_MS = 280;
     ensureInputLogTools();
-
-    function processTestEasterEggKeys(key) {
-      const now = Date.now();
-
-      if (key !== "q") {
-        qEggRef.current = { streak: 0, lastTs: 0 };
-      }
-      if (key !== "k" && key !== "l") {
-        klEggRef.current = { step: 0, lastTs: 0 };
-      }
-
-      if (key === "q") {
-        const qr = qEggRef.current;
-        if (now - qr.lastTs > Q_EGG_MAX_GAP_MS) {
-          qr.streak = 1;
-        } else {
-          qr.streak += 1;
-        }
-        qr.lastTs = now;
-        if (qr.streak >= 7) {
-          qr.streak = 0;
-          triggerTestEasterEgg();
-          return "triggered";
-        }
-        if (qr.streak >= 2) {
-          return "suppress-q";
-        }
-        return null;
-      }
-
-      if (key === "k" || key === "l") {
-        const st = klEggRef.current;
-        if (now - st.lastTs > KL_EGG_MAX_GAP_MS) {
-          st.step = key === "k" ? 1 : 0;
-          st.lastTs = now;
-          return null;
-        }
-        const expected = KL_EGG_PATTERN[st.step];
-        if (key !== expected) {
-          st.step = key === "k" ? 1 : 0;
-          st.lastTs = now;
-          return null;
-        }
-        st.step += 1;
-        st.lastTs = now;
-        if (st.step >= 6) {
-          st.step = 0;
-          triggerTestEasterEgg();
-          return "triggered";
-        }
-        return null;
-      }
-
-      return null;
-    }
 
     const handleKeyDown = (e) => {
       if (e.repeat) return; // ignore key repeat (keypad hold)
       const key = e.key.toLowerCase();
 
-      let testEggResult = null;
       // Test-only backdoor shortcuts (always active)
       if (ENABLE_TEST_SHORTCUTS) {
-        if (ENABLE_TEST_EASTER_EGGS) {
-          testEggResult = processTestEasterEggKeys(key);
-          if (testEggResult === "triggered") {
-            e.preventDefault();
-            return;
-          }
-        }
-
         if (key === "1") {
           e.preventDefault();
           goToScene("instruction");
@@ -375,7 +304,6 @@ export function useKeyboardNav() {
     speechMode,
     togglePaused,
     lastTtsToggleRef,
-    triggerTestEasterEgg,
   ]);
 }
 

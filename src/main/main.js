@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
-const { autoUpdater } = require("electron-updater");
 
 const IS_WIN = process.platform === "win32";
 
@@ -110,30 +109,6 @@ ipcMain.on("attract-signal", () => {
 app.whenReady().then(() => {
   if (IS_WIN) ensurePowerShell();
   createWindow();
-
-  // Auto-update from GitHub Releases (only works in packaged app)
-  if (app.isPackaged) {
-    // Download updates silently, install on next app launch
-    autoUpdater.autoInstallOnAppQuit = true;
-
-    autoUpdater.on('update-available', () => {
-      console.log('Update available, downloading in background...');
-    });
-
-    autoUpdater.on('update-not-available', () => {
-      console.log('App is up to date.');
-    });
-
-    autoUpdater.on('update-downloaded', () => {
-      console.log('Update downloaded. Will install on next restart.');
-    });
-
-    autoUpdater.on('error', (err) => {
-      console.error('Update error:', err);
-    });
-
-    autoUpdater.checkForUpdates();
-  }
 });
 
 app.on("window-all-closed", () => {
