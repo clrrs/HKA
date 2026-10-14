@@ -99,6 +99,14 @@ ipcMain.on("stop-speech", () => {
   );
 });
 
+// Attract enter/exit signal ("6", VK 0x36) for the station's ESP32 → Q-SYS GPIO
+ipcMain.on("attract-signal", () => {
+  sendKeys(
+    "[KbdEvent]::keybd_event(0x36,0,0,[UIntPtr]::Zero);" +
+    "[KbdEvent]::keybd_event(0x36,0,2,[UIntPtr]::Zero)"
+  );
+});
+
 app.whenReady().then(() => {
   if (IS_WIN) ensurePowerShell();
   createWindow();

@@ -100,6 +100,16 @@ export default function AttractScene({ isActive }) {
     return guardNvdaSpeechSilenceWhilePlaying(master);
   }, [isActive]);
 
+  // Send "6" when attract starts and when the user exits it, so the station's
+  // ESP32 can raise a Q-SYS GPIO trigger to fade the BrightSign attract audio.
+  // Compared against a ref so StrictMode's double effect run doesn't resend.
+  const signalledActiveRef = useRef(false);
+  useEffect(() => {
+    if (isActive === signalledActiveRef.current) return;
+    signalledActiveRef.current = isActive;
+    window.kioskApi?.send("attract-signal");
+  }, [isActive]);
+
   // Allow activation each time we (re)enter the attract scene
   useEffect(() => {
     if (isActive) {
