@@ -3,8 +3,10 @@ const WORDS_PER_SEC = 138 / 60;
 
 /** Punctuation-only run NVDA does not speak but pauses on. */
 export const SPEECH_PAUSE = ": . : . :";
-/** Estimated length of one SPEECH_PAUSE. Tune on the kiosk. */
-export const SPEECH_PAUSE_MS = 600;
+/** Length of one SPEECH_PAUSE, measured on the kiosk NVDA voice. */
+export const SPEECH_PAUSE_MS = 800;
+/** NVDA's lag between a focus move and the start of the focused name's speech. */
+export const FOCUS_READ_LEAD_MS = 200;
 
 export function countWords(text) {
   return String(text || "")

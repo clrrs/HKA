@@ -27,6 +27,32 @@ export function scheduleFocus(el, { stealWindow = false } = {}) {
   };
 }
 
+/**
+ * Focus a target that was hidden or inert until this commit (scene change,
+ * overlay closing). NVDA speaks focus that lands in a subtree the same frame
+ * it is revealed, but braille keeps showing the previous element. So focus
+ * waits on the silent park (App) for two frames, then moves.
+ */
+export function scheduleFocusAfterReveal(el, { stealWindow = false } = {}) {
+  if (!el) return () => {};
+  if (document.activeElement !== el) {
+    const park = document.querySelector("[data-focus-park]");
+    if (park && !park.closest("[inert]")) park.focus({ preventScroll: true });
+  }
+  let raf2 = 0;
+  let cancelFocus = () => {};
+  const raf1 = requestAnimationFrame(() => {
+    raf2 = requestAnimationFrame(() => {
+      cancelFocus = scheduleFocus(el, { stealWindow });
+    });
+  });
+  return () => {
+    cancelAnimationFrame(raf1);
+    cancelAnimationFrame(raf2);
+    cancelFocus();
+  };
+}
+
 export function useSceneFocus(sceneId, isActive) {
   const lastFocusedRef = useRef(null);
   
@@ -35,13 +61,16 @@ export function useSceneFocus(sceneId, isActive) {
     
     const sceneEl = document.querySelector(`[data-scene="${sceneId}"]`);
     if (!sceneEl) return;
+    // The scene already placed focus itself (e.g. the theme tip).
+    if (sceneEl.contains(document.activeElement)) return;
     
     const first = sceneEl.querySelector('[data-autofocus]') ||
       sceneEl.querySelector(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
 
-    const cancel = first ? scheduleFocus(first) : () => {};
+    // The scene was display:none until this commit.
+    const cancel = first ? scheduleFocusAfterReveal(first) : () => {};
     return () => {
       cancel();
       lastFocusedRef.current = document.activeElement;

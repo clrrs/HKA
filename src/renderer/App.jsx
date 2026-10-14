@@ -3,7 +3,12 @@ import { flushSync } from "react-dom";
 import SceneContainer from "./components/SceneContainer";
 import AccessibilityMenu from "./components/AccessibilityMenu";
 import AccessibilityMenuFlat from "./components/AccessibilityMenuFlat";
-import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
+import {
+  scheduleFocus,
+  scheduleFocusAfterReveal,
+  useKeyboardNav,
+} from "./state/useSceneManager";
+import { getElementSummary, logInputEvent } from "./state/interactionLog";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
 import {
@@ -166,6 +171,33 @@ export default function App() {
       window.removeEventListener("mousedown", activate, true);
     };
   }, [pointerActive]);
+
+  // Focus trace for the debug export (__HKA_EXPORT_DEBUG_LOGS__): every
+  // element NVDA was handed focus on, and when focus fell to nothing.
+  // Registered once (scene read through a ref) so no focus move is missed
+  // while a scene change re-runs effects.
+  const traceSceneRef = useRef(scene);
+  traceSceneRef.current = scene;
+  useEffect(() => {
+    const summarize = (el) => getElementSummary(el).slice(0, 120);
+    const log = (action, el) =>
+      logInputEvent({
+        source: "focus",
+        scene: traceSceneRef.current,
+        action,
+        target: summarize(el),
+      });
+    const onFocusIn = (e) => log("focus", e.target);
+    const onFocusOut = (e) => {
+      if (!e.relatedTarget) log("focus-lost", e.target);
+    };
+    document.addEventListener("focusin", onFocusIn, true);
+    document.addEventListener("focusout", onFocusOut, true);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn, true);
+      document.removeEventListener("focusout", onFocusOut, true);
+    };
+  }, []);
 
   useEffect(() => {
     if (!testEasterEgg) return;
@@ -384,27 +416,30 @@ export default function App() {
       setScenesEntryLabel(SETTINGS_CLOSED_ANNOUNCEMENT);
       const el = settingsReturnFocusRef.current;
       settingsReturnFocusRef.current = null;
-      const restore = () => {
+      const getTarget = () => {
         const usable =
           el && document.contains(el) && !el.closest("[inert]") ? el : null;
         // Fall back to the scene so focus never drops to body on close.
-        const target = usable || getActiveSceneFocusTarget();
-        target?.focus({ preventScroll: true });
+        return usable || getActiveSceneFocusTarget();
       };
-      // First attempt next frame: after the label commits, before Chromium
-      // reports the removed overlay's focus loss (which brailles as "doc").
+      // Next frame: after the label commits, before Chromium reports the
+      // removed overlay's focus loss (which brailles as "doc"). The target was
+      // inert until now, so focus parks first ("Settings closed." is read as
+      // focus enters .app-scenes) and reaches it two frames later; landing on
+      // it the frame it is revealed leaves braille on the old control.
       focusRestorePendingRef.current = true;
-      const raf = requestAnimationFrame(restore);
-      const t1 = window.setTimeout(restore, 60);
-      const t2 = window.setTimeout(() => {
-        restore();
+      let cancelFocus = () => {};
+      const raf = requestAnimationFrame(() => {
+        cancelFocus = scheduleFocusAfterReveal(getTarget());
+      });
+      const t = window.setTimeout(() => {
         focusRestorePendingRef.current = false;
-      }, 220);
+      }, 400);
       prevShowSettingsRef.current = showSettings;
       return () => {
         cancelAnimationFrame(raf);
-        window.clearTimeout(t1);
-        window.clearTimeout(t2);
+        window.clearTimeout(t);
+        cancelFocus();
         focusRestorePendingRef.current = false;
       };
     }

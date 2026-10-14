@@ -703,6 +703,16 @@ export function getArtifactAltText(artifact) {
   return `Image: ${alt}`;
 }
 
+/** Theme page heading name: what NVDA reads when the theme page lands. */
+export function getThemeHeadingLabel(theme) {
+  return `${theme.label}. ${theme.description} Use left and right keys to select an artifact.`;
+}
+
+/** Tip shown the first time a visitor reaches any theme page. */
+export function getThemeTipMessage(themeLabel) {
+  return `Tip: You are on the ${themeLabel} theme page. Use the left and right keys to navigate between artifacts, and press the select key to learn more. Press the home button to choose a different theme.`;
+}
+
 const THEME_SELECT_CTA = "Press select key to view the artifacts in this theme.";
 const ARTIFACT_SELECT_CTA = "Press select key to learn more.";
 

@@ -1,8 +1,23 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
-import { getTheme, getArtifactIndex, getArtifactCircleName, getArtifactCircleDescription } from "../../data/artifacts";
-import { scheduleFocus } from "../../state/useSceneManager";
+import {
+  getTheme,
+  getArtifactIndex,
+  getArtifactCircleName,
+  getArtifactCircleDescription,
+  getThemeHeadingLabel,
+  getThemeTipMessage,
+} from "../../data/artifacts";
+import { scheduleFocusAfterReveal } from "../../state/useSceneManager";
 import { EARCON, playEarcon } from "../../audio/earcons";
+import { stopNvdaSpeechAggressively } from "../../audio/nvdaSpeechControl";
+import {
+  FOCUS_READ_LEAD_MS,
+  SPEECH_PAUSE,
+  SPEECH_PAUSE_MS,
+  combineAnnouncement,
+  estimateSpeechDurationMs,
+} from "../../utils/speechTiming";
 import ArtifactPopup from "../ArtifactPopup";
 
 const ITEM_WIDTH = 600;
@@ -36,11 +51,22 @@ function getThumbnailSources(artifact) {
   };
 }
 
-function getThemeTipMessage(themeLabel) {
-  return `Tip: You are on the ${themeLabel} theme page. Use the left and right keys to navigate between artifacts, and press the select key to learn more. Press the home button to choose a different theme.`;
+const TIP_PASS_THROUGH_KEYS = new Set(["s", "home", "a"]);
+
+/** Tip, then the theme page copy it sits over. */
+function tipParts(theme) {
+  return [getThemeTipMessage(theme.label), getThemeHeadingLabel(theme)];
 }
 
-const TIP_PASS_THROUGH_KEYS = new Set(["s", "home", "a"]);
+/**
+ * Speech gets a double pause after the tip: the hush aims at the first one,
+ * and the second leaves room if the injected Ctrl reaches NVDA late, so the
+ * page copy does not start before it lands.
+ */
+function tipSpeechLabel(theme) {
+  const [tip, page] = tipParts(theme);
+  return `${tip} ${SPEECH_PAUSE} ${SPEECH_PAUSE} ${page}`;
+}
 const TIP_AUTO_DISMISS_MS = 20000;
 
 export default function ThemeScene() {
@@ -91,8 +117,9 @@ export default function ThemeScene() {
     setTipGate((prev) => (prev.show ? { ...prev, show: false } : prev));
   }, []);
 
+  // The heading sits under the inert page until the tip closes.
   const restoreThemeEntryFocus = useCallback(() => {
-    return scheduleFocus(headingRef.current);
+    return scheduleFocusAfterReveal(headingRef.current);
   }, []);
 
   useEffect(() => {
@@ -133,8 +160,22 @@ export default function ThemeScene() {
   useEffect(() => {
     if (!showTip || !theme) return;
 
+    // The tip's name carries the theme page copy after it for braille; speech
+    // stops in the pause after the tip so the page copy is read only once the
+    // tip goes away (focus moves to the heading).
+    let hushTimer = null;
+    if (speechMode) {
+      const [tip] = tipParts(theme);
+      hushTimer = setTimeout(
+        stopNvdaSpeechAggressively,
+        FOCUS_READ_LEAD_MS + estimateSpeechDurationMs(tip) + SPEECH_PAUSE_MS / 2
+      );
+    }
+
     const handleKeyDownCapture = (e) => {
       if (!showTipRef.current || e.repeat) return;
+      // The hush above is an injected Ctrl; it must not dismiss the tip.
+      if (e.key === "Control") return;
 
       const key = e.key.toLowerCase();
       dismissTip();
@@ -169,10 +210,11 @@ export default function ThemeScene() {
 
     return () => {
       clearTimeout(dismissTimer);
+      if (hushTimer !== null) clearTimeout(hushTimer);
       window.removeEventListener("keydown", handleKeyDownCapture, true);
       window.removeEventListener("pointerdown", handlePointerDownCapture, true);
     };
-  }, [showTip, theme, dismissTip, restoreThemeEntryFocus]);
+  }, [showTip, theme, speechMode, dismissTip, restoreThemeEntryFocus]);
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");
@@ -324,7 +366,7 @@ export default function ThemeScene() {
             // Silent role + name: NVDA drops the role word ("section") in
             // speech and braille. Named in both modes so braille keeps the text.
             role="application"
-            aria-label={`${theme.label}. ${theme.description} Use left and right keys to select an artifact.`}
+            aria-label={getThemeHeadingLabel(theme)}
           >
             <p
               className="theme-title"
@@ -432,10 +474,11 @@ export default function ThemeScene() {
         <div
           ref={tipRef}
           className="idle-overlay theme-tip-overlay"
-          // Not alertdialog: NVDA would add "alert dialog". The tip is this
-          // overlay's name, so focus reads it once in speech and braille.
+          // Not alertdialog: NVDA would add "alert dialog". Tip + page copy
+          // are this overlay's name: one focus for speech and braille.
           role="application"
-          aria-label={getThemeTipMessage(theme.label)}
+          aria-label={tipSpeechLabel(theme)}
+          aria-braillelabel={combineAnnouncement(tipParts(theme)).braille}
           tabIndex={-1}
           data-autofocus
         >

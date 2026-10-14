@@ -1,19 +1,22 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useHeadphoneSinkEffect } from "../../audio/AudioRoutingProvider";
 import {
   guardNvdaSpeechSilenceWhilePlaying,
   stopNvdaSpeechAggressively,
 } from "../../audio/nvdaSpeechControl";
 import { useAppState } from "../../state/StateProvider";
-import { useAnnounce } from "../../state/AnnouncerProvider";
-import { getTheme } from "../../data/artifacts";
+import {
+  getTheme,
+  getThemeHeadingLabel,
+  getThemeTipMessage,
+} from "../../data/artifacts";
 import {
   QUOTE_THEME_IDS,
   preloadQuoteScreens,
   quoteScreenSrc,
 } from "../../data/quoteScreens";
-import { estimateSpeechDurationMs } from "../../utils/speechTiming";
-import { scheduleFocus } from "../../state/useSceneManager";
+import { combineAnnouncement, estimateSpeechDurationMs } from "../../utils/speechTiming";
+import { scheduleFocusAfterReveal } from "../../state/useSceneManager";
 import { SILENT_NAME } from "../../utils/silentName";
 
 const QUOTE_VO_DIR = "Quote VOs";
@@ -26,8 +29,13 @@ const QUOTE_VO_FILE_BY_THEME_ID = {
 };
 
 const QUOTE_INTRO_ANNOUNCEMENT = "Short quote scene autoplaying now.";
-/** Same pause nudge used after role "button" on theme/artifact circles. */
-const QUOTE_SPEECH_PAUSE = ": . : . :";
+/**
+ * From the entry's focus to the hush: lands in the pause after the intro,
+ * before the quote would be spoken (same offset the live-region version used).
+ */
+const QUOTE_INTRO_HUSH_MS = 50 + estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT);
+/** Start the hush timer anyway if the entry's focus event never comes. */
+const QUOTE_FOCUS_FALLBACK_MS = 300;
 
 const QUOTE_APPEARANCES = ["dark", "light"];
 
@@ -38,16 +46,33 @@ function quoteVoSrc(themeId) {
   return `./${path}`;
 }
 
-function quoteSceneAnnouncement(quote) {
-  const trimmed = String(quote || "").trim();
-  if (!trimmed) return `${QUOTE_INTRO_ANNOUNCEMENT} ${QUOTE_SPEECH_PAUSE}`;
-  return `${QUOTE_INTRO_ANNOUNCEMENT} ${QUOTE_SPEECH_PAUSE} ${trimmed}`;
+/**
+ * Everything from the quote scene up to the theme page as one braille block:
+ * intro, quote, the first-visit tip, then the theme page copy. Speech is cut
+ * after the intro; the theme page reads its own part when it lands.
+ */
+function quoteSceneBlock(theme, withTip) {
+  return combineAnnouncement([
+    QUOTE_INTRO_ANNOUNCEMENT,
+    theme.quote,
+    withTip ? getThemeTipMessage(theme.label) : null,
+    getThemeHeadingLabel(theme),
+  ]);
 }
 
 export default function QuoteScene() {
-  const { currentTheme, goToScene, scene, speechMode, prefs } = useAppState();
-  const announce = useAnnounce();
+  const { currentTheme, goToScene, scene, speechMode, prefs, hasSeenThemeTip } =
+    useAppState();
   const theme = getTheme(currentTheme);
+  // Fixed for each visit: a name change while focused would be re-spoken.
+  const entryKey = scene === "quote" && theme ? theme.id : null;
+  const [entry, setEntry] = useState({ key: null, block: null });
+  if (entryKey !== entry.key) {
+    setEntry({
+      key: entryKey,
+      block: entryKey ? quoteSceneBlock(theme, !hasSeenThemeTip) : null,
+    });
+  }
   const audioRef = useRef(null);
   const quoteEntryRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -78,13 +103,15 @@ export default function QuoteScene() {
 
     let cancelled = false;
     let cancelEntryFocus = () => {};
-    let announceTimer = null;
     let introTimer = null;
+    let fallbackTimer = null;
     const extraStopIds = [];
 
-    // Park focus and leave it there — braille comes from the live announcement,
-    // not from moving focus onto the quote text.
-    cancelEntryFocus = scheduleFocus(quoteEntryRef.current);
+    // Focus the entry and leave it there: its name is the whole block, so
+    // NVDA reads the intro and braille keeps everything. The scene was hidden
+    // until now, so focus goes there after the reveal.
+    const entryEl = quoteEntryRef.current;
+    cancelEntryFocus = scheduleFocusAfterReveal(entryEl);
 
     const hushAndPlay = () => {
       if (cancelled) return;
@@ -105,31 +132,31 @@ export default function QuoteScene() {
       }
     };
 
+    // Hush + VO fire in the pause after the intro, timed from the focus that
+    // starts the read.
+    const startIntroTimer = () => {
+      entryEl?.removeEventListener("focus", startIntroTimer);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      if (cancelled || introTimer) return;
+      introTimer = window.setTimeout(hushAndPlay, QUOTE_INTRO_HUSH_MS);
+    };
+
     if (speechMode) {
-      // One live announcement: intro, pause nudge, then quote (for braille).
-      // Timer covers the intro only — hush+VO fire in the ": . : . :" buffer
-      // before the quote would be spoken.
-      announceTimer = window.setTimeout(() => {
-        if (cancelled) return;
-        announce(quoteSceneAnnouncement(theme?.quote), {
-          politeness: "assertive",
-          source: "quote-scene-intro",
-        });
-      }, 50);
-      const waitMs = 50 + estimateSpeechDurationMs(QUOTE_INTRO_ANNOUNCEMENT);
-      introTimer = window.setTimeout(hushAndPlay, waitMs);
+      entryEl?.addEventListener("focus", startIntroTimer);
+      fallbackTimer = window.setTimeout(startIntroTimer, QUOTE_FOCUS_FALLBACK_MS);
     } else {
       hushAndPlay();
     }
 
     return () => {
       cancelled = true;
-      if (announceTimer) window.clearTimeout(announceTimer);
+      entryEl?.removeEventListener("focus", startIntroTimer);
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
       if (introTimer) window.clearTimeout(introTimer);
       cancelEntryFocus();
       for (const id of extraStopIds) window.clearTimeout(id);
     };
-  }, [scene, theme?.id, theme?.quote, speechMode, announce]);
+  }, [scene, theme?.id, speechMode]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -191,14 +218,15 @@ export default function QuoteScene() {
       )}
       {theme ? (
         <>
-          {/* Silent focus park: stays focused for the whole quote scene.
+          {/* Stays focused for the whole quote scene; its name is the block.
               role="application" so NVDA doesn't add "section". */}
           <div
             ref={quoteEntryRef}
             className="sr-only"
             tabIndex={0}
             role="application"
-            aria-label={SILENT_NAME}
+            aria-label={entry.block?.speech || SILENT_NAME}
+            aria-braillelabel={entry.block?.braille || undefined}
           />
           <audio
             key={theme.id}

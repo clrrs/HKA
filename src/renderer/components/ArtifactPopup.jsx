@@ -28,6 +28,7 @@ import {
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
 import {
+  FOCUS_READ_LEAD_MS,
   SPEECH_PAUSE,
   combineAnnouncement,
   estimateSpeechDurationMs,
@@ -62,8 +63,8 @@ const VIDEO_END_DWELL_MS = 1000;
 const TRANSCRIPT_IDLE_BUFFER_MS = 30000;
 /** Covers NVDA's "dialog" role preamble before it reaches the spoken dialog label. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
-/** NVDA's lag between the open focus and the start of the anchor's spoken name. */
-const FOCUS_READ_LEAD_MS = 200;
+/** Time for the Ctrl hush (two presses, 40 ms apart) to reach NVDA. */
+const HUSH_SETTLE_MS = 40 + BRAILLE_OUTPUT_SETTLE_MS;
 const EMPTY_IMAGES = [];
 
 const GUIDED_HEADINGS = {
@@ -579,6 +580,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // region ahead of it. Cleared when focus leaves that element.
   const [controlsEntryLabel, setControlsEntryLabel] = useState(null);
   const [textEntryLabel, setTextEntryLabel] = useState(null);
+  // End-of-ring bump: the arrow re-reads itself as a name change (`n` flips
+  // the name so a repeat bump is read again), not a live message that would
+  // outlive the arrow on braille.
+  const [arrowBump, setArrowBump] = useState(null);
+  const bumpSpeechUntilRef = useRef(0);
+  const navigateTimerRef = useRef(null);
   const focusAnchorActiveRef = useRef(!speechMode);
   const focusAnchorRef = useRef(null);
   const popupRef = useRef(null);
@@ -2112,25 +2119,55 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     [onNavigate, onClose]
   );
 
+  // A bump read still going is not cut by the next screen's focus, so hush it
+  // first and let the hush land before that focus (or it cuts the new read).
+  const navigateAfterBumpHush = useCallback((go) => {
+    if (navigateTimerRef.current !== null) {
+      window.clearTimeout(navigateTimerRef.current);
+      navigateTimerRef.current = null;
+    }
+    if (Date.now() >= bumpSpeechUntilRef.current) {
+      go();
+      return;
+    }
+    bumpSpeechUntilRef.current = 0;
+    stopNvdaSpeechAggressively();
+    navigateTimerRef.current = window.setTimeout(() => {
+      navigateTimerRef.current = null;
+      go();
+    }, HUSH_SETTLE_MS);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (navigateTimerRef.current !== null) window.clearTimeout(navigateTimerRef.current);
+    },
+    []
+  );
+
   const handlePrevArrow = useCallback(() => {
     flashSelected(prevArrowRef);
-    if (prevArtifact) {
-      playEarcon(EARCON.previousArtifact);
-      goToArtifact(prevArtifact.id);
-    } else {
-      goToArtifact(null, { focusThemeStart: true });
-    }
-  }, [goToArtifact, prevArtifact, flashSelected]);
+    if (prevArtifact) playEarcon(EARCON.previousArtifact);
+    navigateAfterBumpHush(() => {
+      if (prevArtifact) {
+        goToArtifact(prevArtifact.id);
+      } else {
+        goToArtifact(null, { focusThemeStart: true });
+      }
+    });
+  }, [goToArtifact, prevArtifact, flashSelected, navigateAfterBumpHush]);
 
   const handleNextArrow = useCallback(() => {
     flashSelected(nextArrowRef);
-    if (nextArtifact) {
-      playEarcon(EARCON.nextArtifact);
-      goToArtifact(nextArtifact.id);
-    } else {
-      goToArtifact(null, { focusThemeStart: true });
-    }
-  }, [goToArtifact, nextArtifact, flashSelected]);
+    if (nextArtifact) playEarcon(EARCON.nextArtifact);
+    navigateAfterBumpHush(() => {
+      if (nextArtifact) {
+        goToArtifact(nextArtifact.id);
+      } else {
+        goToArtifact(null, { focusThemeStart: true });
+      }
+    });
+  }, [goToArtifact, nextArtifact, flashSelected, navigateAfterBumpHush]);
 
   const goToImage = useCallback(
     (next, triggerRef) => {
@@ -2535,6 +2572,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   );
   stepTextNavRef.current = stepTextNav;
 
+  const clearArrowBump = useCallback(() => setArrowBump(null), []);
+
+  const bumpArrowName = useCallback((side, speech) => {
+    setArrowBump((prev) => ({ side, n: prev?.side === side ? prev.n + 1 : 0 }));
+    bumpSpeechUntilRef.current =
+      Date.now() + FOCUS_READ_LEAD_MS + estimateSpeechDurationMs(speech);
+  }, []);
+
   const bumpArrow = useCallback((ref) => {
     const el = ref.current;
     if (!el) return;
@@ -2643,18 +2688,14 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           focusables[idx + 1].focus();
         } else if (idx === focusables.length - 1) {
           bumpArrow(nextArrowRef);
-          announce(`${nextArrowLabel}. ${nextArrowTip}`, {
-            politeness: "assertive",
-          });
+          bumpArrowName("next", `${nextArrowLabel}. ${nextArrowTip}`);
         }
       } else if (isBack) {
         if (idx > 0) {
           focusables[idx - 1].focus();
         } else if (idx === 0) {
           bumpArrow(prevArrowRef);
-          announce(`${prevArrowLabel}. ${prevArrowTip}`, {
-            politeness: "assertive",
-          });
+          bumpArrowName("prev", `${prevArrowLabel}. ${prevArrowTip}`);
         }
       }
     },
@@ -2663,6 +2704,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       transcriptOpen,
       getPopupFocusables,
       bumpArrow,
+      bumpArrowName,
       announce,
       nextArrowLabel,
       nextArrowTip,
@@ -2905,6 +2947,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     ...visibleBlocks.map((block) => getBlockSpeech(block, false)),
   ].join(". ");
 
+  const arrowName = (side, label, tip) =>
+    arrowBump?.side === side
+      ? `${label}. ${tip}${arrowBump.n % 2 ? SILENT_NAME : ""}`
+      : label;
+
   const autoplayBtnClass = (section) =>
     visualActiveSection === section ? " carousel-btn--autoplay-active" : "";
 
@@ -2949,7 +2996,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           ref={prevArrowRef}
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--prev"
           onClick={handlePrevArrow}
-          aria-label={prevArrowLabel}
+          onBlur={clearArrowBump}
+          aria-label={arrowName("prev", prevArrowLabel, prevArrowTip)}
           aria-describedby={PREV_ARROW_DESC_ID}
         />
 
@@ -3244,7 +3292,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           ref={nextArrowRef}
           className="artifact-popup-nav-arrow artifact-popup-nav-arrow--next"
           onClick={handleNextArrow}
-          aria-label={nextArrowLabel}
+          onBlur={clearArrowBump}
+          aria-label={arrowName("next", nextArrowLabel, nextArrowTip)}
           aria-describedby={NEXT_ARROW_DESC_ID}
         />
       </div>
