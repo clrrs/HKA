@@ -1,11 +1,9 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { useAppState } from "../../state/StateProvider";
-import { useAnnounce } from "../../state/AnnouncerProvider";
 import { getTheme, getArtifactIndex, getArtifactCircleName, getArtifactCircleDescription } from "../../data/artifacts";
 import { scheduleFocus } from "../../state/useSceneManager";
 import { EARCON, playEarcon } from "../../audio/earcons";
 import ArtifactPopup from "../ArtifactPopup";
-import { SILENT_NAME } from "../../utils/silentName";
 
 const ITEM_WIDTH = 600;
 const GAP = 77;
@@ -57,7 +55,6 @@ export default function ThemeScene() {
     closeArtifact,
     showSettings,
   } = useAppState();
-  const announce = useAnnounce();
   const theme = getTheme(currentTheme);
 
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -136,12 +133,6 @@ export default function ThemeScene() {
   useEffect(() => {
     if (!showTip || !theme) return;
 
-    announce(getThemeTipMessage(theme.label), {
-      politeness: "assertive",
-      source: "theme-tip-show",
-      dedupeMs: 0,
-    });
-
     const handleKeyDownCapture = (e) => {
       if (!showTipRef.current || e.repeat) return;
 
@@ -181,7 +172,7 @@ export default function ThemeScene() {
       window.removeEventListener("keydown", handleKeyDownCapture, true);
       window.removeEventListener("pointerdown", handlePointerDownCapture, true);
     };
-  }, [showTip, theme, announce, dismissTip, restoreThemeEntryFocus]);
+  }, [showTip, theme, dismissTip, restoreThemeEntryFocus]);
 
   const showCarousel = useCallback(() => {
     carouselRef.current?.removeAttribute("aria-hidden");
@@ -441,14 +432,14 @@ export default function ThemeScene() {
         <div
           ref={tipRef}
           className="idle-overlay theme-tip-overlay"
-          // Not alertdialog: NVDA would add "alert dialog". SILENT_NAME keeps
-          // the silent role silent; the tip itself is spoken via announce().
+          // Not alertdialog: NVDA would add "alert dialog". The tip is this
+          // overlay's name, so focus reads it once in speech and braille.
           role="application"
-          aria-label={SILENT_NAME}
+          aria-label={getThemeTipMessage(theme.label)}
           tabIndex={-1}
           data-autofocus
         >
-          {/* Visual only — spoken once via announce(); hiding prevents focus+name double-read */}
+          {/* Visual only — read via the overlay's name; hiding prevents a double read */}
           <div className="idle-overlay-card" aria-hidden="true">
             <div className="idle-overlay-content">
               <p id="theme-tip-message" className="idle-overlay-line">

@@ -6,11 +6,15 @@ import AccessibilityMenuFlat from "./components/AccessibilityMenuFlat";
 import { scheduleFocus, useKeyboardNav } from "./state/useSceneManager";
 import { useAppState } from "./state/StateProvider";
 import { useAnnounce } from "./state/AnnouncerProvider";
-import { stopNvdaSpeechForMediaStart } from "./audio/nvdaSpeechControl";
+import {
+  stopNvdaSpeechForMediaStart,
+  toggleNvdaSpeechModeQuietly,
+} from "./audio/nvdaSpeechControl";
 import { EARCON, playEarcon } from "./audio/earcons";
 import { moveSettingsFocus } from "./utils/settingsFocus";
 import { preloadQuoteScreens } from "./data/quoteScreens";
 import { SILENT_NAME } from "./utils/silentName";
+import { estimateSpeechDurationMs } from "./utils/speechTiming";
 
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
@@ -27,14 +31,19 @@ const SPEECH_HUD_VISIBLE_MS = 2000;
 const SPEECH_HUD_FADE_MS = 280;
 
 const IDLE_DISMISSED_ANNOUNCEMENT = "Idle warning dismissed.";
+const IDLE_WARNING_LINE = "Still there? Press any key to stay.";
+const IDLE_COUNTDOWN_INTRO = "Returning to start in…";
+const SETTINGS_OPENED_ANNOUNCEMENT = "Settings opened.";
 const SETTINGS_CLOSED_ANNOUNCEMENT = "Settings closed.";
 
 function isFocusPark(el) {
   return Boolean(el?.hasAttribute?.("data-focus-park"));
 }
 
+/** Long reads (a paragraph, or an anchor still holding a full read on braille). */
 function isParagraphFocus() {
-  return document.activeElement?.tagName === "P";
+  const el = document.activeElement;
+  return el?.tagName === "P" || Boolean(el?.hasAttribute?.("data-long-read"));
 }
 
 function getActiveSceneFocusTarget() {
@@ -73,6 +82,7 @@ export default function App() {
     videoOverlayOpen,
     autoReadActive,
     speechMode,
+    lastTtsToggleRef,
     idleTimeoutDisabled,
     autoReadFast,
     settingsMenuVariant,
@@ -115,7 +125,9 @@ export default function App() {
   const idleBrailleRef = useRef(null);
   const idleFocusSessionRef = useRef(false);
   const idleReturnFocusRef = useRef(null);
-  const idleBufferAnnouncedRef = useRef(false);
+  const speechModeRef = useRef(speechMode);
+  speechModeRef.current = speechMode;
+  const prevShowSettingsForTtsRef = useRef(false);
   const speechHudSeenFirstStateRef = useRef(false);
   const speechHudFadeTimeoutRef = useRef(null);
   const speechHudHideTimeoutRef = useRef(null);
@@ -490,7 +502,6 @@ export default function App() {
   useEffect(() => {
     if (idleCountdown === null) {
       idleFocusSessionRef.current = false;
-      idleBufferAnnouncedRef.current = false;
       return;
     }
     if (idleFocusSessionRef.current) return;
@@ -506,27 +517,52 @@ export default function App() {
     ) {
       idleReturnFocusRef.current = active;
     }
-    announce("Still there? Press any key to stay.", {
-      politeness: "assertive",
-      source: "idle-warning-show",
-      dedupeMs: 0,
-    });
+    // The warning is the focused element's name (see idleSpeechLabel), so
+    // speech and braille get it from this one focus.
     const t = window.setTimeout(() => {
       idleBrailleRef.current?.focus();
     }, 50);
     return () => window.clearTimeout(t);
-  }, [idleCountdown, announce]);
+  }, [idleCountdown]);
 
+  // Keep NVDA speaking for the whole Settings session; apply mute only on close if Off.
+  // Suppress NVDA's own "Speech Mode Talk/Off" so open/close read as Settings, not mode.
   useEffect(() => {
-    if (idleCountdown !== "buffer") return;
-    if (idleBufferAnnouncedRef.current) return;
-    idleBufferAnnouncedRef.current = true;
-    announce("Returning to start in…", {
-      politeness: "assertive",
-      source: "idle-buffer",
-      dedupeMs: 0,
-    });
-  }, [idleCountdown, announce]);
+    const wasOpen = prevShowSettingsForTtsRef.current;
+    prevShowSettingsForTtsRef.current = showSettings;
+    if (showSettings && !wasOpen) {
+      if (!speechModeRef.current) {
+        lastTtsToggleRef.current = Date.now();
+        // Speech was muted: focus already landed silently. After unmute, kill the
+        // mode line and speak the same open confirmation speech-on visitors get.
+        // Same text as the focused intro's name, so braille does not change.
+        return toggleNvdaSpeechModeQuietly({
+          onSuppressed: () => {
+            announce(SETTINGS_OPENED_ANNOUNCEMENT, {
+              politeness: "assertive",
+              source: "settings-open-speech-off",
+              dedupeMs: 0,
+            });
+          },
+        });
+      }
+    } else if (!showSettings && wasOpen) {
+      if (!speechModeRef.current) {
+        // Let "Settings closed." (scenesEntryLabel) finish, then mute and kill
+        // "Speech Mode Off" so it does not replace the close confirmation.
+        let cancelQuiet = () => {};
+        const remuteTimer = window.setTimeout(() => {
+          lastTtsToggleRef.current = Date.now();
+          cancelQuiet = toggleNvdaSpeechModeQuietly();
+        }, estimateSpeechDurationMs(SETTINGS_CLOSED_ANNOUNCEMENT) + 200);
+        return () => {
+          window.clearTimeout(remuteTimer);
+          cancelQuiet();
+        };
+      }
+    }
+    return undefined;
+  }, [showSettings, announce, lastTtsToggleRef]);
 
   useEffect(() => {
     if (!speechHudSeenFirstStateRef.current) {
@@ -604,9 +640,18 @@ export default function App() {
   const idleWarningActive = idleCountdown !== null;
   const showCountdownIntro =
     idleCountdown === "buffer" || typeof idleCountdown === "number";
-  const idleBrailleText = `Still there? Press any key to stay.${
-    showCountdownIntro ? " Returning to start in…" : ""
+  const idleBrailleText = `${IDLE_WARNING_LINE}${
+    showCountdownIntro ? ` ${IDLE_COUNTDOWN_INTRO}` : ""
   }${typeof idleCountdown === "number" ? ` ${idleCountdown}` : ""}`;
+  // Speech gets only what is new at each step: the warning on focus, then the
+  // intro, then each number, all as name changes of the focused element.
+  // Braille keeps the whole line via aria-braillelabel.
+  const idleSpeechLabel =
+    typeof idleCountdown === "number"
+      ? String(idleCountdown)
+      : idleCountdown === "buffer"
+        ? IDLE_COUNTDOWN_INTRO
+        : IDLE_WARNING_LINE;
 
   return (
     <div className="app">
@@ -724,20 +769,15 @@ export default function App() {
                 </p>
               </div>
             </div>
-            <div
-              className="sr-only"
-              aria-live="assertive"
-              aria-atomic="true"
-            >
-              {typeof idleCountdown === "number" ? idleCountdown : ""}
-            </div>
-            {/* Named + silent role so focus reads the text without "section". */}
+            {/* Named + silent role so focus reads the text without "section".
+                One output per step: no live regions. */}
             <div
               ref={idleBrailleRef}
               className="sr-only"
               tabIndex={-1}
               role="application"
-              aria-label={idleBrailleText}
+              aria-label={idleSpeechLabel}
+              aria-braillelabel={idleBrailleText}
             >
               {idleBrailleText}
             </div>

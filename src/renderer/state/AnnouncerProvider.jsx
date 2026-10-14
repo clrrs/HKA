@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useCallback, useRef, useEffect } from "react";
 
 const AnnouncerContext = createContext(null);
-const BrailleContext = createContext(null);
-const NVDA_CHECK_INTERVAL_MS = 15000;
+const AnnouncementLogContext = createContext(null);
 const ANNOUNCE_LOG_KEY = "__HKA_ANNOUNCE_LOG__";
 const ANNOUNCE_TOOLS_KEY = "__HKA_ANNOUNCE_TOOLS__";
 const EXPORT_ALL_TOOLS_KEY = "__HKA_EXPORT_DEBUG_LOGS__";
@@ -74,12 +73,12 @@ export function useAnnounce() {
 }
 
 /**
- * Braille-only output through the NVDA controller client. Returns a function
- * `showBraille(text, { source })` that is a no-op (returns false) when NVDA or
- * the controller DLL is unavailable, e.g. Mac/dev.
+ * Log screen reader output that does not go through a live region (a focused
+ * element's name, a timed visual step) so it shows up in the same timeline.
+ * Returns `logOutput(message, { source, channel })`.
  */
-export function useBraille() {
-  return useContext(BrailleContext);
+export function useAnnouncementLog() {
+  return useContext(AnnouncementLogContext);
 }
 
 export default function AnnouncerProvider({ children }) {
@@ -95,70 +94,11 @@ export default function AnnouncerProvider({ children }) {
     assertive: { text: "", time: 0 },
   });
 
-  // True when the NVDA controller client can take speech/braille directly.
-  // Re-checked periodically in case NVDA restarts while the app is running.
-  const controllerRef = useRef(false);
-
   useEffect(() => {
     // Register debug helpers immediately on app load so operators can clear/export
     // before any announcement has fired.
     ensureAnnouncementTools();
   }, []);
-
-  useEffect(() => {
-    const invoke = window.kioskApi?.invoke;
-    if (!invoke) return undefined;
-    let cancelled = false;
-    const check = () => {
-      invoke("nvda-available")
-        .then((ok) => {
-          if (!cancelled) controllerRef.current = Boolean(ok);
-        })
-        .catch(() => {
-          if (!cancelled) controllerRef.current = false;
-        });
-    };
-    check();
-    const id = window.setInterval(check, NVDA_CHECK_INTERVAL_MS);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, []);
-
-  const logControllerOutput = useCallback((fields) => {
-    ensureAnnouncementTools();
-    sequenceRef.current += 1;
-    const now = Date.now();
-    const entry = {
-      seq: sequenceRef.current,
-      ts: new Date(now).toISOString(),
-      sinceStartMs: now - ANNOUNCE_LOG_START,
-      dedupeMs: 0,
-      status: "emitted",
-      ...fields,
-    };
-    writeAnnouncementLog(entry);
-    if (window.__ANNOUNCE_DIAGNOSTIC__) {
-      console.log("[Announcer]", entry);
-    }
-  }, []);
-
-  const showBraille = useCallback(
-    (text, options = {}) => {
-      const { source = "unknown" } = options;
-      if (!text || !controllerRef.current) return false;
-      window.kioskApi.send("nvda-braille", text);
-      logControllerOutput({
-        message: text,
-        politeness: "n/a",
-        source,
-        channel: "controller-braille",
-      });
-      return true;
-    },
-    [logControllerOutput]
-  );
 
   const announce = useCallback((message, options = {}) => {
     const {
@@ -166,9 +106,6 @@ export default function AnnouncerProvider({ children }) {
       dedupeMs = 0,
       clear = false,
       source = "unknown",
-      // Speak without touching braille, so a braille message sent with
-      // showBraille() stays put. Falls back to the live region without NVDA.
-      speechOnly = false,
     } = options;
 
     const channel = politeness === "assertive" ? "assertive" : "polite";
@@ -221,19 +158,6 @@ export default function AnnouncerProvider({ children }) {
       return;
     }
 
-    if (speechOnly && controllerRef.current) {
-      lastMessageRef.current[channel] = { text: message, time: now };
-      window.kioskApi.send("nvda-speak", message);
-      logControllerOutput({
-        message,
-        politeness,
-        dedupeMs,
-        source,
-        channel: "controller-speech",
-      });
-      return;
-    }
-
     const target = channel === "assertive" ? assertiveRef.current : politeRef.current;
 
     if (!target) return;
@@ -276,11 +200,33 @@ export default function AnnouncerProvider({ children }) {
     if (window.__ANNOUNCE_DIAGNOSTIC__) {
       console.log("[Announcer]", entry);
     }
-  }, [logControllerOutput]);
+  }, []);
+
+  const logOutput = useCallback((message, options = {}) => {
+    const { source = "unknown", channel = "focus-label" } = options;
+    ensureAnnouncementTools();
+    sequenceRef.current += 1;
+    const now = Date.now();
+    const entry = {
+      seq: sequenceRef.current,
+      ts: new Date(now).toISOString(),
+      sinceStartMs: now - ANNOUNCE_LOG_START,
+      message,
+      politeness: "n/a",
+      dedupeMs: 0,
+      source,
+      channel,
+      status: "logged",
+    };
+    writeAnnouncementLog(entry);
+    if (window.__ANNOUNCE_DIAGNOSTIC__) {
+      console.log("[Announcer]", entry);
+    }
+  }, []);
 
   return (
     <AnnouncerContext.Provider value={announce}>
-      <BrailleContext.Provider value={showBraille}>{children}</BrailleContext.Provider>
+      <AnnouncementLogContext.Provider value={logOutput}>{children}</AnnouncementLogContext.Provider>
       <div
         ref={politeRef}
         className="sr-only"

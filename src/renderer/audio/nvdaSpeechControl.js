@@ -6,6 +6,34 @@ export const BRAILLE_OUTPUT_SETTLE_MS = 150;
 let lastStopAt = 0;
 
 /**
+ * Toggle NVDA speech mode (Insert+S ×2) and cancel the resulting
+ * "Speech Mode Talk" / "Speech Mode Off" line so the kiosk can speak its own.
+ * Returns a cleanup that clears pending timers.
+ */
+export function toggleNvdaSpeechModeQuietly(options = {}) {
+  const { suppressDelayMs = 300, onSuppressed } = options;
+  window.kioskApi?.send("toggle-tts");
+  const timers = new Set();
+  const schedule = (fn, ms) => {
+    const id = window.setTimeout(() => {
+      timers.delete(id);
+      fn();
+    }, ms);
+    timers.add(id);
+  };
+  schedule(() => {
+    stopNvdaSpeechAggressively();
+    schedule(() => {
+      onSuppressed?.();
+    }, 80);
+  }, suppressDelayMs);
+  return () => {
+    for (const id of timers) window.clearTimeout(id);
+    timers.clear();
+  };
+}
+
+/**
  * Stop current NVDA speech right before media starts.
  * Debounced to avoid duplicate triggers from mirrored players.
  */

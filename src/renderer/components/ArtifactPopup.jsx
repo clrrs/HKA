@@ -6,8 +6,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import { useAppState } from "../state/StateProvider";
-import { useAnnounce, useBraille } from "../state/AnnouncerProvider";
+import { useAnnounce, useAnnouncementLog } from "../state/AnnouncerProvider";
 import { scheduleFocus } from "../state/useSceneManager";
 import { useHeadphoneSinkEffect } from "../audio/AudioRoutingProvider";
 import { EARCON, playEarcon } from "../audio/earcons";
@@ -26,11 +27,15 @@ import {
   getPrevArtifact,
 } from "../data/artifacts";
 import { MISSING_COPY, textOrMissing } from "../data/contentPlaceholder";
-import { estimateSpeechDurationMs } from "../utils/speechTiming";
+import {
+  SPEECH_PAUSE,
+  combineAnnouncement,
+  estimateSpeechDurationMs,
+  partStartOffsetsMs,
+} from "../utils/speechTiming";
 import { SILENT_NAME } from "../utils/silentName";
 
 const SCROLL_STEP_RATIO = 0.75;
-const SECTION_TRANSITION_MS = 1000;
 const PREV_ARTIFACT_LABEL = "Previous artifact";
 const NEXT_ARTIFACT_LABEL = "Next artifact";
 const BACK_TO_THEME_LABEL = "Back to theme";
@@ -49,11 +54,16 @@ const ZOOM_TIP = "Tip: Zoom will enlarge image to full screen size";
 const ZOOM_TIP_DESCRIPTION = `: . : . : ${ZOOM_TIP}`;
 const TOOLBAR_NAV_HINT =
   "Use left and right keys to navigate artifact tool bar.";
+const CONTROLS_LABEL = "Controls";
+const TRANSCRIPT_CLOSED_ANNOUNCEMENT = "Transcript closed.";
+const ZOOM_EXITED_ANNOUNCEMENT = "Exited zoom mode.";
 const VIDEO_END_DWELL_MS = 1000;
 // Extra time the inactivity timer stays held after a transcript read finishes.
 const TRANSCRIPT_IDLE_BUFFER_MS = 30000;
 /** Covers NVDA's "dialog" role preamble before it reaches the spoken dialog label. */
 const DIALOG_TITLE_PREAMBLE_MS = 500;
+/** NVDA's lag between the open focus and the start of the anchor's spoken name. */
+const FOCUS_READ_LEAD_MS = 200;
 const EMPTY_IMAGES = [];
 
 const GUIDED_HEADINGS = {
@@ -68,10 +78,6 @@ const GUIDED_HEADING_FALLBACK = "Description";
  * text panel instead of each rendering a "MISSING COPY" section.
  */
 const HIDE_MISSING_GUIDED_SECTIONS = false;
-
-function estimateChunkDurationMs(text, bufferMs = SECTION_TRANSITION_MS) {
-  return estimateSpeechDurationMs(text) + bufferMs;
-}
 
 function autoReadDelayMs(ms, fast) {
   return fast ? Math.max(50, Math.round(ms / 6)) : ms;
@@ -417,6 +423,35 @@ function buildAutoplayChunks(artifact, blocks) {
   }));
 }
 
+/**
+ * Everything read on open, as one output on the focus anchor so braille is not
+ * overwritten piece by piece. Speech on: title, alt, story (what auto-read
+ * covers), toolbar hint. Speech off: title and alt. Story chunks carry their
+ * estimated start inside the speech so the visuals can follow along.
+ */
+function buildOpenRead(artifact, blocks, withStory) {
+  if (!artifact) return null;
+  const chunks = withStory ? buildAutoplayChunks(artifact, blocks) : [];
+  const parts = [
+    `${artifact.title} opened.`,
+    getArtifactAltText(artifact),
+    ...chunks.map((chunk) => chunk.text),
+    withStory ? TOOLBAR_NAV_HINT : null,
+  ];
+  const { starts, totalMs } = partStartOffsetsMs(parts);
+  const hintStartMs = withStory ? starts[parts.length - 1] : totalMs;
+  return {
+    label: combineAnnouncement(parts),
+    chunks: chunks.map((chunk, i) => ({
+      ...chunk,
+      startMs: starts[2 + i],
+      // Until the next piece starts (the hint, after the last chunk).
+      durationMs: (i + 1 < chunks.length ? starts[3 + i] : hintStartMs) - starts[2 + i],
+    })),
+    hintStartMs,
+  };
+}
+
 function useFocusTrap(containerRef, isActive, options = {}) {
   const { autofocusOnActivate = true, skipAutofocusRef, initialFocusDoneRef } = options;
 
@@ -482,10 +517,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     (message, options = {}) => globalAnnounce(message, { source: "ArtifactPopup", ...options }),
     [globalAnnounce]
   );
-  const globalShowBraille = useBraille();
-  const showBraille = useCallback(
-    (text) => globalShowBraille(text, { source: "ArtifactPopup" }),
-    [globalShowBraille]
+  const globalLogOutput = useAnnouncementLog();
+  const logOutput = useCallback(
+    (message, channel) => globalLogOutput(message, { source: "ArtifactPopup", channel }),
+    [globalLogOutput]
   );
 
   const artifact = getArtifact(theme.id, artifactId);
@@ -534,11 +569,16 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   // Speech off: the popup opens on a silent anchor so nothing is highlighted
   // yet. It leaves the focus order as soon as you move off it.
   const [focusAnchorActive, setFocusAnchorActive] = useState(!speechMode);
-  // Dialog name carries "{title} opened." once; blanked after so zoom/settings/
-  // idle restore does not make NVDA re-speak the open line.
-  const [dialogAriaLabel, setDialogAriaLabel] = useState(() =>
-    artifact ? `${artifact.title} opened.` : SILENT_NAME
-  );
+  // The open read is the anchor's name, so NVDA speaks it in one go and braille
+  // keeps all of it. Fixed for this artifact (the popup remounts per artifact);
+  // cleared once focus leaves so a restore lands on a silent anchor.
+  const [openRead] = useState(() => buildOpenRead(artifact, textBlocks, speechMode));
+  const [anchorLabel, setAnchorLabel] = useState(() => openRead?.label ?? null);
+  // Transient name on a re-entered container or the text panel, so a
+  // confirmation or revealed copy is read with the focus move instead of a live
+  // region ahead of it. Cleared when focus leaves that element.
+  const [controlsEntryLabel, setControlsEntryLabel] = useState(null);
+  const [textEntryLabel, setTextEntryLabel] = useState(null);
   const focusAnchorActiveRef = useRef(!speechMode);
   const focusAnchorRef = useRef(null);
   const popupRef = useRef(null);
@@ -1085,7 +1125,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setVisualSection(null);
   }, [cancelAutoplay, clearTranscriptDwell, clearStoryTransition, setVisualSection]);
 
-  /** Park on Story after auto-read: gold highlight, silent focus, toolbar tip. */
+  /**
+   * Park on Story when auto-read reaches the toolbar tip: gold highlight, focus
+   * stays on the anchor (the tip is the tail of its name).
+   */
   const parkOnStoryEnd = useCallback(() => {
     clearTranscriptDwell();
     clearTextAutoScroll();
@@ -1098,9 +1141,29 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setIsAutoplaying(false);
     setVisualSection("description");
     storyParkedRef.current = true;
-    // Already on braille as the tail of the auto-read braille message.
-    announce(TOOLBAR_NAV_HINT, { politeness: "assertive", speechOnly: true });
-  }, [announce, clearTranscriptDwell, clearTextAutoScroll, setVisualSection]);
+  }, [clearTranscriptDwell, clearTextAutoScroll, setVisualSection]);
+
+  // Focus leaving the anchor ends the open read: NVDA drops the rest of the
+  // speech, and a restore (Settings, idle) should land on a silent anchor
+  // rather than read it all again. The label never changes while focused; a
+  // name change would be re-spoken and swap out the braille.
+  const handleAnchorBlur = useCallback(() => {
+    if (!document.hasFocus()) return;
+    setAnchorLabel(null);
+    if (autoplayingRef.current) markAutoplayEnded();
+  }, [markAutoplayEnded]);
+
+  // Entry labels last for one entry: drop them when focus leaves, never while
+  // the element (or, for Controls, a button inside it) still has focus.
+  const handleControlsBlur = useCallback((e) => {
+    if (!document.hasFocus() || e.currentTarget.contains(e.relatedTarget)) return;
+    setControlsEntryLabel(null);
+  }, []);
+
+  const handleTextPanelBlur = useCallback((e) => {
+    if (!document.hasFocus() || e.target !== e.currentTarget) return;
+    setTextEntryLabel(null);
+  }, []);
 
   // Used when an auto-started video finishes (legacy path; auto-read no longer starts video).
   const landOnNextArrowEnd = useCallback(() => {
@@ -1427,7 +1490,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     autoplayDoneRef.current = false;
     storyParkedRef.current = false;
     popupInitialFocusDoneRef.current = false;
-    setDialogAriaLabel(artifact ? `${artifact.title} opened.` : SILENT_NAME);
     clearTranscriptDwell();
     clearStoryTransition();
   }, [artifactId, artifact, clearTranscriptDwell, clearStoryTransition]);
@@ -1477,21 +1539,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     focusAnchorRef.current?.focus({ preventScroll: true });
   }, [artifactId, speechMode, focusAnchorActive]);
 
+  // The open read itself is the anchor's name (focused above); log it so the
+  // timeline export shows what NVDA was given.
   useEffect(() => {
-    if (!artifact || speechMode) return;
-
-    const openTitle = `${artifact.title} opened.`;
-    const openAlt = getArtifactAltText(artifact);
-    // Braille gets title + alt together so the alt doesn't wipe the title.
-    showBraille([openTitle, openAlt].filter(Boolean).join(" "));
-    announce(openTitle, { politeness: "assertive", speechOnly: true });
-    setDialogAriaLabel(SILENT_NAME);
-
-    const altDelay = estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS;
-    const t = window.setTimeout(() => {
-      announce(openAlt, { politeness: "assertive", speechOnly: true });
-    }, altDelay);
-    return () => window.clearTimeout(t);
+    if (openRead) logOutput(openRead.label.speech, "focus-label");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1517,25 +1568,18 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     }
     if (autoplayDoneRef.current) return;
 
-    const chunks = buildAutoplayChunks(artifact, textBlocks);
-    if (chunks.length === 0) return;
-
-    const openAlt = getArtifactAltText(artifact);
-    const openTitle = `${artifact.title} opened.`;
-
-    // Braille shows the whole auto-read at once and stays put while speech
-    // reads it in pieces (the pieces below are speech-only). NVDA clears it
-    // when the visitor moves focus with a key. Sent after the dialog's focus
-    // braille settles so it lands on top.
-    const brailleText = [openTitle, openAlt, ...chunks.map((c) => c.text), TOOLBAR_NAV_HINT]
-      .filter(Boolean)
-      .join(" ");
-    const brailleTimer = window.setTimeout(
-      () => showBraille(brailleText),
-      BRAILLE_OUTPUT_SETTLE_MS
-    );
+    // NVDA is reading the anchor's name; these timers only move the visuals
+    // along with it. Without story chunks (speech was off at open) there is no
+    // read to follow.
+    const chunks = openRead?.chunks ?? [];
+    if (chunks.length === 0) {
+      autoplayDoneRef.current = true;
+      return;
+    }
 
     let chunkIndex = 0;
+    // Timeline position of the step currently scheduled.
+    let scheduledAt = -FOCUS_READ_LEAD_MS;
     autoplayingRef.current = true;
     storyParkedRef.current = false;
     setIsAutoplaying(true);
@@ -1543,70 +1587,54 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     setTextNavActive(false);
     setVisualSection(null);
 
+    const scheduleAt = (atMs, fn) => {
+      const delay = autoReadDelayMs(Math.max(0, atMs - scheduledAt), autoReadFastRef.current);
+      scheduledAt = atMs;
+      autoplayPlayNextRef.current = fn;
+      autoplayDeadlineRef.current = Date.now() + delay;
+      autoplayTimeoutRef.current = setTimeout(fn, delay);
+    };
+
     const playNext = () => {
       if (!autoplayingRef.current || isPausedRef.current) return;
       if (chunkIndex >= chunks.length) {
+        logOutput("[toolbar tip: park on Story]", "visual-step");
         parkOnStoryEnd();
         return;
       }
 
       const chunk = chunks[chunkIndex];
+      chunkIndex += 1;
       if (chunk.mode) {
         setTextMode(chunk.mode);
       }
       setCurrentImageIndex(chunk.imageIndex);
       setVisualSection(chunk.section, chunk.blockKey);
+      logOutput(`[story ${chunkIndex} of ${chunks.length}: ${chunk.blockKey}]`, "visual-step");
 
-      announce(chunk.text, { politeness: "assertive", speechOnly: true });
-      chunkIndex += 1;
-
-      const delay = autoReadDelayMs(
-        estimateChunkDurationMs(chunk.text, SECTION_TRANSITION_MS),
-        autoReadFastRef.current
-      );
+      const duration = autoReadDelayMs(chunk.durationMs, autoReadFastRef.current);
       if (chunk.section === "description") {
         // Wait for textMode swap to render the visible block before scrolling.
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             if (!autoplayingRef.current || isPausedRef.current) return;
             scrollBlockToTop(chunk.blockKey);
-            startTextAutoScroll(delay, chunk.blockKey);
+            startTextAutoScroll(duration, chunk.blockKey);
           });
         });
       } else {
         clearTextAutoScroll();
       }
-      autoplayPlayNextRef.current = playNext;
-      autoplayDeadlineRef.current = Date.now() + delay;
-      autoplayTimeoutRef.current = setTimeout(playNext, delay);
-    };
-
-    // Dialog aria-label speaks "{title} opened." first. Then Image: alt, then story.
-    // Blank the dialog name once title is consumed so later focus (zoom/settings/
-    // idle restore) does not re-speak it.
-    const announceAltThenStory = () => {
-      if (!autoplayingRef.current || isPausedRef.current) return;
-      setDialogAriaLabel(SILENT_NAME);
-      announce(openAlt, { politeness: "assertive", speechOnly: true });
-      const altDelay = autoReadDelayMs(
-        estimateSpeechDurationMs(openAlt) + DIALOG_TITLE_PREAMBLE_MS,
-        autoReadFastRef.current
+      scheduleAt(
+        chunkIndex < chunks.length ? chunks[chunkIndex].startMs : openRead.hintStartMs,
+        playNext
       );
-      autoplayPlayNextRef.current = playNext;
-      autoplayDeadlineRef.current = Date.now() + altDelay;
-      autoplayTimeoutRef.current = setTimeout(playNext, altDelay);
     };
 
-    const titleDelay = autoReadDelayMs(
-      estimateSpeechDurationMs(openTitle) + DIALOG_TITLE_PREAMBLE_MS,
-      autoReadFastRef.current
-    );
-    autoplayPlayNextRef.current = announceAltThenStory;
-    autoplayDeadlineRef.current = Date.now() + titleDelay;
-    autoplayTimeoutRef.current = setTimeout(announceAltThenStory, titleDelay);
+    // Title and alt are read first; the Story highlight waits for the story.
+    scheduleAt(chunks[0].startMs, playNext);
 
     return () => {
-      window.clearTimeout(brailleTimer);
       if (autoplayingRef.current) {
         cancelAutoplay();
       }
@@ -1615,11 +1643,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     speechMode,
     artifact,
     artifactId,
-    textBlocks,
+    openRead,
     zoomOpen,
     transcriptOpen,
-    announce,
-    showBraille,
+    logOutput,
     cancelAutoplay,
     clearTranscriptDwell,
     clearStoryTransition,
@@ -2114,7 +2141,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       setCurrentImageIndex(next);
       setTextMode("guided");
 
-      const revealGuided = (block) => {
+      // One output: when the new copy overflows, `speech` is read as the text
+      // panel's name with the focus move into it; otherwise it goes to the live
+      // region and focus stays on the button.
+      const revealGuided = (block, speech) => {
         if (block) {
           activeBlockKeyRef.current = block.key;
           setActiveBlockKey(block.key);
@@ -2125,35 +2155,36 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             const overflow = hasScrollOverflow(textBodyRef.current);
             setTextScrollable(overflow);
             const manual = !autoplayingRef.current && !transcriptDwellActiveRef.current;
+            let entered = false;
             if (overflow && manual) {
-              enterTextNavRef.current?.({
-                announceBlock: false,
-                focus: true,
-                sourceRef: triggerRef,
-              });
+              entered = Boolean(
+                enterTextNavRef.current?.({
+                  announceBlock: false,
+                  focus: true,
+                  sourceRef: triggerRef,
+                  entryLabel: speech,
+                })
+              );
             } else {
               if (textNavActiveRef.current) resetTextScroll();
               if (isOnTextPanel(document.activeElement)) {
                 triggerRef.current?.focus({ preventScroll: true });
               }
             }
+            if (!entered) announce(speech, { dedupeMs: 200 });
           });
         });
       };
 
       if (isCombined) {
-        announce(`Image ${next + 1} of ${images.length}.`, { dedupeMs: 200 });
-        revealGuided(null);
+        revealGuided(null, `Image ${next + 1} of ${images.length}.`);
         return;
       }
 
       if (isUnifiedDocumentGuided(artifact, images)) {
         const block = textBlocks.find((b) => b.key === "guided-0") || null;
         const page = getDocumentPageAnnounce(artifact, next, images.length);
-        announce(block ? `${page} ${getBlockSpeech(block, false)}` : page, {
-          dedupeMs: 200,
-        });
-        revealGuided(block);
+        revealGuided(block, block ? `${page} ${getBlockSpeech(block, false)}` : page);
         return;
       }
 
@@ -2166,16 +2197,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
         if (nextLetter !== prevLetter && block) {
           const total = artifact.letterSections?.length ?? 1;
           const position = `Item ${nextLetter + 1} of ${total}.`;
-          announce(`${position} ${getBlockSpeech(block, false)}`, { dedupeMs: 200 });
-          revealGuided(block);
+          revealGuided(block, `${position} ${getBlockSpeech(block, false)}`);
           return;
         }
 
         const page = getDocumentPageAnnounce(artifact, next, images.length);
-        announce(block ? `${page} ${getBlockSpeech(block, false)}` : page, {
-          dedupeMs: 200,
-        });
-        revealGuided(block);
+        revealGuided(block, block ? `${page} ${getBlockSpeech(block, false)}` : page);
         return;
       }
 
@@ -2188,10 +2215,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       const guidedSpeech = block
         ? [block.heading, block.text].filter(Boolean).join(". ")
         : null;
-      announce(guidedSpeech ? `${position} ${guidedSpeech}` : position, {
-        dedupeMs: 200,
-      });
-      revealGuided(block || null);
+      revealGuided(block || null, guidedSpeech ? `${position} ${guidedSpeech}` : position);
     },
     [
       artifact,
@@ -2243,13 +2267,11 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       setActiveBlockKey(introKey);
     }
 
-    if (speechMode && introSpeech) {
-      announce(introSpeech, { politeness: "assertive", dedupeMs: 0 });
-    }
-
-    scheduleOverflowTextNavRef.current?.(storyBtnRef);
+    scheduleOverflowTextNavRef.current?.(storyBtnRef, {
+      speech: speechMode ? introSpeech : "",
+      announceOptions: { politeness: "assertive", dedupeMs: 0 },
+    });
   }, [
-    announce,
     clearStoryTransition,
     markAutoplayEnded,
     speechMode,
@@ -2271,15 +2293,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         scrollBlockToTop(guided.key);
-        scheduleOverflowTextNavRef.current?.(guidedDescBtnRef);
+        scheduleOverflowTextNavRef.current?.(guidedDescBtnRef, {
+          speech: speechMode ? getBlockSpeech(guided, false) : "",
+          announceOptions: { politeness: "assertive", dedupeMs: 0 },
+        });
       });
     });
-
-    if (speechMode) {
-      announce(getBlockSpeech(guided, false), { politeness: "assertive", dedupeMs: 0 });
-    }
   }, [
-    announce,
     clearStoryTransition,
     currentImageIndex,
     getGuidedBlockForImage,
@@ -2289,11 +2309,13 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   ]);
 
   const closeTranscript = useCallback(() => {
-    setTranscriptOpen(false);
-    announce("Transcript closed.", { politeness: "assertive", dedupeMs: 0 });
-    // Delay focus so the live region lands before the restored control is read.
-    window.setTimeout(() => restoreMainFocus(transcriptBtnRef), 60);
-  }, [announce, restoreMainFocus]);
+    // Read as the Controls name when focus re-enters it (see controlsEntryLabel).
+    flushSync(() => {
+      setControlsEntryLabel(TRANSCRIPT_CLOSED_ANNOUNCEMENT);
+      setTranscriptOpen(false);
+    });
+    restoreMainFocus(transcriptBtnRef);
+  }, [restoreMainFocus]);
 
   const openTranscript = useCallback(() => {
     rememberMainFocus();
@@ -2310,12 +2332,15 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   }, [markAutoplayEnded, rememberMainFocus]);
 
   const exitZoom = useCallback(() => {
-    setZoomOpen(false);
-    setSnapIndex(0);
+    // Read as the Controls name when focus re-enters it (see controlsEntryLabel).
+    flushSync(() => {
+      setControlsEntryLabel(ZOOM_EXITED_ANNOUNCEMENT);
+      setZoomOpen(false);
+      setSnapIndex(0);
+    });
     playEarcon(EARCON.popupClose);
-    announce("Exited zoom mode.");
     restoreMainFocus(zoomOrPlayRef);
-  }, [announce, restoreMainFocus]);
+  }, [restoreMainFocus]);
 
   const handleVideoToggle = useCallback((e) => {
     const btn = e?.currentTarget ?? document.activeElement;
@@ -2398,7 +2423,7 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
   );
 
   const enterTextNav = useCallback(
-    ({ announceBlock = true, focus = false, sourceRef = null } = {}) => {
+    ({ announceBlock = true, focus = false, sourceRef = null, entryLabel = "" } = {}) => {
       const snaps = refreshTextSnaps();
       // One snap means nowhere to step — don't trap focus in the text panel.
       // (Do not gate on hasScrollOverflow alone; a short clipped line can be
@@ -2423,11 +2448,21 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
       }
       applyTextSnap(index, { announceBlock, forceAnnounce: announceBlock });
       if (focus) {
-        getTextPanelFocusEl()?.focus({ preventScroll: true });
+        const target = getTextPanelFocusEl();
+        if (entryLabel) {
+          if (target && document.activeElement !== target) {
+            // Commit the name before focus so NVDA reads it with the move.
+            flushSync(() => setTextEntryLabel(entryLabel));
+          } else {
+            // Already there: renaming the focused panel would re-speak it.
+            announce(entryLabel, { dedupeMs: 200 });
+          }
+        }
+        target?.focus({ preventScroll: true });
       }
       return true;
     },
-    [applyTextSnap, refreshTextSnaps, getTextPanelFocusEl]
+    [applyTextSnap, refreshTextSnaps, getTextPanelFocusEl, announce]
   );
   enterTextNavRef.current = enterTextNav;
 
@@ -2435,23 +2470,43 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
    * Story / Previous Image / Next Image hand the focus to the text panel, but
    * only when the copy they just revealed actually overflows and only while the
    * visitor is driving. Auto-read scrolls the panel itself and must keep focus.
+   * `speech` is one output either way: the panel's name on that focus move, or
+   * a live announcement when focus stays on the button.
    */
-  scheduleOverflowTextNavRef.current = (sourceRef, { onlyIfStillOnPath = false } = {}) => {
-    if (autoplayingRef.current || transcriptDwellActiveRef.current) return;
+  scheduleOverflowTextNavRef.current = (
+    sourceRef,
+    { onlyIfStillOnPath = false, speech = "", announceOptions } = {}
+  ) => {
+    const announceInPlace = () => {
+      if (speech) announce(speech, announceOptions);
+    };
+    if (autoplayingRef.current || transcriptDwellActiveRef.current) {
+      announceInPlace();
+      return;
+    }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (autoplayingRef.current || transcriptDwellActiveRef.current) return;
+        if (autoplayingRef.current || transcriptDwellActiveRef.current) {
+          announceInPlace();
+          return;
+        }
         const snaps = refreshTextSnaps();
         const canStepScroll = snaps.length > 1;
         setTextScrollable(canStepScroll);
-        if (!canStepScroll) return;
+        if (!canStepScroll) {
+          announceInPlace();
+          return;
+        }
         const active = document.activeElement;
         const stillOnPath =
           textNavActiveRef.current ||
           active === sourceRef?.current ||
           isOnTextPanel(active);
-        if (onlyIfStillOnPath && !stillOnPath) return;
-        enterTextNav({ announceBlock: false, focus: true, sourceRef });
+        if (onlyIfStillOnPath && !stillOnPath) {
+          announceInPlace();
+          return;
+        }
+        enterTextNav({ announceBlock: false, focus: true, sourceRef, entryLabel: speech });
       });
     });
   };
@@ -2845,9 +2900,6 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
     });
     return map;
   })();
-  // Title opened first — auto-read then announces Image: alt, then story.
-  // dialogAriaLabel state is blanked after that open title is consumed.
-
   const textPanelLabel = [
     artifact.title,
     ...visibleBlocks.map((block) => getBlockSpeech(block, false)),
@@ -2863,10 +2915,10 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
           isAutoplaying ? " artifact-popup--autoplaying" : ""
         }`}
         ref={popupRef}
-        // application, not dialog: NVDA still speaks the name on entry but
-        // drops the role word in speech and braille (silent role when named).
+        // application, not dialog: NVDA drops the role word in speech and
+        // braille (silent role when named). The open read is on the anchor.
         role="application"
-        aria-label={dialogAriaLabel}
+        aria-label={SILENT_NAME}
         onKeyDown={handlePopupKeyDown}
       >
         <p id={PREV_ARROW_DESC_ID} className="sr-only">
@@ -2884,9 +2936,12 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             className="artifact-popup-focus-anchor"
             tabIndex={0}
             data-autofocus
+            // Long idle limit while the full read is still on braille.
+            data-long-read={anchorLabel ? "" : undefined}
             role="application"
-            aria-label={SILENT_NAME}
-            aria-hidden={speechMode ? undefined : true}
+            aria-label={anchorLabel?.speech || SILENT_NAME}
+            aria-braillelabel={anchorLabel?.braille || undefined}
+            onBlur={handleAnchorBlur}
           />
         )}
         <button
@@ -2931,7 +2986,21 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
             </div>
           )}
 
-          <div className="artifact-popup-controls" role="application" aria-label="Controls">
+          <div
+            className="artifact-popup-controls"
+            role="application"
+            // A confirmation (zoom exit, transcript close) rides on this name
+            // when focus re-enters, so it is read with the restored button.
+            aria-label={
+              controlsEntryLabel
+                ? `${controlsEntryLabel} ${SPEECH_PAUSE} ${CONTROLS_LABEL}`
+                : CONTROLS_LABEL
+            }
+            aria-braillelabel={
+              controlsEntryLabel ? `${controlsEntryLabel} ${CONTROLS_LABEL}` : undefined
+            }
+            onBlur={handleControlsBlur}
+          >
             {showStoryButton && (
               <button
                 type="button"
@@ -3061,7 +3130,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
               // Focused only with speech off: name it so braille shows the text
               // without "section". Generic in speech mode (layout ancestor).
               role={speechMode ? undefined : "application"}
-              aria-label={speechMode ? undefined : textPanelLabel}
+              aria-label={speechMode ? undefined : textEntryLabel || textPanelLabel}
+              onBlur={handleTextPanelBlur}
               data-autofocus={!speechMode && !focusAnchorActive && textScrollable ? true : undefined}
               onClick={() => enterTextNav()}
             >
@@ -3076,7 +3146,8 @@ export default function ArtifactPopup({ theme, artifactId, onNavigate, onClose }
                   ref={textBodyRef}
                   tabIndex={speechMode && !isAutoplaying && textScrollable ? 0 : -1}
                   role={speechMode ? "application" : undefined}
-                  aria-label={speechMode ? SILENT_NAME : undefined}
+                  aria-label={speechMode ? textEntryLabel || SILENT_NAME : undefined}
+                  onBlur={handleTextPanelBlur}
                   aria-hidden={speechMode && isAutoplaying ? true : undefined}
                 >
                   {visibleBlocks.map((block) =>

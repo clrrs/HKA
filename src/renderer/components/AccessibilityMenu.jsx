@@ -172,7 +172,7 @@ export default function AccessibilityMenu({ onboarding = false }) {
           // role word is dropped from speech and braille (a bare focusable div
           // reads as "section").
           role="application"
-          aria-label={onboarding ? ONBOARDING_INTRO_SR_LABEL : "Settings"}
+          aria-label={onboarding ? ONBOARDING_INTRO_SR_LABEL : "Settings opened."}
         >
           <h2
             id="accessibility-settings-title"

@@ -211,11 +211,8 @@ export default function StateProvider({ children }) {
   const [autoReadActive, setAutoReadActive] = useState(false);
 
   const [speechMode, setSpeechMode] = useState(true);
-  const speechModeRef = useRef(speechMode);
-  speechModeRef.current = speechMode;
   const toggleSpeechMode = () => setSpeechMode((prev) => !prev);
   const lastTtsToggleRef = useRef(0);
-  const prevShowSettingsForTtsRef = useRef(false);
 
   const setSpeechModeWithTts = useCallback((enabled) => {
     lastTtsToggleRef.current = Date.now();
@@ -247,23 +244,6 @@ export default function StateProvider({ children }) {
       return prev;
     });
   }, []);
-
-  // Keep NVDA speaking for the whole Settings session; apply mute only on close if Off.
-  useEffect(() => {
-    const wasOpen = prevShowSettingsForTtsRef.current;
-    prevShowSettingsForTtsRef.current = showSettings;
-    if (showSettings && !wasOpen) {
-      if (!speechModeRef.current) {
-        lastTtsToggleRef.current = Date.now();
-        window.kioskApi?.send("toggle-tts");
-      }
-    } else if (!showSettings && wasOpen) {
-      if (!speechModeRef.current) {
-        lastTtsToggleRef.current = Date.now();
-        window.kioskApi?.send("toggle-tts");
-      }
-    }
-  }, [showSettings]);
 
   const [hasSeenThemeTip, setHasSeenThemeTip] = useState(false);
 
