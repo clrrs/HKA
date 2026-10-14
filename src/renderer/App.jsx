@@ -534,7 +534,11 @@ export default function App() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  useEffect(() => {
+  // Layout effect: .app-main goes inert in this same commit and the focus park
+  // is inside it, so any gap before the overlay takes focus drops it to the
+  // bare document. NVDA brailles that as "doc" and then leads every update
+  // of the warning (intro, countdown numbers) with it.
+  useLayoutEffect(() => {
     if (idleCountdown === null) {
       idleFocusSessionRef.current = false;
       return;
@@ -553,11 +557,9 @@ export default function App() {
       idleReturnFocusRef.current = active;
     }
     // The warning is the focused element's name (see idleSpeechLabel), so
-    // speech and braille get it from this one focus.
-    const t = window.setTimeout(() => {
-      idleBrailleRef.current?.focus();
-    }, 50);
-    return () => window.clearTimeout(t);
+    // speech and braille get it from this one focus. scheduleFocus retries
+    // in case Chromium drops the first call in the inert turn.
+    return scheduleFocus(idleBrailleRef.current);
   }, [idleCountdown]);
 
   // Keep NVDA speaking for the whole Settings session; apply mute only on close if Off.

@@ -1292,7 +1292,11 @@ h1[tabindex]:focus-visible {
 }
 
 .instruction-focus-anchor {
+  /* Pinned inside the clipped scene: left at its static spot (below the
+     video), focusing it scrolled .instruction-scene and shifted the video up. */
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   padding: 0;

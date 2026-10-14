@@ -66,7 +66,7 @@ export default function InstructionScene({ isActive }) {
     } else if (isBack && document.activeElement === emptyFocusRef.current) {
       e.preventDefault();
       e.stopPropagation();
-      skipButtonRef.current?.focus();
+      skipButtonRef.current?.focus({ preventScroll: true });
     }
   };
 
