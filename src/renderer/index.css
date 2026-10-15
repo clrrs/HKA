@@ -167,6 +167,37 @@ body {
   border-color: var(--color-black);
 }
 
+[data-theme="light"] .theme-circle--disabled.theme-circle--focused .theme-circle-inner {
+  background-color: #c0c0c0;
+}
+
+/* Light: artifact popup — nav arrows, section markers, transcript panel */
+[data-theme="light"] .artifact-popup-nav-arrow--prev::before {
+  border-right-color: var(--color-black);
+}
+
+[data-theme="light"] .artifact-popup-nav-arrow--next::before {
+  border-left-color: var(--color-black);
+}
+
+[data-theme="light"] .artifact-popup-scroll-marker {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .artifact-popup-transcript {
+  background: var(--color-white);
+  border: 2px solid var(--color-black);
+  border-bottom: none;
+}
+
+[data-theme="light"] .artifact-popup-transcript-body {
+  scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+[data-theme="light"] .artifact-popup-transcript-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.35);
+}
+
 /* ============================================
    Layout — fixed 1920x1080 design, scaled to fit
    ============================================ */
