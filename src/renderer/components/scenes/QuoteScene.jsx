@@ -160,9 +160,13 @@ export default function QuoteScene() {
     };
 
     audioEl.addEventListener("ended", handleEnded);
+    // The keypad is ignored on the quote scene, so a VO that fails to load
+    // would otherwise strand the visitor here until the idle timeout.
+    audioEl.addEventListener("error", handleEnded);
 
     return () => {
       audioEl.removeEventListener("ended", handleEnded);
+      audioEl.removeEventListener("error", handleEnded);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;

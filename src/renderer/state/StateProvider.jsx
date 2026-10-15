@@ -94,6 +94,9 @@ export default function StateProvider({ children }) {
     setPrefs((prev) => ({ ...prev, [k]: v }));
   };
 
+  // Shift toggles this on any scene, even ones with nothing to pause, so it is
+  // cleared on every scene change and artifact open. Otherwise a stray Shift on
+  // Home would leave the next artifact's auto-read and video stuck paused.
   const [isPaused, setIsPaused] = useState(false);
   const togglePaused = useCallback(() => {
     setIsPaused((prev) => !prev);
@@ -109,6 +112,7 @@ export default function StateProvider({ children }) {
     }
     setScene(sceneName);
     setSubscene(options.subscene || null);
+    setIsPaused(false);
     if (options.artifactId !== undefined) {
       setArtifactId(options.artifactId);
     } else if (sceneName !== "theme") {
@@ -123,6 +127,7 @@ export default function StateProvider({ children }) {
 
   const openArtifact = useCallback((id) => {
     setArtifactId(id);
+    setIsPaused(false);
   }, []);
 
   const closeArtifact = useCallback(() => {

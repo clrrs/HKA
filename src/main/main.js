@@ -18,6 +18,8 @@ function createWindow() {
     kiosk: false,
     fullscreen: true, // Set to true for production
     autoHideMenuBar: true,
+    // Avoid a white flash while the portable exe's page loads.
+    backgroundColor: "#000000",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -49,18 +51,27 @@ let ps = null;
 function ensurePowerShell() {
   if (!IS_WIN) return;
   if (ps && ps.exitCode === null) return;
-  ps = spawn("powershell.exe", ["-NoProfile", "-NoLogo", "-NoExit"], {
+  const child = spawn("powershell.exe", ["-NoProfile", "-NoLogo", "-NoExit"], {
     stdio: ["pipe", "ignore", "pipe"],
     windowsHide: true,
   });
-  ps.stderr.on("data", (d) => console.error("PS stderr:", d.toString()));
-  ps.on("exit", () => { ps = null; });
-  ps.stdin.write(KBD_EVENT_TYPE_DEF);
+  ps = child;
+  child.stderr.on("data", (d) => console.error("PS stderr:", d.toString()));
+  // Unhandled, a spawn failure or a write after PowerShell dies throws in the
+  // main process and shows an error dialog over the kiosk.
+  child.on("error", (err) => {
+    console.error("PowerShell error:", err);
+    if (ps === child) ps = null;
+  });
+  child.stdin.on("error", (err) => console.error("PowerShell stdin error:", err));
+  child.on("exit", () => { if (ps === child) ps = null; });
+  child.stdin.write(KBD_EVENT_TYPE_DEF);
 }
 
 function sendKeys(script) {
   if (!IS_WIN) return;
   ensurePowerShell();
+  if (!ps) return;
   ps.stdin.write(script + "\n");
 }
 
@@ -106,10 +117,23 @@ ipcMain.on("attract-signal", () => {
   );
 });
 
-app.whenReady().then(() => {
-  if (IS_WIN) ensurePowerShell();
-  createWindow();
-});
+// The portable exe takes a while to unpack, so a second double-click is easy.
+// A second copy would double every keystroke, sound and "6" signal.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win) return;
+    if (win.isMinimized()) win.restore();
+    win.focus();
+  });
+
+  app.whenReady().then(() => {
+    if (IS_WIN) ensurePowerShell();
+    createWindow();
+  });
+}
 
 app.on("window-all-closed", () => {
   if (ps) ps.kill();

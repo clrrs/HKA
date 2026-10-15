@@ -10,7 +10,7 @@ import {
 const ATTRACT_SRC = "3HK7_Attract_v05-260930.mp4";
 
 export default function AttractScene({ isActive }) {
-  const { goToScene } = useAppState();
+  const { goToScene, lastTtsToggleRef } = useAppState();
   const advancingRef = useRef(false);
   const videoRef = useRef(null);
   const mirrorRef = useRef(null);
@@ -124,6 +124,9 @@ export default function AttractScene({ isActive }) {
     const handleKeyDown = (e) => {
       if (e.repeat) return;
       if (e.key === "Control" || e.ctrlKey) return;
+      // An idle reset with speech off sends Insert+S to unmute NVDA; a leaked
+      // synthetic key must not start the experience for nobody.
+      if (Date.now() - lastTtsToggleRef.current < 1000) return;
       if (advancingRef.current) return;
       advancingRef.current = true;
       e.preventDefault();
@@ -133,7 +136,7 @@ export default function AttractScene({ isActive }) {
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
-  }, [isActive, goToScene]);
+  }, [isActive, goToScene, lastTtsToggleRef]);
 
   const handleClick = () => {
     if (advancingRef.current) return;
