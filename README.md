@@ -4,26 +4,43 @@ Helen Keller Archive
 
 ## Setting up a fresh kiosk PC
 
-The kiosk runs a **portable** copy of NVDA (the screen reader). It's a self-contained folder that is already set up for HKA: voice, settings and speech dictionary are all inside it, so nothing needs to be configured by hand.
+The kiosk uses NVDA (the screen reader) with the Acapela **Sharon** voice. You install NVDA and Acapela yourself, then copy two HKA files into NVDA's settings folder: the settings file and the speech dictionary. You'll get the Acapela activation key separately.
 
-### Install the portable NVDA copy
+### 1. Install NVDA 2026.1.1
 
-1. Download [NVDA-Portable.zip](NVDA-Portable.zip) from this repo.
-2. In File Explorer, right-click the downloaded zip → **Properties**. If there is an **Unblock** checkbox at the bottom, tick it and click **OK**. (Otherwise Windows may block NVDA from running.)
-3. Right-click the zip → **Extract All**, and extract it to `C:\NVDA-Portable`. Don't leave it in Downloads or on a OneDrive-synced Desktop.
-4. Open `C:\NVDA-Portable` and double-click `nvda.exe`. If Windows shows “Windows protected your PC”, click **More info** → **Run anyway**.
-5. NVDA should start talking. Its icon appears in the system tray (bottom right, near the clock).
+Use this exact version, not the latest one.
 
-### Start NVDA automatically with Windows
+1. Download [nvda_2026.1.1.exe](https://www.nvaccess.org/files/nvda/releases/2026.1.1/nvda_2026.1.1.exe) from NV Access.
+2. Run it, accept the license, and choose **Install NVDA on this computer**.
+3. Leave **Start NVDA after I sign in** ticked. NVDA must already be running **before** the HKA app opens, and this makes sure it is.
+4. When the install finishes, NVDA starts talking and its icon appears in the system tray (bottom right, near the clock).
 
-NVDA must already be running **before** the HKA app opens. A portable copy can’t use NVDA’s own “start after sign-in” setting, so add it to the Windows Startup folder:
+### 2. Install the Acapela voices
 
-1. Press **Windows+R**, type `shell:startup`, and press **Enter**. A folder opens.
-2. In another File Explorer window, open `C:\NVDA-Portable`, right-click `nvda.exe` → **Show more options** → **Create shortcut**.
-3. Move the new shortcut into the Startup folder.
-4. Restart the PC and check that NVDA is speaking once Windows has signed in.
+1. Go to the [Acapela TTS for NVDA download page (v1.9.5)](https://www.acapela-nvda.com/get-your-download-here-v1-9-5/) and download two files:
+   - **Engines**: `Acapela TTS Voices for NVDA - Engines-1.9.5.nvda-addon` (required)
+   - **Colibri voices**: `Acapela TTS Voices for NVDA - CO voices-1.9.5.nvda-addon`
 
-Note: a portable copy doesn’t speak on the Windows sign-in screen or on admin (UAC) prompts. That’s expected.
+   Do **not** download the separate "HQ voice - Sharon" file. HKA uses the **Colibri** Sharon voice, which comes in the Colibri bundle.
+2. Double-click the Engines file and confirm the install. Then do the same for the Colibri voices file. Restart NVDA when it asks.
+3. Activate Acapela with the activation key you were sent. The PC needs internet access for this step. Until it's activated, Acapela runs as a 15-day trial.
+   1. Open the NVDA menu: press **Insert+N**, or right-click the NVDA icon in the system tray.
+   2. Go to **Acapela**. In its submenu, choose the option to activate a license.
+   3. Type in the activation key and confirm.
+
+### 3. Copy in the HKA settings and dictionary
+
+1. Download both files from this repo. On each page, click the **Download raw file** button (top right of the file view):
+   - [backup-nvda.ini](backup-nvda.ini) (NVDA settings)
+   - [backup-dictionary.dic](backup-dictionary.dic) (speech dictionary)
+2. Quit NVDA: press **Insert+Q** and choose **Exit**. NVDA must be closed, or it will overwrite the settings file when it exits.
+3. Press **Windows+R**, type `%APPDATA%\nvda`, and press **Enter**. NVDA's settings folder opens.
+4. Copy `backup-nvda.ini` into that folder and rename it to `nvda.ini`, replacing the existing file.
+5. Open the `speechDicts` folder inside it, copy `backup-dictionary.dic` there, and rename it to `default.dic`. Create the `speechDicts` folder if it isn't there.
+6. If Windows hides file extensions, make sure the files didn't end up as `nvda.ini.txt` or `default.dic.txt` (File Explorer → **View** → **Show** → **File name extensions**).
+7. Start NVDA again with **Ctrl+Alt+N**.
+8. Check the voice: press **Insert+N** → **Preferences** → **Settings** → **Speech**. The synthesizer should be Acapela and the voice should be Sharon (Colibri, "Sharon22k_CO"), not the HQ Sharon.
+9. Restart the PC and check that NVDA is speaking with the Sharon voice once Windows has signed in.
 
 ### Run the app
 
