@@ -17,6 +17,8 @@ Use this exact version, not the latest one.
 
 ### 2. Install the Acapela voices
 
+The Acapela license has to be activated on every kiosk PC, even if you're setting it up from an existing portable copy of NVDA instead of following step 1.
+
 1. Go to the [Acapela TTS for NVDA download page (v1.9.5)](https://www.acapela-nvda.com/get-your-download-here-v1-9-5/) and download two files:
    - **Engines**: `Acapela TTS Voices for NVDA - Engines-1.9.5.nvda-addon` (required)
    - **Colibri voices**: `Acapela TTS Voices for NVDA - CO voices-1.9.5.nvda-addon`
