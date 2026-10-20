@@ -6,10 +6,10 @@ import AnnouncerProvider from './state/AnnouncerProvider';
 import AudioRoutingProvider from './audio/AudioRoutingProvider';
 import './index.css';
 
-// "6" is the attract enter/exit signal the app sends itself (see AttractScene);
-// it is not a keypad key, so swallow it before any app handler sees it.
+// "8" / "6" are attract start/dismiss signals the app sends itself (see AttractScene);
+// they are not keypad keys, so swallow them before any app handler sees them.
 const swallowAttractSignal = (e) => {
-  if (e.key === '6' || e.code === 'Digit6') {
+  if (e.key === '6' || e.code === 'Digit6' || e.key === '8' || e.code === 'Digit8') {
     e.preventDefault();
     e.stopImmediatePropagation();
   }

@@ -73,12 +73,17 @@ The app does **not** update itself. To update, quit the app, replace the old exe
 
 Screen reader speech is turned on and off from the Settings menu (**A** → Screen Reader).
 
-### “6” keystroke (attract audio signal)
+### “8” / “6” keystrokes (attract audio signal)
 
-The app sends a **6** keystroke (Windows virtual key `0x36`) every time the attract loop **starts** and every time a visitor **exits** it. The station’s ESP32 listens for it and raises a Q-SYS GPIO trigger that fades the BrightSign attract audio.
+The station’s ESP32 listens for these keystrokes and raises a Q-SYS GPIO trigger for the BrightSign attract audio.
 
-- “6” is an **outgoing signal only**. It is not a keypad key, and the app swallows it so it never triggers anything inside the app.
-- Nothing needs to be configured on the PC. It goes out through the same Windows keyboard-event path the app uses for volume and NVDA control, so it only fires on Windows.
+| Key | Windows virtual key | Sent when |
+|-----|---------------------|-----------|
+| **8** | `0x38` | The attract loop **starts**: when the app launches, and when the idle countdown ends |
+| **6** | `0x36` | A visitor **dismisses** the attract loop |
+
+- “8” and “6” are **outgoing signals only**. They are not keypad keys, and the app swallows them so they never trigger anything inside the app.
+- Nothing needs to be configured on the PC. They go out through the same Windows keyboard-event path the app uses for volume and NVDA control, so they only fire on Windows.
 
 ### Testing shortcuts
 

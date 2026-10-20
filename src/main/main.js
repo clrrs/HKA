@@ -109,16 +109,17 @@ ipcMain.on("stop-speech", () => {
   );
 });
 
-// Attract enter/exit signal ("6", VK 0x36) for the station's ESP32 → Q-SYS GPIO
-ipcMain.on("attract-signal", () => {
+// Attract start ("8", VK 0x38) / dismiss ("6", VK 0x36) for ESP32 → Q-SYS GPIO
+ipcMain.on("attract-signal", (_event, kind) => {
+  const vk = kind === "start" ? "0x38" : "0x36";
   sendKeys(
-    "[KbdEvent]::keybd_event(0x36,0,0,[UIntPtr]::Zero);" +
-    "[KbdEvent]::keybd_event(0x36,0,2,[UIntPtr]::Zero)"
+    `[KbdEvent]::keybd_event(${vk},0,0,[UIntPtr]::Zero);` +
+    `[KbdEvent]::keybd_event(${vk},0,2,[UIntPtr]::Zero)`
   );
 });
 
 // The portable exe takes a while to unpack, so a second double-click is easy.
-// A second copy would double every keystroke, sound and "6" signal.
+// A second copy would double every keystroke, sound and attract signal.
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
